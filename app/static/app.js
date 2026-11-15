@@ -499,19 +499,53 @@ $("#aiLog").addEventListener("click", (e) => withBusy(e.target, async () => {
 $("#aiDiscard").addEventListener("click", resetAi);
 
 // ================================================================ WORKOUTS
+// ---------------------------------------------------------------- exercise picker (body part -> exercise)
+const picker = { groups: {}, parts: [], mine: {}, sessions: [], lookup: {} };
+async function loadPicker() {
+  const r = await api("/api/exercises");
+  Object.assign(picker, { groups: r.groups, parts: r.body_parts, mine: r.plan_exercises, sessions: r.plan_sessions });
+  picker.lookup = {};
+  for (const [part, names] of Object.entries(r.groups)) for (const n of names) picker.lookup[n.toLowerCase()] = part;
+  const sel = $("#workoutName"), keep = sel.value;
+  const common = ["Strength", "Run", "Ride", "Walk", "Hike", "Swim", "HIIT", "Yoga", "Mobility"];
+  sel.innerHTML = `<option value="">Pick a workout…</option>`
+    + (r.plan_sessions.length ? `<optgroup label="Your plan">${r.plan_sessions.map((n) => `<option>${esc(n)}</option>`).join("")}</optgroup>` : "")
+    + `<optgroup label="Other">${common.map((n) => `<option>${n}</option>`).join("")}</optgroup>`;
+  if (keep) setWorkoutName(keep);
+}
+function setWorkoutName(name) {
+  const sel = $("#workoutName");
+  if (name && ![...sel.options].some((o) => o.value === name)) sel.insertAdjacentHTML("beforeend", `<option>${esc(name)}</option>`);
+  sel.value = name || "";
+}
+function exerciseOptions(part, current) {
+  const mine = (picker.mine[part] || []);
+  const all = (picker.groups[part] || []).filter((n) => !mine.includes(n));
+  let html = `<option value="">Exercise…</option>`;
+  if (mine.length) html += `<optgroup label="In your plan">${mine.map((n) => `<option>${esc(n)}</option>`).join("")}</optgroup>`;
+  html += `<optgroup label="All ${esc(part.toLowerCase())}">${all.map((n) => `<option>${esc(n)}</option>`).join("")}</optgroup>`;
+  if (current && !mine.includes(current) && !all.includes(current)) html += `<option>${esc(current)}</option>`;
+  return html;
+}
+
 function addSetRow(v = {}) {
   const row = document.createElement("div");
   row.className = "set-row";
-  row.innerHTML = `<input placeholder="Exercise" data-k="exercise" value="${esc(v.exercise || "")}" aria-label="Exercise">
+  const part = v.part || picker.lookup[(v.exercise || "").toLowerCase()] || Object.keys(picker.mine)[0] || picker.parts[0] || "Chest";
+  row.innerHTML = `<select data-k="part" aria-label="Body part">${picker.parts.map((p) => `<option ${p === part ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>
+    <select data-k="exercise" aria-label="Exercise">${exerciseOptions(part, v.exercise)}</select>
     <input type="number" placeholder="Reps" data-k="reps" min="0" value="${esc(v.reps ?? "")}" aria-label="Reps">
     <input type="number" placeholder="kg" step="0.5" min="0" data-k="weight_kg" value="${esc(v.weight_kg ?? "")}" aria-label="Weight kg">
     <button type="button" class="icon" title="Remove set" aria-label="Remove set">✕</button>`;
   row.querySelector("button").onclick = () => row.remove();
+  $('[data-k="exercise"]', row).value = v.exercise || "";
+  $('[data-k="part"]', row).onchange = (e) => { $('[data-k="exercise"]', row).innerHTML = exerciseOptions(e.target.value); };
   $("#setRows").appendChild(row);
 }
 $("#addSet").onclick = () => {
   const last = $$("#setRows .set-row").at(-1);
-  addSetRow(last ? { exercise: $('[data-k="exercise"]', last).value, weight_kg: $('[data-k="weight_kg"]', last).value } : {});
+  addSetRow(last ? { part: $('[data-k="part"]', last).value, exercise: $('[data-k="exercise"]', last).value,
+                     reps: $('[data-k="reps"]', last).value, weight_kg: $('[data-k="weight_kg"]', last).value } : {});
 };
 
 function nowLocalInput() { return localIso().slice(0, 16); }
@@ -523,7 +557,8 @@ async function loadTodaysPlan() {
   const session = plan?.days.find((d) => d.weekday === wd);
   if (!session) return toast(plan ? "Today is a rest day in your plan" : "No active plan. Build one in Plans", true);
   const f = $("#activityForm").elements;
-  f.name.value = session.title;
+  if (!picker.parts.length) await loadPicker();
+  setWorkoutName(session.title);
   f.start_time.value = nowLocalInput();
   $("#setRows").innerHTML = "";
   if (session.type === "cardio") {
@@ -543,6 +578,7 @@ $("#loadPlan").onclick = () => loadTodaysPlan().catch((e) => toast(e.message, tr
 
 loaders.exercise = async () => {
   loaders.plans().catch((e) => toast(e.message, true));
+  loadPicker().catch(() => {});
   const f = $("#activityForm").elements.start_time;
   if (!f.value) f.value = nowLocalInput();
   const filter = $("#actFilter").value;

@@ -183,3 +183,13 @@ def test_move_plan_session(client):
     p = client.post(f"/api/plans/{plan['id']}/move", json={"from_day": "Sun", "to_day": "Wed"}).json()
     assert {d["weekday"]: d["title"] for d in p["days"]} == {"Wed": "Full Body A", "Fri": "Full Body C", "Sun": "Full Body B"}
     assert client.post(f"/api/plans/{plan['id']}/move", json={"from_day": "Xyz", "to_day": "Mon"}).status_code == 400
+
+
+def test_exercise_picker(client):
+    r = client.get("/api/exercises").json()
+    assert "Chest" in r["body_parts"] and "Goblet Squat" in r["groups"]["Legs"]
+    assert "Dumbbell Floor Press" in r["groups"]["Chest"] and r["plan_sessions"] == []
+    client.post("/api/plans/generate", json={"goal": "strength", "days_per_week": 3, "equipment": "home", "include_cardio": False})
+    r = client.get("/api/exercises").json()
+    assert r["plan_sessions"] == ["Full Body A", "Full Body B", "Full Body C"]
+    assert "Goblet Squat" in r["plan_exercises"]["Legs"]

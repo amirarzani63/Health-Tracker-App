@@ -138,7 +138,12 @@ label.check input { width: auto; }
 .actions { margin-top: 8px; }
 fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
 legend { font-size: 13px; color: var(--muted); }
-.set-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 6px; margin-bottom: 6px; }
+.set-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+.set-row select[data-k="part"] { grid-column: 1 / 2; }
+.set-row select[data-k="exercise"] { grid-column: 2 / 4; }
+.set-row input[data-k="reps"] { grid-column: 1 / 2; }
+.set-row input[data-k="weight_kg"] { grid-column: 2 / 3; }
+.set-row button { grid-column: 3 / 4; grid-row: 2; }
 
 .list { list-style: none; margin: 0; padding: 0; }
 .list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
