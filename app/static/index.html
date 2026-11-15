@@ -56,6 +56,40 @@
 
   <!-- DIET -->
   <section id="view-diet" class="view">
+    <div class="card" id="aiCard">
+      <h3>Calorie counter</h3>
+      <p class="muted small">Tell it what you ate, snap photos of your plate, or both. You'll review the estimate before anything is logged.</p>
+      <form id="aiForm" class="form">
+        <label>What did you eat?
+          <textarea name="description" rows="2" placeholder="e.g. 2 scrambled eggs, a slice of sourdough with butter, and a latte with oat milk"></textarea>
+        </label>
+        <div class="row">
+          <label>Photos (up to 4)
+            <input type="file" name="photos" id="aiPhotos" accept="image/*" multiple>
+          </label>
+          <label>Meal
+            <select name="meal"><option value="">Auto-detect</option><option>breakfast</option><option>lunch</option><option>dinner</option><option>snack</option></select>
+          </label>
+        </div>
+        <div id="aiPreviews" class="thumbs"></div>
+        <button type="submit" id="aiSubmit">Estimate calories</button>
+      </form>
+      <p id="aiDisabled" class="small warn-text hidden">The AI calorie counter needs an Anthropic API key. Set <code>ANTHROPIC_API_KEY</code> before starting the server. You can still log food manually below.</p>
+      <div id="aiResult" class="hidden">
+        <h4>Estimate <span class="muted small" id="aiTotals"></span></h4>
+        <div class="table-wrap"><table class="ai-table"><thead><tr>
+          <th></th><th>Food</th><th>Portion</th><th>kcal</th><th>P g</th><th>C g</th><th>F g</th><th></th>
+        </tr></thead><tbody id="aiItems"></tbody></table></div>
+        <p class="small" id="aiNotes"></p>
+        <div class="row actions">
+          <label>Log as
+            <select id="aiMeal"><option>breakfast</option><option>lunch</option><option>dinner</option><option>snack</option></select>
+          </label>
+          <button type="button" id="aiLog">Add to food log</button>
+          <button type="button" class="ghost" id="aiDiscard">Discard</button>
+        </div>
+      </div>
+    </div>
     <div class="card">
       <h3>Daily targets</h3>
       <div id="macroBars"></div>
