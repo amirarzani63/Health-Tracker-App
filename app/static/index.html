@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Health Tracker</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/vendor/chart.umd.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Health Tracker</div>
+  <nav id="tabs">
+    <button data-view="dashboard" class="active">Dashboard</button>
+    <button data-view="diet">Diet</button>
+    <button data-view="exercise">Exercise</button>
+    <button data-view="plans">Plans</button>
+    <button data-view="garmin">Garmin</button>
+    <button data-view="profile">Profile</button>
+  </nav>
+</header>
+
+<main>
+  <div class="daybar">
+    <button id="prevDay" aria-label="Previous day">‹</button>
+    <input type="date" id="day">
+    <button id="nextDay" aria-label="Next day">›</button>
+    <button id="todayBtn" class="ghost">Today</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <section id="view-dashboard" class="view active">
+    <div class="grid kpis">
+      <div class="card kpi"><span class="label">Calories left</span><span class="value" id="kCalLeft">–</span><span class="sub" id="kCalSub"></span></div>
+      <div class="card kpi"><span class="label">Protein</span><span class="value" id="kProtein">–</span><span class="sub" id="kProteinSub"></span></div>
+      <div class="card kpi"><span class="label">Steps</span><span class="value" id="kSteps">–</span><span class="sub" id="kStepsSub"></span></div>
+      <div class="card kpi"><span class="label">Sleep</span><span class="value" id="kSleep">–</span><span class="sub" id="kSleepSub"></span></div>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <h3>Today's training</h3>
+        <div id="readiness" class="pill"></div>
+        <div id="todaySession"></div>
+      </div>
+      <div class="card">
+        <h3>Last 7 days</h3>
+        <div class="grid mini" id="weekStats"></div>
+        <ul class="list" id="recentActs"></ul>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Intake vs. burned (14 days)</h3>
+      <div class="chart"><canvas id="trendChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- DIET -->
+  <section id="view-diet" class="view">
+    <div class="card">
+      <h3>Daily targets</h3>
+      <div id="macroBars"></div>
+      <p class="muted small" id="targetSource"></p>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <h3>Log food</h3>
+        <label>Quick search
+          <input id="foodSearch" placeholder="e.g. chicken, oats, yogurt" autocomplete="off">
+        </label>
+        <ul class="list suggestions" id="foodResults"></ul>
+        <form id="foodForm" class="form">
+          <div class="row">
+            <label>Meal
+              <select name="meal"><option>breakfast</option><option>lunch</option><option>dinner</option><option selected>snack</option></select>
+            </label>
+            <label>Servings <input name="servings" type="number" step="0.25" min="0.25" value="1"></label>
+          </div>
+          <label>Name <input name="name" required></label>
+          <div class="row">
+            <label>kcal <input name="calories" type="number" step="1" min="0" required></label>
+            <label>Protein g <input name="protein_g" type="number" step="0.1" min="0" value="0"></label>
+            <label>Carbs g <input name="carbs_g" type="number" step="0.1" min="0" value="0"></label>
+            <label>Fat g <input name="fat_g" type="number" step="0.1" min="0" value="0"></label>
+          </div>
+          <p class="muted small">Macros are per serving; they're multiplied by servings when saved.</p>
+          <button type="submit">Add food</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Food log</h3>
+        <div id="foodLog"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Suggestions for the rest of the day</h3>
+      <ul id="dietTips" class="tips"></ul>
+      <div id="mealSuggestions" class="grid three"></div>
+    </div>
+  </section>
+
+  <!-- EXERCISE -->
+  <section id="view-exercise" class="view">
+    <div class="grid two">
+      <div class="card">
+        <h3>Log a workout</h3>
+        <form id="activityForm" class="form">
+          <div class="row">
+            <label>Type
+              <select name="activity_type">
+                <option value="strength_training">Strength</option><option value="running">Run</option>
+                <option value="cycling">Ride</option><option value="walking">Walk</option>
+                <option value="hiking">Hike</option><option value="lap_swimming">Swim</option>
+                <option value="yoga">Yoga</option><option value="other">Other</option>
+              </select>
+            </label>
+            <label>Start <input name="start_time" type="datetime-local" required></label>
+          </div>
+          <label>Name <input name="name" placeholder="e.g. Upper A"></label>
+          <div class="row">
+            <label>Minutes <input name="minutes" type="number" min="1" required></label>
+            <label>Distance km <input name="distance_km" type="number" step="0.01" min="0"></label>
+            <label>kcal <input name="calories" type="number" min="0"></label>
+            <label>Avg HR <input name="avg_hr" type="number" min="30" max="230"></label>
+          </div>
+          <fieldset>
+            <legend>Sets (strength)</legend>
+            <div id="setRows"></div>
+            <button type="button" class="ghost" id="addSet">+ Add set</button>
+          </fieldset>
+          <label>Notes <textarea name="notes" rows="2"></textarea></label>
+          <button type="submit">Save workout</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Weekly volume (minutes)</h3>
+        <div class="chart"><canvas id="volumeChart"></canvas></div>
+        <h3>Wellness (Garmin)</h3>
+        <div class="chart"><canvas id="wellnessChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Activity history</h3>
+      <div class="table-wrap"><table id="activityTable"><thead><tr>
+        <th>Date</th><th>Activity</th><th>Time</th><th>Distance</th><th>kcal</th><th>Avg HR</th><th>TE</th><th>Source</th><th></th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- PLANS -->
+  <section id="view-plans" class="view">
+    <div class="card">
+      <h3>Generate a workout plan</h3>
+      <form id="planForm" class="form">
+        <div class="row">
+          <label>Goal
+            <select name="goal">
+              <option value="general">General fitness</option><option value="strength">Strength</option>
+              <option value="hypertrophy">Muscle gain</option><option value="fat_loss">Fat loss</option>
+              <option value="endurance">Endurance</option>
+            </select>
+          </label>
+          <label>Days / week <select name="days_per_week"><option value="">From profile</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+          <label>Weeks <input name="weeks" type="number" min="1" max="16" value="4"></label>
+          <label>Equipment <select name="equipment"><option value="">From profile</option><option value="gym">Gym</option><option value="home">Home (dumbbells/bands)</option><option value="bodyweight">Bodyweight</option></select></label>
+        </div>
+        <label class="check"><input type="checkbox" name="include_cardio" checked> Include cardio days (HR zones for your fenix)</label>
+        <button type="submit">Generate plan</button>
+      </form>
+    </div>
+    <div id="activePlan"></div>
+    <div class="card">
+      <h3>Saved plans</h3>
+      <ul class="list" id="planList"></ul>
+    </div>
+  </section>
+
+  <!-- GARMIN -->
+  <section id="view-garmin" class="view">
+    <div class="card">
+      <h3>Garmin Connect</h3>
+      <p id="garminStatus" class="muted">Checking…</p>
+      <form id="garminLogin" class="form hidden">
+        <p class="small muted">Sign in with your Garmin Connect account (the one your fenix 7 Pro syncs to). Your password is used once to get a session token and is never stored.</p>
+        <label>Email <input name="email" type="email" required autocomplete="username"></label>
+        <label>Password <input name="password" type="password" required autocomplete="current-password"></label>
+        <button type="submit">Connect</button>
+      </form>
+      <form id="garminMfa" class="form hidden">
+        <p class="small">Garmin sent you a verification code. Enter it to finish connecting.</p>
+        <label>Code <input name="code" inputmode="numeric" required></label>
+        <button type="submit">Verify</button>
+      </form>
+      <div id="garminConnected" class="hidden">
+        <div class="row">
+          <label>Days to pull <input id="syncDays" type="number" min="1" max="365" value="7"></label>
+        </div>
+        <div class="row actions">
+          <button id="syncBtn">Sync now</button>
+          <button id="logoutBtn" class="ghost">Disconnect</button>
+        </div>
+        <pre id="syncResult" class="small"></pre>
+      </div>
+    </div>
+    <div class="card small muted">
+      <p>Synced from Garmin: activities (runs, rides, strength, etc. with HR, training effect and load), daily steps, active/total calories, resting HR, stress, Body Battery, sleep, and weigh-ins from Index scales. The server also re-syncs the last 2 days automatically every 6 hours while connected.</p>
+    </div>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="view-profile" class="view">
+    <div class="grid two">
+      <div class="card">
+        <h3>Profile</h3>
+        <form id="profileForm" class="form">
+          <label>Name <input name="name"></label>
+          <div class="row">
+            <label>Sex <select name="sex"><option value="male">Male</option><option value="female">Female</option></select></label>
+            <label>Birth year <input name="birth_year" type="number" min="1900" max="2100"></label>
+          </div>
+          <div class="row">
+            <label>Height cm <input name="height_cm" type="number" step="0.1"></label>
+            <label>Weight kg <input name="weight_kg" type="number" step="0.1"></label>
+          </div>
+          <div class="row">
+            <label>Activity level (without Garmin)
+              <select name="activity_level">
+                <option value="sedentary">Sedentary</option><option value="light">Light</option>
+                <option value="moderate">Moderate</option><option value="active">Active</option><option value="very_active">Very active</option>
+              </select>
+            </label>
+            <label>Goal <select name="goal"><option value="lose">Lose fat</option><option value="maintain">Maintain</option><option value="gain">Gain muscle</option></select></label>
+          </div>
+          <div class="row">
+            <label>Diet <select name="diet_type"><option>omnivore</option><option>pescatarian</option><option>vegetarian</option><option>vegan</option></select></label>
+            <label>Avoid (comma-separated) <input name="allergies" placeholder="nuts, gluten, soy"></label>
+          </div>
+          <div class="row">
+            <label>Experience <select name="experience"><option>beginner</option><option>intermediate</option><option>advanced</option></select></label>
+            <label>Training days <input name="training_days" type="number" min="1" max="7"></label>
+            <label>Equipment <select name="equipment"><option value="gym">Gym</option><option value="home">Home</option><option value="bodyweight">Bodyweight</option></select></label>
+          </div>
+          <button type="submit">Save profile</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Weight</h3>
+        <form id="weightForm" class="form row">
+          <label>Weight kg <input name="weight_kg" type="number" step="0.1" required></label>
+          <label>Body fat % <input name="body_fat_pct" type="number" step="0.1"></label>
+          <button type="submit">Log</button>
+        </form>
+        <div class="chart"><canvas id="weightChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast" role="status"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
