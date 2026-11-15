@@ -53,3 +53,12 @@ def test_suggestions_skip_logged_meals():
     res = nutrition.suggest_meals(p, t, {"calories": 500, "protein_g": 30, "carbs_g": 50, "fat_g": 15}, {"breakfast"})
     assert "breakfast" not in res["meals"]
     assert res["remaining"]["calories"] == round(t.calories - 500)
+
+
+def test_protein_uses_reference_weight_above_bmi_30():
+    # 105 kg at 180 cm (BMI 32.4): protein from the BMI-27 weight (87.5 kg) x 2.0 g/kg
+    t = nutrition.compute_targets(profile(weight_kg=105, height_cm=180, goal="lose", birth_year=1984), today=date(2026, 11, 15))
+    assert round(t.protein_g) == 175
+    assert round(t.bmr) == 1970  # Mifflin-St Jeor, male, 42 years
+    # normal BMI: unchanged, total weight
+    assert nutrition.compute_targets(profile(goal="lose"), today=date(2025, 1, 1)).protein_g == 160

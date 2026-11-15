@@ -24,6 +24,20 @@ suggestions, and automatically pull activity and wellness data from Garmin Conne
   Synced data: workouts (with avg/max HR, Training Effect, load), steps, total/active calories, resting/min/max heart
   rate, stress, Body Battery, sleep and Index-scale weigh-ins.
 
+### One-tap setup and your own Garmin workouts
+
+- **Set it all up for me** (Today tab, or Settings → Goals): reads your sex, height, weight, birth year, sleep
+  schedule, step goal, intensity-minute goal and goal weight from Garmin, works out your experience and
+  training days from the last 30 days of activities, and sets goals and daily nutrition targets.
+- **Your saved Garmin workouts become the plan.** They're adapted to your goal and equipment. At home, barbell,
+  cable and machine moves are swapped for dumbbell or band versions from Garmin's own exercise catalog, with no
+  duplicates in a workout. For weight loss, low-rep sets go to 10 reps, rests are capped at 60 s and sets at 4,
+  and two Zone 2 cardio days are added.
+- **Send to your fenix:** adapted copies are saved in Garmin Connect (originals untouched, copies end in
+  "· Health Tracker") and scheduled on your Garmin calendar two weeks ahead. Each sync keeps the calendar
+  filled. Plans tab → **Stop sending** removes the upcoming ones.
+- Protein targets use lean-mass reference weight (BMI 27) when BMI is over 30.
+
 ### Recommendations
 
 Rule-based coaching from the last 7 days vs. your goals, for example: protein consistently low, calories above a

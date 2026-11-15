@@ -188,3 +188,5 @@ class AutoSetupIn(BaseModel):
     focus: Literal["auto", "lose_weight", "build_muscle", "get_stronger", "improve_cardio", "stay_healthy"] = "auto"
     equipment: Literal["auto", "gym", "home", "bodyweight"] = "auto"
     diet_type: Literal["auto", "omnivore", "vegetarian", "vegan", "pescatarian"] = "auto"
+    use_garmin_workouts: bool = True
+    send_to_watch: bool = True

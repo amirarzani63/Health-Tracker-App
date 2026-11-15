@@ -9,6 +9,7 @@ from collections import defaultdict
 from datetime import date, datetime, time, timedelta
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import (Activity, DailyStats, FoodEntry, Goals, Profile, Reminder, ReminderLog,
@@ -31,35 +32,40 @@ REMINDER_WINDOW = timedelta(hours=4)  # don't nag about things far in the past
 
 
 # ---------------------------------------------------------------- singletons
+def _get_or_create(db: Session, model, **defaults):
+    """Fetch the single settings row, creating it once. Safe when two requests race on first use."""
+    row = db.get(model, 1)
+    if row is None:
+        try:
+            db.add(model(id=1, **defaults))
+            db.commit()
+        except IntegrityError:
+            db.rollback()  # another request created it first; use theirs
+        row = db.get(model, 1)
+    return row
+
+
 def get_profile(db: Session) -> Profile:
-    profile = db.get(Profile, 1)
-    if profile is None:
-        profile = Profile(id=1, allergies=[])
-        db.add(profile)
-        db.commit()
-    return profile
+    return _get_or_create(db, Profile, allergies=[])
 
 
 def get_goals(db: Session) -> Goals:
-    goals = db.get(Goals, 1)
-    if goals is None:
-        goals = Goals(id=1)
-        db.add(goals)
-        db.commit()
-    return goals
+    return _get_or_create(db, Goals)
 
 
 def get_reminders(db: Session) -> list[Reminder]:
     existing = {r.key: r for r in db.scalars(select(Reminder)).all()}
-    added = False
-    for key, (t, _) in DEFAULT_REMINDERS.items():
-        if key not in existing:
+    missing = [k for k in DEFAULT_REMINDERS if k not in existing]
+    if missing:
+        for key in missing:
             # weigh-in defaults to Mondays only; everything else is off until the user opts in
-            existing[key] = Reminder(key=key, enabled=False, time=t, days=[0] if key == "weigh_in" else list(range(7)))
-            db.add(existing[key])
-            added = True
-    if added:
-        db.commit()
+            t = DEFAULT_REMINDERS[key][0]
+            db.add(Reminder(key=key, enabled=False, time=t, days=[0] if key == "weigh_in" else list(range(7))))
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()  # created concurrently by another request
+        existing = {r.key: r for r in db.scalars(select(Reminder)).all()}
     return [existing[k] for k in DEFAULT_REMINDERS]
 
 

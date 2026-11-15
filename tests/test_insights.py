@@ -197,3 +197,18 @@ def test_sync_if_stale(client, tmp_path):
         assert stats["min_hr"] == 44 and stats["max_hr"] == 172
     finally:
         app.dependency_overrides.clear()
+
+
+def test_first_use_race_does_not_fail(client):
+    """Several requests creating the default rows at once (as the app does on first open) must not 500."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from app.db import Base, engine
+
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+    paths = ["/api/reminders", "/api/goals", "/api/profile", "/api/dashboard", "/api/reminders",
+             f"/api/reminders/due?now={TODAY}T12:00:00"] * 3
+    with ThreadPoolExecutor(8) as pool:
+        codes = list(pool.map(lambda p: client.get(p).status_code, paths))
+    assert codes == [200] * len(paths)

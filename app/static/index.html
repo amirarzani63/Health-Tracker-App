@@ -221,8 +221,16 @@
 
   <!-- PLANS -->
   <section id="view-plans" class="view">
+    <div class="card" id="garminPlanCard">
+      <h3>Use my Garmin workouts</h3>
+      <p class="muted small">Pick the workouts you saved in Garmin Connect. The app adapts them to your goal and equipment
+        (from your profile), spreads them over your week, adds cardio days if you're losing weight, and can put
+        everything on your fenix via your Garmin calendar. Your originals are never changed.</p>
+      <div id="garminPlanBody"><button type="button" class="ghost" id="loadGarminWorkouts">Load my Garmin workouts</button></div>
+      <p class="small" id="watchPlanStatus"></p>
+    </div>
     <div class="card">
-      <h3>Build a workout plan</h3>
+      <h3>Or build a new plan</h3>
       <form id="planForm" class="form">
         <div class="row">
           <label>Goal

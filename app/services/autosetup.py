@@ -165,7 +165,8 @@ def infer_focus(garmin: dict, history: dict) -> str:
 
 
 def run_auto_setup(db: Session, client, focus: str = "auto", equipment: str = "auto",
-                   diet_type: str = "auto", today: date | None = None) -> dict:
+                   diet_type: str = "auto", today: date | None = None,
+                   use_garmin_workouts: bool = True, send_to_watch: bool = False) -> dict:
     """Fill profile + goals and build an active plan. Returns a human-readable summary."""
     today = today or date.today()
     profile, goals = insights.get_profile(db), insights.get_goals(db)
@@ -222,7 +223,47 @@ def run_auto_setup(db: Session, client, focus: str = "auto", equipment: str = "a
     goals.saved = True
     done.append(f"Workouts/week: {days}")
 
-    # ---- workout plan
+    if garmin.get("weight_kg"):
+        entry = db.scalar(select(WeightEntry).where(WeightEntry.day == today, WeightEntry.source == "garmin"))
+        if entry is None:
+            db.add(WeightEntry(day=today, weight_kg=garmin["weight_kg"], source="garmin"))
+
+    # ---- workout plan: your own saved Garmin workouts first, adapted to goal + equipment
+    garmin_plan = None
+    if client is not None and use_garmin_workouts:
+        db.commit()  # profile/goals must be saved before the plan reads them
+        try:
+            from app.services.garmin_workouts import create_plan_from_garmin
+
+            garmin_plan = create_plan_from_garmin(db, client, profile.goal, profile.equipment, days,
+                                                  send_to_watch=send_to_watch)
+        except Exception as e:
+            log.warning("Building the plan from Garmin workouts failed: %s", e)
+            done.append(f"Couldn't use your saved Garmin workouts ({e}); built a plan instead.")
+    if garmin_plan:
+        done.append(f"Workout plan from your Garmin workouts: {', '.join(garmin_plan['used'])}")
+        done += [f"Adjusted: {c}" for c in garmin_plan["changes"][:8]]
+        if len(garmin_plan["changes"]) > 8:
+            done.append(f"…and {len(garmin_plan['changes']) - 8} more adjustments")
+        p = garmin_plan["pushed"]
+        if p:
+            done.append(f"Sent to your fenix: {len(p['saved'])} workouts saved in Garmin Connect, "
+                        f"{p['scheduled']} sessions on your Garmin calendar (next 2 weeks; kept topped up)")
+            if p["errors"]:
+                done.append(f"Some Garmin updates failed ({len(p['errors'])}); they'll be retried next time you run setup.")
+    if not garmin_plan:
+        if client is not None and use_garmin_workouts:
+            done.append("No saved Garmin workouts found, so a plan was built for you.")
+        _generated_plan(db, profile, plan_goal, days, history, done)
+    db.commit()
+    targets = insights.targets_for(db, today)
+    done.append(f"Daily nutrition: ~{round(targets.calories)} kcal, {round(targets.protein_g)} g protein "
+                + ("(recalculated every day from your Garmin burn)" if client is not None
+                   else "(estimated; becomes exact once Garmin is connected)"))
+    return {"focus": focus, "garmin_used": bool(garmin), "summary": done}
+
+
+def _generated_plan(db, profile, plan_goal, days, history, done):
     plan = generate_plan(goal=plan_goal, days_per_week=days, weeks=6 if plan_goal in ("strength", "hypertrophy") else 4,
                          equipment=profile.equipment, experience=profile.experience,
                          include_cardio=plan_goal != "strength" or history["cardio_share"] > 0.3)
@@ -230,18 +271,6 @@ def run_auto_setup(db: Session, client, focus: str = "auto", equipment: str = "a
     db.add(WorkoutPlan(name=plan["name"], goal=plan["goal"], weeks=plan["weeks"], days=plan["days"],
                        progression=plan["progression"], active=True))
     done.append(f"Workout plan: {plan['name']}")
-
-    if garmin.get("weight_kg"):
-        entry = db.scalar(select(WeightEntry).where(WeightEntry.day == today, WeightEntry.source == "garmin"))
-        if entry is None:
-            db.add(WeightEntry(day=today, weight_kg=garmin["weight_kg"], source="garmin"))
-    db.commit()
-
-    targets = insights.targets_for(db, today)
-    done.append(f"Daily nutrition: ~{round(targets.calories)} kcal, {round(targets.protein_g)} g protein "
-                + ("(recalculated every day from your Garmin burn)" if client is not None
-                   else "(estimated; becomes exact once Garmin is connected)"))
-    return {"focus": focus, "garmin_used": bool(garmin), "summary": done}
 
 
 def refresh_from_sync(db: Session, today_summary: dict | None):

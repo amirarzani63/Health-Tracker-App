@@ -211,6 +211,12 @@ class GarminService:
         from app.services.autosetup import refresh_from_sync
 
         refresh_from_sync(db, today_summary)  # latest weight -> profile, goals that follow Garmin
+        try:
+            from app.services.garmin_workouts import keep_calendar_filled
+
+            result["workouts_scheduled"] = keep_calendar_filled(db, client)
+        except Exception as e:
+            result["errors"].append(f"watch calendar: {e}")
         self._save_tokens(client)  # tokens may have been refreshed during the sync
         state = db.get(SyncState, "garmin_last_sync") or SyncState(key="garmin_last_sync")
         state.value = datetime.now().isoformat(timespec="seconds")

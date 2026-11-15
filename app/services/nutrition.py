@@ -32,6 +32,14 @@ def bmr_mifflin(sex: str, weight_kg: float, height_cm: float, age: int) -> float
     return base + 5 if sex == "male" else base - 161
 
 
+def protein_reference_weight(profile) -> float:
+    """Protein needs follow lean mass, so with a BMI over 30 use the weight at BMI 27 instead of total weight."""
+    h = (profile.height_cm or 0) / 100
+    if h <= 0:
+        return profile.weight_kg
+    return min(profile.weight_kg, 27 * h * h) if profile.weight_kg / (h * h) > 30 else profile.weight_kg
+
+
 @dataclass
 class Targets:
     bmr: float
@@ -65,7 +73,7 @@ def compute_targets(profile, garmin_active_calories: float | None = None,
     if g is not None and g.calorie_target:
         calories, source = float(g.calorie_target), "goal"
     protein = (g.protein_target_g if g is not None and g.protein_target_g is not None
-               else PROTEIN_PER_KG.get(profile.goal, 1.6) * profile.weight_kg)
+               else PROTEIN_PER_KG.get(profile.goal, 1.6) * protein_reference_weight(profile))
     fat = g.fat_target_g if g is not None and g.fat_target_g is not None else calories * FAT_SHARE / 9
     carbs = (g.carbs_target_g if g is not None and g.carbs_target_g is not None
              else max(0.0, (calories - protein * 4 - fat * 9) / 4))

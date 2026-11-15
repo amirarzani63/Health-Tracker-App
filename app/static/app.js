@@ -225,6 +225,9 @@ function renderAutoSetup(el, garminConnected) {
       ? `<span class="ok">✓ Garmin connected.</span> Your details and last 30 days come from your watch.`
       : `Garmin isn't connected yet. <a href="#settings" data-goto="settings" data-focus="#garminLogin input">Connect it first</a> for personal values (recommended).`}</div>
     <form class="form auto-form">
+      ${garminConnected ? `
+      <label class="check"><input type="checkbox" name="use_garmin_workouts" checked> Build my plan from my saved Garmin workouts (adapted to my goal and equipment)</label>
+      <label class="check"><input type="checkbox" name="send_to_watch" checked> Send my plan to my fenix (Garmin calendar, 2 weeks ahead, kept topped up)</label>` : ""}
       <div class="row">
         <label>Main goal <select name="focus">${opts(FOCUS_OPTS)}</select></label>
         <label>Where you train <select name="equipment">${opts(EQUIP_OPTS)}</select></label>
@@ -239,7 +242,10 @@ function renderAutoSetup(el, garminConnected) {
     btn.disabled = true;
     btn.textContent = garminConnected ? "Reading your Garmin data… (up to a minute)" : "Setting up…";
     try {
-      const r = await api("/api/setup/auto", { method: "POST", body: formData(e.target) });
+      const body = formData(e.target);
+      body.use_garmin_workouts = !!e.target.elements.use_garmin_workouts?.checked;
+      body.send_to_watch = !!e.target.elements.send_to_watch?.checked;
+      const r = await api("/api/setup/auto", { method: "POST", body });
       $(".auto-result", el).innerHTML = r.summary.map((x) => `<li>${esc(x)}</li>`).join("")
         + (r.note ? `<li class="warn-text">${esc(r.note)}</li>` : "")
         + `<li class="muted">You can change any of this in Settings. Weight and Garmin goals keep updating automatically.</li>`;
@@ -566,12 +572,16 @@ function renderPlanDay(day, compact = false) {
   if (day.type === "rest") return `<div class="plan-day"><div class="wd">${day.weekday}</div><strong>Rest / mobility</strong><p class="muted small">Easy walk and stretching. Let your Garmin recovery time come down.</p></div>`;
   if (day.type === "cardio") return `<div class="plan-day cardio"><div class="wd">${day.weekday} · cardio</div><strong>${esc(day.title)}</strong>
     <p class="small">${day.minutes} min in <b>${esc(day.zone)}</b>. Set your fenix data screen to show HR zone.</p></div>`;
-  return `<div class="plan-day strength"><div class="wd">${day.weekday} · strength</div><strong>${esc(day.title)}</strong>
-    <table>${day.exercises.map((x) => `<tr><td>${esc(x.exercise)}</td><td>${x.sets}×${esc(x.reps)}${compact ? "" : ` · ${x.rest_s}s rest`}</td></tr>`).join("")}</table></div>`;
+  const rest = (x) => (x.rest_s ? ` · ${x.rest_s}s rest` : "");
+  const changes = !compact && day.changes?.length
+    ? `<details class="small"><summary class="muted">${day.changes.length} adjustment${day.changes.length > 1 ? "s" : ""} for your goal</summary><ul class="tips">${day.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></details>` : "";
+  return `<div class="plan-day strength"><div class="wd">${day.weekday} · strength${day.garmin_source_id ? " · from Garmin" : ""}</div><strong>${esc(day.title)}</strong>
+    <table>${day.exercises.map((x) => `<tr><td>${esc(x.exercise)}</td><td>${x.sets}×${esc(x.reps)}${compact ? "" : rest(x)}</td></tr>`).join("")}</table>${changes}</div>`;
 }
 
 loaders.plans = async () => {
-  const [plans, active] = await Promise.all([api("/api/plans"), api("/api/plans/active")]);
+  const [plans, active, watch] = await Promise.all([api("/api/plans"), api("/api/plans/active"), api("/api/garmin/watch-plan").catch(() => null)]);
+  renderWatchStatus(watch);
   $("#activePlan").innerHTML = active ? `<div class="card"><h3>Active plan: ${esc(active.name)}</h3>
     <div class="plan-days">${active.days.map((d) => renderPlanDay(d)).join("")}</div>
     <h4>Progression</h4><ul class="tips">${active.progression.map((p) => `<li><b>Week ${p.week}:</b> ${esc(p.note)}</li>`).join("")}</ul></div>` : "";
@@ -580,6 +590,58 @@ loaders.plans = async () => {
     <span>${p.active ? "" : `<button class="ghost small-btn" data-activate-plan="${p.id}">Activate</button>`}
     <button class="icon" data-del-plan="${p.id}" title="Delete" aria-label="Delete plan">✕</button></span></li>`).join("") || `<li class="muted">No plans yet. Pick a goal above and build one.</li>`;
 };
+
+function renderWatchStatus(w) {
+  const el = $("#watchPlanStatus");
+  if (!w?.sending) { el.innerHTML = ""; return; }
+  el.innerHTML = `✓ Sending your plan to your fenix. Scheduled on your Garmin calendar through ${esc(w.scheduled_until || "–")}.
+    <button type="button" class="ghost small-btn" id="stopWatch">Stop sending</button>`;
+  $("#stopWatch").onclick = (e) => withBusy(e.target, async () => {
+    if (!confirm("Remove this app's upcoming workouts from your Garmin calendar?")) return;
+    const r = await api("/api/garmin/watch-plan/stop", { method: "POST" });
+    toast(`Removed ${r.removed} scheduled workouts from Garmin`);
+    loaders.plans();
+  });
+}
+
+$("#loadGarminWorkouts").addEventListener("click", (e) => withBusy(e.target, async () => {
+  const [list, goals] = await Promise.all([api("/api/garmin/workouts"), api("/api/goals")]);
+  if (!list.length) { $("#garminPlanBody").innerHTML = `<p class="muted">No saved workouts found in your Garmin Connect account.</p>`; return; }
+  const days = Math.min(6, Math.max(2, goals.workouts_per_week || 4));
+  let picked = 0;
+  $("#garminPlanBody").innerHTML = `<form class="form" id="garminPlanForm">
+    <ul class="list">${list.map((w) => {
+      const pre = ["strength_training", "hiit"].includes(w.sport) && picked++ < days;
+      return `<li><label class="check"><input type="checkbox" name="w" value="${esc(w.id)}" ${pre ? "checked" : ""}>
+        ${esc(w.name)}</label><span class="muted small">${esc(w.sport.replace(/_/g, " "))}${w.minutes ? ` · ${w.minutes} min` : ""}</span></li>`;
+    }).join("")}</ul>
+    <div class="row">
+      <label>Training days / week <select name="days">${[2, 3, 4, 5, 6].map((n) => `<option ${n === days ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+    </div>
+    <label class="check"><input type="checkbox" name="send" checked> Send to my fenix (Garmin calendar)</label>
+    <button type="submit">Build my plan from these</button>
+    <ul class="auto-result" id="garminPlanResult"></ul></form>`;
+  $("#garminPlanForm").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const f = ev.target;
+    const ids = $$("input[name=w]:checked", f).map((x) => x.value);
+    if (!ids.length) return toast("Pick at least one workout", true);
+    const btn = $("button[type=submit]", f);
+    withBusy(btn, async () => {
+      btn.textContent = f.elements.send.checked ? "Building and sending to Garmin…" : "Building…";
+      try {
+        const r = await api("/api/garmin/plan-from-workouts", { method: "POST", body: { workout_ids: ids, days_per_week: Number(f.elements.days.value), send_to_watch: f.elements.send.checked } });
+        const p = r.pushed;
+        $("#garminPlanResult").innerHTML = [`Plan built from: ${r.used.join(", ")}`,
+          ...r.changes.map((c) => `Adjusted: ${c}`),
+          p ? `Sent to your fenix: ${p.saved.length} workouts in Garmin Connect, ${p.scheduled} sessions on your calendar` : "Not sent to Garmin",
+          ...((p && p.errors) || []).map((x) => `⚠ ${x}`)].map((x) => `<li>${esc(x)}</li>`).join("");
+        toast("Plan ready ✓");
+        loaders.plans();
+      } finally { btn.textContent = "Build my plan from these"; }
+    });
+  });
+}));
 
 $("#planForm").addEventListener("submit", async (e) => {
   e.preventDefault();

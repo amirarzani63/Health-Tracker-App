@@ -44,7 +44,8 @@ def auto_setup(data: AutoSetupIn, db: Session = Depends(get_db), svc=Depends(gar
             client = None
     else:
         note = "Garmin isn't connected, so defaults were used. Connect Garmin and run setup again for personal values."
-    result = autosetup.run_auto_setup(db, client, data.focus, data.equipment, data.diet_type)
+    result = autosetup.run_auto_setup(db, client, data.focus, data.equipment, data.diet_type,
+                                      use_garmin_workouts=data.use_garmin_workouts, send_to_watch=data.send_to_watch)
     result["note"] = note
     return result
 
