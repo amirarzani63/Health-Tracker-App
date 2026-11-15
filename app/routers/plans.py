@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import WorkoutPlan
-from app.routers.profile import get_profile
+from app.services.insights import get_profile
 from app.schemas import PlanOut, PlanRequest
 from app.services.workout_planner import generate_plan
 

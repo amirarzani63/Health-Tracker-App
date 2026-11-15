@@ -222,6 +222,8 @@ def upsert_daily(db: Session, day: date, summary: dict, sleep: dict) -> DailySta
         stats.active_calories = _num(summary.get("activeKilocalories"))
         stats.bmr_calories = _num(summary.get("bmrKilocalories"))
         stats.resting_hr = i(summary.get("restingHeartRate"))
+        stats.min_hr = i(summary.get("minHeartRate"))
+        stats.max_hr = i(summary.get("maxHeartRate"))
         stats.avg_stress = i(summary.get("averageStressLevel"))
         stats.body_battery_high = i(summary.get("bodyBatteryHighestValue"))
         stats.body_battery_low = i(summary.get("bodyBatteryLowestValue"))

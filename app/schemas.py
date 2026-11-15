@@ -33,7 +33,7 @@ class ProfileIn(BaseModel):
 
 
 class ProfileOut(ProfileIn, ORM):
-    pass
+    setup_done: bool = False
 
 
 class WeightIn(BaseModel):
@@ -56,6 +56,7 @@ class FoodIn(BaseModel):
     protein_g: float = Field(0, ge=0)
     carbs_g: float = Field(0, ge=0)
     fat_g: float = Field(0, ge=0)
+    fiber_g: float = Field(0, ge=0)
 
 
 class FoodOut(FoodIn, ORM):
@@ -114,6 +115,8 @@ class DailyStatsOut(ORM):
     sleep_s: int | None
     sleep_score: int | None
     intensity_minutes: int | None
+    min_hr: int | None = None
+    max_hr: int | None = None
 
 
 class PlanRequest(BaseModel):
@@ -147,3 +150,34 @@ class GarminMfaIn(BaseModel):
 
 class GarminSyncIn(BaseModel):
     days: int = Field(7, ge=1, le=365)
+
+
+class GoalsIn(BaseModel):
+    calorie_target: float | None = Field(None, ge=800, le=8000)
+    protein_target_g: float | None = Field(None, ge=0, le=500)
+    carbs_target_g: float | None = Field(None, ge=0, le=1000)
+    fat_target_g: float | None = Field(None, ge=0, le=400)
+    fiber_target_g: float = Field(30, ge=0, le=100)
+    steps_target: int = Field(10000, ge=0, le=100000)
+    sleep_target_h: float = Field(7.5, ge=3, le=14)
+    workouts_per_week: int = Field(4, ge=0, le=14)
+    active_minutes_per_week: int = Field(150, ge=0, le=3000)
+    target_weight_kg: float | None = Field(None, gt=20, lt=400)
+
+
+class GoalsOut(GoalsIn, ORM):
+    saved: bool = False
+
+
+ReminderKey = Literal["breakfast", "lunch", "dinner", "workout", "weigh_in", "evening_review"]
+
+
+class ReminderIn(BaseModel):
+    key: ReminderKey
+    enabled: bool
+    time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    days: list[int] = Field(default_factory=lambda: list(range(7)))
+
+
+class ReminderOut(ReminderIn, ORM):
+    pass

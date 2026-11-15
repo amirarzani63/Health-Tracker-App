@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from sqlalchemy import JSON, Date, DateTime, Float, Integer, String, UniqueConstraint
+from sqlalchemy import JSON, Boolean, Date, DateTime, Float, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -24,6 +24,7 @@ class Profile(Base):
     experience: Mapped[str] = mapped_column(String(20), default="intermediate")
     training_days: Mapped[int] = mapped_column(Integer, default=4)
     equipment: Mapped[str] = mapped_column(String(20), default="gym")  # gym | home | bodyweight
+    setup_done: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class WeightEntry(Base):
@@ -49,6 +50,7 @@ class FoodEntry(Base):
     protein_g: Mapped[float] = mapped_column(Float, default=0)
     carbs_g: Mapped[float] = mapped_column(Float, default=0)
     fat_g: Mapped[float] = mapped_column(Float, default=0)
+    fiber_g: Mapped[float] = mapped_column(Float, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
 
@@ -93,6 +95,8 @@ class DailyStats(Base):
     sleep_s: Mapped[int | None] = mapped_column(Integer, nullable=True)
     sleep_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     intensity_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    min_hr: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_hr: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class WorkoutPlan(Base):
@@ -113,3 +117,40 @@ class SyncState(Base):
 
     key: Mapped[str] = mapped_column(String(50), primary_key=True)
     value: Mapped[str] = mapped_column(String(2000), default="")
+
+
+class Goals(Base):
+    """Daily and weekly targets. Nullable nutrition targets mean "calculate automatically"."""
+
+    __tablename__ = "goals"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    calorie_target: Mapped[float | None] = mapped_column(Float, nullable=True)
+    protein_target_g: Mapped[float | None] = mapped_column(Float, nullable=True)
+    carbs_target_g: Mapped[float | None] = mapped_column(Float, nullable=True)
+    fat_target_g: Mapped[float | None] = mapped_column(Float, nullable=True)
+    fiber_target_g: Mapped[float] = mapped_column(Float, default=30)
+    steps_target: Mapped[int] = mapped_column(Integer, default=10000)
+    sleep_target_h: Mapped[float] = mapped_column(Float, default=7.5)
+    workouts_per_week: Mapped[int] = mapped_column(Integer, default=4)
+    active_minutes_per_week: Mapped[int] = mapped_column(Integer, default=150)
+    target_weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    saved: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class Reminder(Base):
+    __tablename__ = "reminders"
+
+    key: Mapped[str] = mapped_column(String(30), primary_key=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    time: Mapped[str] = mapped_column(String(5), default="12:00")  # HH:MM local time
+    days: Mapped[list] = mapped_column(JSON, default=lambda: [0, 1, 2, 3, 4, 5, 6])  # 0 = Monday
+
+
+class ReminderLog(Base):
+    """Which reminders were already shown on a given day (so each fires once)."""
+
+    __tablename__ = "reminder_log"
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    key: Mapped[str] = mapped_column(String(30), primary_key=True)

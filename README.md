@@ -6,22 +6,38 @@ suggestions, and automatically pull activity and wellness data from Garmin Conne
 
 ## Features
 
-| Area | What it does |
+| Tab | What it does |
 | --- | --- |
-| **Dashboard** | Calories left, protein, steps, sleep, training readiness, today's planned session, last-7-day totals, 14-day intake vs. burned chart |
-| **Calorie counter** | Describe what you ate ("2 eggs, toast with butter, a latte"), snap up to 4 photos of your plate, or both. Claude identifies each food, estimates portion, calories and macros, and flags low-confidence guesses; you review and edit the items before they're added to the log |
-| **Diet** | Food log by meal, quick-add food library, macro progress bars, calorie/macro targets (Mifflin-St Jeor), meal suggestions that fit your remaining budget and respect diet type (omnivore / pescatarian / vegetarian / vegan) and foods to avoid |
-| **Exercise** | Manual workout logging with sets/reps/weight, activity history (incl. Garmin Training Effect), weekly volume chart, resting HR / sleep / Body Battery trends |
-| **Plans** | Generates a weekly split (full body, upper/lower, PPL) for 2–6 days, for gym / home / bodyweight, with goal-specific sets/reps/rest, HR-zone cardio days, weekly progression and a deload week |
-| **Garmin** | Connect your Garmin Connect account (MFA supported), sync activities, daily stats (steps, calories, RHR, stress, Body Battery, sleep), and Index scale weigh-ins; auto-syncs every 6 hours |
+| **Today** | Everything at a glance: calories and protein left, steps, workouts and active minutes this week, sleep and weight vs. your goals; a "today's picture" combining what you ate with what your Garmin says you burned (energy balance); recommendations; today's planned workout with a recovery hint; a 14-day eaten-vs-burned chart; quick buttons to log food, a workout or your weight; a setup checklist for first-time use |
+| **Food** | AI calorie counter (describe a meal and/or snap photos: Claude itemizes it, you review and log); searchable food list; calories, protein, carbs, fat and fibre vs. targets; food log by meal; meal ideas that fit what's left of today's calories and protein, filtered by diet type and foods to avoid |
+| **Workouts** | Log workouts with type, duration, distance, calories, heart rate and sets (exercise, reps, weight). "Load today's plan" pre-fills the sets from your active plan. History merges manual workouts with those synced from your fenix |
+| **Plans** | Builds a weekly plan for strength, muscle gain, weight loss, cardio/endurance or general fitness: 2–6 days, gym/home/bodyweight, goal-specific sets/reps/rest, heart-rate-zone cardio days, weekly progression and a deload week |
+| **Progress** | Week / month / 3-month / year views: calories eaten vs. target vs. burned, daily macros, a weekly summary table (days logged, averages, days on target, workouts vs. goal, active minutes, steps, sleep, weight change), body weight vs. target, workouts per week vs. goal, strength progress per exercise (estimated 1-rep max and heaviest set), steps, resting heart rate and sleep |
+| **Settings** | Goals (calories, macros, fibre, steps, sleep, workouts/week, active minutes/week, target weight; blank nutrition targets are calculated for you), profile, reminders, Garmin connection |
 
-### How Garmin data is used
+### Garmin + food log = full daily picture
 
-- **Calorie targets**: on days with Garmin data, your target uses the watch's measured burn
-  (BMR + active calories) instead of a generic activity multiplier, so a long run raises your budget.
-- **Readiness**: low Body Battery, short sleep or high stress turns the dashboard hint amber/red and
-  suggests easier training.
-- **Refuel tips**: long or high-calorie sessions trigger post-workout nutrition tips.
+- **Calorie targets** follow your Garmin-measured burn on synced days (unless you set a fixed target in Goals).
+- **Energy balance**: eaten (your log) minus burned (Garmin) per day, shown on Today and in Progress.
+- **Readiness**: low Body Battery, short sleep or high stress suggests an easier session.
+- **Auto-sync**: when you open the app it syncs if the last sync is over an hour old, and the server re-syncs every 6 hours.
+  Synced data: workouts (with avg/max HR, Training Effect, load), steps, total/active calories, resting/min/max heart
+  rate, stress, Body Battery, sleep and Index-scale weigh-ins.
+
+### Recommendations
+
+Rule-based coaching from the last 7 days vs. your goals, for example: protein consistently low, calories above a
+weight-loss target (or below a gain target), very low intake, too few logged days, workout goal at risk with the days
+left this week (and what's next in your plan), low steps, short sleep, low fibre, and weight trending the wrong way.
+
+### Reminders
+
+Turn on any of: log breakfast/lunch/dinner, planned workout, weigh-in, and an evening nutrition check-in, each with
+its own time and days. They're smart: "log lunch" doesn't fire if lunch is logged, the workout reminder only fires on
+plan days when you haven't trained yet, and the evening check-in tells you the calories and protein you have left.
+Reminders show as in-app banners and, if you allow it, as browser notifications. Notifications only arrive while
+the app is open in a browser tab or added to your home screen. True push notifications to a closed app would need
+web push and HTTPS hosting (see next steps).
 
 ## Quick start
 
@@ -47,6 +63,16 @@ Open http://localhost:8000, fill in **Profile** first (height, weight, goal, die
 **Garmin** and sign in with your Garmin Connect account.
 
 API docs are at http://localhost:8000/docs.
+
+### Use it on your phone
+
+Run the server so other devices on your home Wi-Fi can reach it, then open `http://<your-computer's-IP>:8000`
+on your phone and choose **Add to Home Screen**. It then opens like an app, and the camera button in the calorie
+counter takes photos directly:
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
 
 ### Configuration (environment variables)
 
@@ -98,6 +124,7 @@ app/
     workout_planner.py    Plan generator and readiness hints
     garmin.py             Garmin login/MFA, token storage, sync + data mapping
     food_ai.py            AI calorie counter (Claude vision + structured outputs)
+    insights.py           Daily/weekly summaries, goal progress, recommendations, reminders, strength progress
   static/                 Single-page frontend (HTML/CSS/JS, vendored Chart.js)
 tests/                    pytest suite (uses a fake Garmin client)
 ```
@@ -110,6 +137,7 @@ pytest
 
 ## Ideas for next steps
 
+- Web push notifications so reminders arrive even when the app is closed (needs HTTPS hosting)
 - Barcode scanning / Open Food Facts lookup for packaged foods
 - Remember frequent meals for one-tap re-logging
 - AI-generated meal plans and plan adjustments (e.g. with the Claude API)

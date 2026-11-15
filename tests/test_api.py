@@ -89,7 +89,7 @@ class FakeGarmin:
 
     def get_user_summary(self, d):
         return {"totalSteps": 12000, "totalKilocalories": 2900, "activeKilocalories": 900,
-                "bmrKilocalories": 1800, "restingHeartRate": 48, "averageStressLevel": 25,
+                "bmrKilocalories": 1800, "restingHeartRate": 48, "minHeartRate": 44, "maxHeartRate": 172, "averageStressLevel": 25,
                 "bodyBatteryHighestValue": 85, "bodyBatteryLowestValue": 20,
                 "moderateIntensityMinutes": 10, "vigorousIntensityMinutes": 30}
 

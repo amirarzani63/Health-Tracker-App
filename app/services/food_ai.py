@@ -33,6 +33,7 @@ as their own items when they are significant (roughly 30 kcal or more).
 - For packaged foods with a readable nutrition label, use the label values.
 - For restaurant or chain dishes, use typical published values for that dish when you know them.
 - Prefer realistic, typical values over optimistic ones; restaurant portions are usually large.
+- Estimate dietary fibre too (0 for meat, fish, eggs, oils and most drinks).
 - Use macros consistent with the calories (protein and carbs about 4 kcal/g, fat about 9 kcal/g, alcohol about 7 kcal/g).
 
 Set confidence to "low" when the portion or the food itself is hard to tell, and say in notes \
@@ -48,6 +49,7 @@ class FoodItemEstimate(BaseModel):
     protein_g: float
     carbs_g: float
     fat_g: float
+    fiber_g: float
     confidence: Literal["high", "medium", "low"]
 
 
@@ -150,9 +152,9 @@ class FoodAnalyzer:
         result: MealEstimate = response.parsed_output
         items = [i.model_dump() for i in result.items]
         for i in items:
-            for k in ("calories", "protein_g", "carbs_g", "fat_g"):
+            for k in ("calories", "protein_g", "carbs_g", "fat_g", "fiber_g"):
                 i[k] = max(0.0, round(float(i[k]), 1))
-        totals = {k: round(sum(i[k] for i in items), 1) for k in ("calories", "protein_g", "carbs_g", "fat_g")}
+        totals = {k: round(sum(i[k] for i in items), 1) for k in ("calories", "protein_g", "carbs_g", "fat_g", "fiber_g")}
         return {
             "items": items,
             "totals": totals,

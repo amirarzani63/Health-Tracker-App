@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.db import SessionLocal, init_db
-from app.routers import dashboard, diet, exercise, food_ai, garmin, plans, profile
+from app.routers import dashboard, diet, exercise, food_ai, garmin, insights, plans, profile
 from app.services.garmin import GarminError, garmin_service
 
 log = logging.getLogger("health")
@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Health Tracker", lifespan=lifespan)
-for r in (profile, diet, food_ai, exercise, plans, garmin, dashboard):
+for r in (profile, diet, food_ai, exercise, plans, garmin, insights, dashboard):
     app.include_router(r.router)
 
 app.mount("/static", StaticFiles(directory=STATIC), name="static")

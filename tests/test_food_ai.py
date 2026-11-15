@@ -32,9 +32,9 @@ def fake_analyzer(result=None, stop_reason="end_turn"):
 EGGS = MealEstimate(
     items=[
         FoodItemEstimate(name="Scrambled eggs", portion="2 large eggs", calories=182, protein_g=12.4,
-                         carbs_g=1.6, fat_g=13.8, confidence="high"),
+                         carbs_g=1.6, fat_g=13.8, fiber_g=0, confidence="high"),
         FoodItemEstimate(name="Sourdough toast with butter", portion="1 slice + 1 tsp", calories=155.44,
-                         protein_g=4, carbs_g=22, fat_g=5.5, confidence="medium"),
+                         protein_g=4, carbs_g=22, fat_g=5.5, fiber_g=1.2, confidence="medium"),
     ],
     meal_guess="breakfast",
     notes="Assumed eggs cooked in a little butter.",

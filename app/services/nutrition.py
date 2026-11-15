@@ -40,14 +40,15 @@ class Targets:
     protein_g: float
     carbs_g: float
     fat_g: float
-    source: str  # "garmin" if based on measured expenditure, else "estimate"
+    source: str  # "goal" (your own target), "garmin" (measured burn) or "estimate"
+    fiber_g: float = 30
 
     def dict(self):
         return {k: round(v) if isinstance(v, float) else v for k, v in asdict(self).items()}
 
 
 def compute_targets(profile, garmin_active_calories: float | None = None,
-                    garmin_bmr: float | None = None, today: date | None = None) -> Targets:
+                    garmin_bmr: float | None = None, today: date | None = None, goals=None) -> Targets:
     bmr = bmr_mifflin(profile.sex, profile.weight_kg, profile.height_cm, age_on(profile.birth_year, today))
     if garmin_active_calories is not None:
         # Measured: watch BMR (or ours) + actual active burn, plus ~10% thermic effect of food.
@@ -60,10 +61,16 @@ def compute_targets(profile, garmin_active_calories: float | None = None,
 
     floor = 1500 if profile.sex == "male" else 1200
     calories = max(floor, tdee + GOAL_ADJUST.get(profile.goal, 0))
-    protein = PROTEIN_PER_KG.get(profile.goal, 1.6) * profile.weight_kg
-    fat = calories * FAT_SHARE / 9
-    carbs = max(0.0, (calories - protein * 4 - fat * 9) / 4)
-    return Targets(bmr, tdee, calories, protein, carbs, fat, source)
+    g = goals
+    if g is not None and g.calorie_target:
+        calories, source = float(g.calorie_target), "goal"
+    protein = (g.protein_target_g if g is not None and g.protein_target_g is not None
+               else PROTEIN_PER_KG.get(profile.goal, 1.6) * profile.weight_kg)
+    fat = g.fat_target_g if g is not None and g.fat_target_g is not None else calories * FAT_SHARE / 9
+    carbs = (g.carbs_target_g if g is not None and g.carbs_target_g is not None
+             else max(0.0, (calories - protein * 4 - fat * 9) / 4))
+    fiber = g.fiber_target_g if g is not None and g.fiber_target_g is not None else 30
+    return Targets(bmr, tdee, calories, protein, carbs, fat, source, fiber)
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +138,30 @@ MEAL_IDEAS = [
     {"meal": "snack", "name": "Rice cakes with cottage cheese", "calories": 190, "protein_g": 16, "carbs_g": 24, "fat_g": 2, "tags": ["dairy"]},
 ]
 
+# Approximate fibre (g) per serving / per meal idea, merged into the tables above.
+_FIBER = {
+    "Oatmeal (1 cup cooked)": 4, "Banana, medium": 3.1, "Apple, medium": 4.4, "Blueberries (1 cup)": 3.6,
+    "Tofu, firm (150g)": 3.5, "Lentils, cooked (1 cup)": 15.6, "Chickpeas, cooked (1 cup)": 12.5,
+    "Brown rice, cooked (1 cup)": 3.5, "Quinoa, cooked (1 cup)": 5.2, "Sweet potato, baked (medium)": 3.8,
+    "Whole wheat bread (slice)": 1.9, "Whole wheat pasta, cooked (1 cup)": 6.3, "Broccoli (1 cup)": 5.1,
+    "Mixed salad greens (2 cups)": 2, "Avocado (half)": 5, "Almonds (28g)": 3.5, "Peanut butter (2 tbsp)": 1.9,
+    "Pea protein (1 scoop)": 1,
+    "Greek yogurt bowl with berries, oats & honey": 5, "3-egg veggie omelette with whole-grain toast": 4,
+    "Overnight oats with pea protein, banana & PB": 8, "Tofu scramble with spinach, peppers & toast": 6,
+    "Cottage cheese with pineapple & almonds": 3, "Grilled chicken quinoa bowl with roasted veg": 8,
+    "Lentil & vegetable soup with crusty bread": 16, "Tuna salad wrap with greens & avocado": 8,
+    "Chickpea, feta & cucumber Mediterranean salad": 11, "Tofu & edamame soba noodle bowl": 8,
+    "Black bean & sweet potato burrito bowl": 18, "Baked salmon, sweet potato & broccoli": 9,
+    "Lean beef stir-fry with brown rice": 6, "Chicken fajitas with peppers & corn tortillas": 7,
+    "Red lentil dal with basmati rice & spinach": 14, "Whole-wheat pasta with turkey bolognese": 10,
+    "Shrimp & vegetable coconut curry with rice": 5, "Tempeh & vegetable peanut stir-fry": 9,
+    "Protein shake (whey) with banana": 3, "Pea-protein smoothie with berries": 5,
+    "Apple with 2 tbsp peanut butter": 6.5, "Hummus with carrot & cucumber sticks": 6,
+    "Hard-boiled eggs (2) & cherry tomatoes": 1.5, "Rice cakes with cottage cheese": 1,
+}
+for _item in FOODS + MEAL_IDEAS:
+    _item["fiber_g"] = _FIBER.get(_item["name"], 0)
+
 EXCLUDED_BY_DIET = {
     "omnivore": set(),
     "pescatarian": {"meat"},
@@ -191,6 +222,9 @@ def suggest_meals(profile, targets: Targets, consumed: dict, logged_meals: set[s
         tips.append(f"Still {round(remaining['protein_g'])} g protein to go. Prioritise a protein source at your next meal.")
     if targets.source == "garmin":
         tips.append("Today's target includes the active calories your Garmin recorded.")
+    remaining_fiber = targets.fiber_g - consumed.get("fiber_g", 0)
+    if remaining_fiber > 15 and open_meals:
+        tips.append(f"{round(remaining_fiber)} g fibre to go: beans, lentils, berries, oats and veg are easy wins.")
     if profile.goal == "lose":
         tips.append("Fill half the plate with vegetables to stay full on fewer calories.")
     elif profile.goal == "gain":

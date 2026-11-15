@@ -5,26 +5,22 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import Activity, DailyStats, FoodEntry
-from app.routers.profile import get_profile
+from app.models import Activity, FoodEntry
 from app.schemas import FoodIn, FoodOut
-from app.services import nutrition
+from app.services import insights, nutrition
+from app.services.insights import get_profile
 
 router = APIRouter(prefix="/api", tags=["diet"])
 
 
 def day_totals(db: Session, day: date) -> tuple[dict, list[FoodEntry]]:
     entries = db.scalars(select(FoodEntry).where(FoodEntry.day == day).order_by(FoodEntry.created_at)).all()
-    totals = {k: sum(getattr(e, k) for e in entries) for k in ("calories", "protein_g", "carbs_g", "fat_g")}
+    totals = {k: sum(getattr(e, k) or 0 for e in entries) for k in insights.MACROS}
     return totals, entries
 
 
 def targets_for(db: Session, day: date):
-    profile = get_profile(db)
-    stats = db.get(DailyStats, day)
-    active = stats.active_calories if stats and stats.active_calories is not None else None
-    bmr = stats.bmr_calories if stats else None
-    return profile, nutrition.compute_targets(profile, active, bmr, today=day)
+    return get_profile(db), insights.targets_for(db, day)
 
 
 @router.get("/foods", response_model=list[FoodOut])

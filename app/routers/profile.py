@@ -3,19 +3,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import Profile, WeightEntry
+from app.models import WeightEntry
 from app.schemas import ProfileIn, ProfileOut, WeightIn, WeightOut
+from app.services.insights import get_profile
 
 router = APIRouter(prefix="/api", tags=["profile"])
-
-
-def get_profile(db: Session) -> Profile:
-    profile = db.get(Profile, 1)
-    if profile is None:
-        profile = Profile(id=1, allergies=[])
-        db.add(profile)
-        db.commit()
-    return profile
 
 
 @router.get("/profile", response_model=ProfileOut)
@@ -28,6 +20,7 @@ def update_profile(data: ProfileIn, db: Session = Depends(get_db)):
     profile = get_profile(db)
     for k, v in data.model_dump().items():
         setattr(profile, k, v)
+    profile.setup_done = True
     db.commit()
     return profile
 
