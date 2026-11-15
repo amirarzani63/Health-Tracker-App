@@ -1018,7 +1018,7 @@ async function checkReminders() {
   for (const r of due) {
     showBanner(r);
     if ("Notification" in window && Notification.permission === "granted" && document.hidden) {
-      try { new Notification(r.title, { body: r.body, icon: "/static/icon.svg", tag: r.key }); } catch {}
+      try { new Notification(r.title, { body: r.body, icon: "/static/icon-192.png", tag: r.key }); } catch {}
     }
   }
   api("/api/reminders/ack", { method: "POST", body: { day: isoDate(new Date()), keys: due.map((r) => r.key) } }).catch(() => {});
