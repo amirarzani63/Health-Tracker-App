@@ -27,7 +27,8 @@ IS_SQLITE = DATABASE_URL.startswith("sqlite")
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if IS_SQLITE else {},
+    # Postgres: no server-side prepared statements, so pooled endpoints (e.g. Neon "-pooler" / PgBouncer) work too.
+    connect_args={"check_same_thread": False} if IS_SQLITE else {"prepare_threshold": None},
     pool_pre_ping=not IS_SQLITE,  # free hosted databases close idle connections
 )
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
