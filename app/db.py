@@ -7,11 +7,28 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 DATA_DIR = Path(os.getenv("HEALTH_DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATA_DIR / 'health.db'}")
+
+def _database_url() -> str:
+    url = os.getenv("DATABASE_URL", "").strip()
+    if not url:
+        if os.getenv("REQUIRE_DATABASE_URL"):
+            # Hosted on a server without a persistent disk: a local SQLite file would be wiped on restart.
+            raise RuntimeError("DATABASE_URL is not set. Add your database connection string in the host's settings.")
+        return f"sqlite:///{DATA_DIR / 'health.db'}"
+    # Hosted Postgres (Neon, Supabase, Render...) hands out postgres:// URLs; use the psycopg 3 driver.
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
+DATABASE_URL = _database_url()
+IS_SQLITE = DATABASE_URL.startswith("sqlite")
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
+    connect_args={"check_same_thread": False} if IS_SQLITE else {},
+    pool_pre_ping=not IS_SQLITE,  # free hosted databases close idle connections
 )
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
@@ -44,7 +61,7 @@ def _add_missing_columns():
                 ddl = f'ALTER TABLE "{table.name}" ADD COLUMN "{col.name}" {col.type.compile(engine.dialect)}'
                 default = col.default.arg if col.default is not None and col.default.is_scalar else None
                 if isinstance(default, bool):
-                    ddl += f" DEFAULT {int(default)}"
+                    ddl += " DEFAULT TRUE" if default else " DEFAULT FALSE"
                 elif isinstance(default, (int, float)):
                     ddl += f" DEFAULT {default}"
                 elif isinstance(default, str):

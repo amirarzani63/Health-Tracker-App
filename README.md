@@ -74,41 +74,52 @@ counter takes photos directly:
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-## Put it on your phone (host it online)
+## Put it on your phone (free hosting)
 
-The easiest way to use the app on an iPhone or Android phone, from anywhere, is to host it on
-[Render](https://render.com). Everything below can be done from your phone's browser.
+To use the app on your iPhone from anywhere, with no computer left on, host it for free on
+[Render](https://render.com), with your data in a free [Neon](https://neon.tech) Postgres database.
+Everything below can be done from your phone's browser.
 
-1. Sign up at render.com (signing up with GitHub is quickest).
-2. In the Render dashboard tap **New → Blueprint**, connect GitHub and pick **Health-Tracker-App**.
-   Render reads `render.yaml` from the `main` branch and sets everything up.
-3. When asked, enter:
-   - `APP_PASSWORD`: the password you'll use to sign in. Make it long; the app is on the internet.
-   - `ANTHROPIC_API_KEY`: optional, for the photo/text calorie counter (leave blank to skip).
+**1. Create the free database (Neon)**
+1. Go to neon.tech, sign up (GitHub sign-in is quickest) and create a project (any name, the region nearest you).
+2. On the project dashboard tap **Connect** and copy the connection string. It looks like
+   `postgresql://user:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require`. Keep it private.
+
+**2. Create the app (Render)**
+1. Go to render.com and sign up with GitHub. Allow access to the **Health-Tracker-App** repo.
+2. Tap **New → Blueprint** and pick **Health-Tracker-App**. Render reads `render.yaml` and uses the **Free** plan.
+3. Fill in:
+   - `DATABASE_URL`: the Neon connection string from step 1.
+   - `APP_PASSWORD`: the password you'll sign in with. Make it long; the app is on the internet.
+   - `ANTHROPIC_API_KEY`: optional, for the photo/text calorie counter. Leave blank to skip.
 4. Tap **Apply** and wait a few minutes for the first build. You get an address like
    `https://health-tracker-xxxx.onrender.com`.
-5. On your iPhone, open that address in **Safari**, sign in, then tap **Share → Add to Home Screen**.
-   Open it from the new home-screen icon and sign in once more (iOS keeps home-screen apps separate from Safari).
+
+**3. Add it to your iPhone**
+1. Open that address in **Safari** and sign in. Then tap **Share → Add to Home Screen**.
+2. Open it from the new icon and sign in once more (iOS keeps home-screen apps separate from Safari).
    You stay signed in for 90 days.
-6. In the app, go to **Settings → Garmin Connect** and connect your account.
+3. Go to **Settings → Garmin Connect** and connect your account.
 
-Costs: the blueprint uses Render's paid **Starter** instance plus a 1 GB persistent disk, because free
-instances have no disk and would lose your data on every restart. See render.com/pricing for current prices.
-Every push to `main` redeploys automatically.
+**What to expect on the free plan**
+- After ~15 minutes without use the server sleeps. The next open can take up to a minute while it wakes up;
+  after that it's normal speed. Your data is safe in the database the whole time.
+- Garmin data syncs when you open the app (the 6-hourly background sync only runs while the server is awake).
+- Every push to `main` redeploys automatically.
 
-The `Dockerfile` also works on other hosts (Fly.io, Railway, a VPS). Mount a persistent volume at `/data`
-and set `APP_PASSWORD`.
+The `Dockerfile` also works on other hosts (Fly.io, Railway, a VPS). Set `DATABASE_URL` and `APP_PASSWORD`,
+or mount a persistent volume at `/data` to use the built-in SQLite database instead.
 
-**If Garmin sign-in fails from the server:** Garmin sometimes blocks logins from cloud data centers.
-If that happens, connect Garmin once from the app running on your own computer, then copy the
-`data/garmin_tokens` folder to the server's `/data/garmin_tokens`, or ask for help.
+**If Garmin sign-in fails from the server:** Garmin sometimes blocks logins from cloud data centers. If that
+happens, connect Garmin once from the app running on your own computer pointed at the same `DATABASE_URL`;
+the saved session is stored in the database and the server will use it.
 
 ### Configuration (environment variables)
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `HEALTH_DATA_DIR` | `./data` | Where the SQLite DB and Garmin session tokens live |
-| `DATABASE_URL` | `sqlite:///<data dir>/health.db` | Any SQLAlchemy URL |
+| `DATABASE_URL` | `sqlite:///<data dir>/health.db` | Postgres (`postgres://…`, e.g. Neon) or any SQLAlchemy URL |
 | `GARMIN_AUTO_SYNC_HOURS` | `6` | Background sync interval; `0` disables it |
 | `ANTHROPIC_API_KEY` | – | Enables the AI calorie counter |
 | `APP_PASSWORD` | – | Turns on the sign-in page. **Required when the app is on the internet** |
@@ -122,8 +133,8 @@ app uses the community [`garminconnect`](https://github.com/cyberjunky/python-ga
 library, which talks to the same endpoints as the Garmin Connect website.
 
 - Your password is sent to Garmin once to obtain session tokens and is **never stored**.
-- Tokens are saved in `data/garmin_tokens/` (permissions `600`) and refreshed automatically.
-  Delete that folder or click **Disconnect** to revoke local access.
+- Session tokens are saved in the app's database and refreshed automatically.
+  Click **Disconnect** to delete them.
 - If your account has two-step verification, the app asks for the code Garmin sends you.
 - This is intended for personal, self-hosted use of your own data. Because it uses unofficial
   endpoints, a Garmin-side change can occasionally break sync until the library is updated

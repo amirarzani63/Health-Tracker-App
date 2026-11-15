@@ -1,22 +1,22 @@
-# One-click deploy on Render: Dashboard -> New -> Blueprint -> pick this repo.
+# Free hosting on Render: Dashboard -> New -> Blueprint -> pick this repo.
+# Your data lives in a free Postgres database (e.g. Neon), so nothing is lost when the
+# free server sleeps or restarts. See README -> "Put it on your phone".
 services:
   - type: web
     name: health-tracker
     runtime: docker
     branch: main
-    plan: starter          # a paid plan is needed for the persistent disk below
+    plan: free
     healthCheckPath: /healthz
     autoDeploy: true
-    disk:
-      name: data
-      mountPath: /data     # SQLite database and Garmin session tokens live here
-      sizeGB: 1
     envVars:
-      - key: HEALTH_DATA_DIR
-        value: /data
-      - key: APP_PASSWORD  # you'll be asked for this during setup
+      - key: DATABASE_URL       # paste the connection string from Neon (or any Postgres)
+        sync: false
+      - key: APP_PASSWORD       # the password you'll sign in with
         sync: false
       - key: ANTHROPIC_API_KEY  # optional: enables the photo/text calorie counter
         sync: false
       - key: SECRET_KEY
         generateValue: true
+      - key: REQUIRE_DATABASE_URL  # refuse to start on a throwaway local database
+        value: "1"

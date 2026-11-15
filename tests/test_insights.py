@@ -182,10 +182,10 @@ def test_migration_adds_columns(tmp_path, monkeypatch):
 def test_sync_if_stale(client, tmp_path):
     from app.main import app
     from app.routers import garmin as garmin_router
-    from app.services.garmin import GarminService
+    from app.services.garmin import GarminService, MemoryTokenStore
     from tests.test_api import FakeGarmin
 
-    svc = GarminService(factory=FakeGarmin, token_dir=tmp_path / "tok")
+    svc = GarminService(factory=FakeGarmin, store=MemoryTokenStore(), legacy_token_dir=tmp_path / "tok")
     app.dependency_overrides[garmin_router.service] = lambda: svc
     try:
         assert client.post("/api/garmin/sync-if-stale", json={}).json() == {"synced": False, "reason": "not_connected"}

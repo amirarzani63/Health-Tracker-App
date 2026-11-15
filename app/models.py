@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, Float, Integer, String, UniqueConstraint
+from sqlalchemy import JSON, Boolean, Date, DateTime, Float, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -110,6 +110,15 @@ class WorkoutPlan(Base):
     progression: Mapped[list] = mapped_column(JSON, default=list)
     active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+
+
+class StoredSecret(Base):
+    """Small private blobs that must survive restarts, e.g. Garmin session tokens."""
+
+    __tablename__ = "stored_secrets"
+
+    key: Mapped[str] = mapped_column(String(50), primary_key=True)
+    value: Mapped[str] = mapped_column(Text, default="")
 
 
 class SyncState(Base):

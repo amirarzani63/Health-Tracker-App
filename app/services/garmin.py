@@ -3,15 +3,15 @@
 Uses the community `garminconnect` library, which talks to the same
 endpoints as the Garmin Connect website. Your password is only used for
 the initial login and is never stored; the session tokens it produces are
-cached in ``data/garmin_tokens`` (``chmod 600``) and refreshed
-automatically, so later syncs don't need the password again.
+saved in the app's database (so they survive restarts on hosts without a
+persistent disk) and refreshed automatically, so later syncs don't need
+the password again.
 
 Garmin's official Health/Activity APIs require an approved business
 developer account; this approach is meant for personal, self-hosted use.
 """
 
 import logging
-import os
 import threading
 from datetime import date, datetime, timedelta
 from typing import Any, Callable
@@ -19,12 +19,13 @@ from typing import Any, Callable
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db import DATA_DIR
-from app.models import Activity, DailyStats, SyncState, WeightEntry
+from app.db import DATA_DIR, SessionLocal
+from app.models import Activity, DailyStats, StoredSecret, SyncState, WeightEntry
 
 log = logging.getLogger(__name__)
 
-TOKEN_DIR = DATA_DIR / "garmin_tokens"
+LEGACY_TOKEN_DIR = DATA_DIR / "garmin_tokens"  # where older versions kept tokens
+TOKEN_KEY = "garmin_tokens"
 
 # Factory is swappable so tests can inject a fake client.
 ClientFactory = Callable[..., Any]
@@ -40,31 +41,68 @@ class GarminError(Exception):
     pass
 
 
+class DbTokenStore:
+    """Keeps the Garmin session tokens (a small JSON string) in the database."""
+
+    def get(self) -> str | None:
+        with SessionLocal() as db:
+            row = db.get(StoredSecret, TOKEN_KEY)
+            return row.value if row and row.value else None
+
+    def set(self, value: str) -> None:
+        with SessionLocal() as db:
+            row = db.get(StoredSecret, TOKEN_KEY) or StoredSecret(key=TOKEN_KEY)
+            row.value = value
+            db.add(row)
+            db.commit()
+
+    def clear(self) -> None:
+        with SessionLocal() as db:
+            row = db.get(StoredSecret, TOKEN_KEY)
+            if row:
+                db.delete(row)
+                db.commit()
+
+
+class MemoryTokenStore:
+    def __init__(self):
+        self.value = None
+
+    def get(self):
+        return self.value
+
+    def set(self, value):
+        self.value = value
+
+    def clear(self):
+        self.value = None
+
+
 class GarminService:
-    def __init__(self, factory: ClientFactory = _default_factory, token_dir=TOKEN_DIR):
+    def __init__(self, factory: ClientFactory = _default_factory, store=None, legacy_token_dir=LEGACY_TOKEN_DIR):
         self.factory = factory
-        self.token_dir = token_dir
+        self.store = store if store is not None else DbTokenStore()
+        self.legacy_token_dir = legacy_token_dir
         self._client = None
         self._pending_mfa: tuple[Any, Any] | None = None  # (client, client_state)
         self._lock = threading.Lock()
 
     # ------------------------------------------------------------------ auth
+    def _legacy_tokens_present(self) -> bool:
+        d = self.legacy_token_dir
+        return bool(d) and d.exists() and any(d.iterdir())
+
     def has_tokens(self) -> bool:
-        return self.token_dir.exists() and any(self.token_dir.iterdir())
-
-    def _secure_tokens(self):
-        self.token_dir.mkdir(parents=True, exist_ok=True)
-        os.chmod(self.token_dir, 0o700)
-        for f in self.token_dir.iterdir():
-            os.chmod(f, 0o600)
-
-    def _dump_tokens(self, client):
-        self.token_dir.mkdir(parents=True, exist_ok=True)
         try:
-            client.client.dump(str(self.token_dir))
+            return bool(self.store.get()) or self._legacy_tokens_present()
+        except Exception:  # database unavailable
+            return False
+
+    def _save_tokens(self, client):
+        try:
+            self.store.set(client.client.dumps())
         except Exception as e:  # pragma: no cover - depends on library internals
             log.warning("Could not save Garmin tokens: %s", e)
-        self._secure_tokens()
 
     def login(self, email: str, password: str) -> dict:
         """Log in with credentials. Returns {"status": "ok"|"needs_mfa"}."""
@@ -78,7 +116,7 @@ class GarminService:
                 self._pending_mfa = (client, state)
                 return {"status": "needs_mfa"}
             self._client = client
-            self._dump_tokens(client)
+            self._save_tokens(client)
             return {"status": "ok"}
 
     def submit_mfa(self, code: str) -> dict:
@@ -92,28 +130,33 @@ class GarminService:
                 raise GarminError(f"MFA verification failed: {e}") from e
             self._pending_mfa = None
             self._client = client
-            self._dump_tokens(client)
+            self._save_tokens(client)
             return {"status": "ok"}
 
     def client(self):
         if self._client is not None:
             return self._client
-        if not self.has_tokens():
+        tokens = self.store.get()
+        if not tokens and self._legacy_tokens_present():
+            tokens = str(self.legacy_token_dir)  # one-time migration from the old token folder
+        if not tokens:
             raise GarminError("Not connected to Garmin Connect. Log in first.")
         client = self.factory()
         try:
-            client.login(str(self.token_dir))
+            client.login(tokens)  # accepts the saved JSON string (or a folder path)
         except Exception as e:
             raise GarminError(f"Saved Garmin session is no longer valid, please log in again ({e}).") from e
         self._client = client
+        self._save_tokens(client)
         return client
 
     def logout(self):
         with self._lock:
             self._client = None
             self._pending_mfa = None
-            if self.token_dir.exists():
-                for f in self.token_dir.iterdir():
+            self.store.clear()
+            if self._legacy_tokens_present():
+                for f in self.legacy_token_dir.iterdir():
                     f.unlink()
 
     def status(self, db: Session) -> dict:
@@ -162,6 +205,7 @@ class GarminService:
         except Exception as e:
             result["errors"].append(f"body composition: {e}")
 
+        self._save_tokens(client)  # tokens may have been refreshed during the sync
         state = db.get(SyncState, "garmin_last_sync") or SyncState(key="garmin_last_sync")
         state.value = datetime.now().isoformat(timespec="seconds")
         db.add(state)

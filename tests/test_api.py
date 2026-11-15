@@ -1,6 +1,6 @@
 from datetime import date
 
-from app.services.garmin import GarminService
+from app.services.garmin import GarminService, MemoryTokenStore
 from app.routers import garmin as garmin_router
 from app.main import app
 
@@ -60,9 +60,8 @@ def test_weight_updates_profile(client):
 
 # ------------------------------------------------------------------ garmin
 class FakeInner:
-    def dump(self, path):
-        import pathlib
-        pathlib.Path(path, "garmin_tokens.json").write_text("{}")
+    def dumps(self):
+        return '{"di_token": "tok"}'
 
 
 class FakeGarmin:
@@ -101,18 +100,20 @@ class FakeGarmin:
 
 
 def _use_fake(tmp_path):
-    svc = GarminService(factory=FakeGarmin, token_dir=tmp_path / "tokens")
+    svc = GarminService(factory=FakeGarmin, store=MemoryTokenStore(), legacy_token_dir=tmp_path / "tokens")
     app.dependency_overrides[garmin_router.service] = lambda: svc
     return svc
 
 
 def test_garmin_login_sync_and_idempotency(client, tmp_path):
     FakeGarmin.mfa = False
-    _use_fake(tmp_path)
+    svc = _use_fake(tmp_path)
     try:
         assert client.get("/api/garmin/status").json()["connected"] is False
         assert client.post("/api/garmin/login", json={"email": "a@b.c", "password": "x"}).json() == {"status": "ok"}
-        assert (tmp_path / "tokens" / "garmin_tokens.json").exists()
+        assert svc.store.get() == '{"di_token": "tok"}'
+        svc._client = None  # simulate a restart: must reconnect from the saved tokens
+        assert client.get("/api/garmin/status").json()["connected"] is True
 
         r = client.post("/api/garmin/sync", json={"days": 2}).json()
         assert r["activities_added"] == 1 and r["days_synced"] == 2 and r["weights"] == 1 and not r["errors"]
