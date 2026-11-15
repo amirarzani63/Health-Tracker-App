@@ -22,6 +22,10 @@ async function api(path, opts = {}) {
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
+  if (res.status === 401 && !path.startsWith("/api/garmin/")) {
+    location.href = "/login"; // session expired
+    throw new Error("Please sign in again");
+  }
   if (!res.ok) {
     let msg = res.statusText;
     try {
@@ -396,6 +400,7 @@ $("#aiForm").addEventListener("submit", async (e) => {
   btn.textContent = "Analysing…";
   try {
     const res = await fetch("/api/foods/analyze", { method: "POST", body: fd });
+    if (res.status === 401) { location.href = "/login"; return; }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Analysis failed");
     ai.items = data.items.map((i) => ({ ...i, keep: true }));
@@ -887,6 +892,12 @@ $("#prevDay").onclick = () => shiftDay(-1);
 $("#nextDay").onclick = () => shiftDay(1);
 $("#todayBtn").onclick = () => setDay(isoDate(new Date()));
 $("#day").value = state.day;
+
+$("#signOut").addEventListener("click", async () => {
+  await api("/api/auth/logout", { method: "POST" }).catch(() => {});
+  location.href = "/login";
+});
+api("/api/auth/status").then((s) => $("#accountCard").classList.toggle("hidden", !s.enabled)).catch(() => {});
 
 (async () => {
   try {

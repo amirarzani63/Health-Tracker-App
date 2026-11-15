@@ -74,6 +74,35 @@ counter takes photos directly:
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
+## Put it on your phone (host it online)
+
+The easiest way to use the app on an iPhone or Android phone, from anywhere, is to host it on
+[Render](https://render.com). Everything below can be done from your phone's browser.
+
+1. Sign up at render.com (signing up with GitHub is quickest).
+2. In the Render dashboard tap **New → Blueprint**, connect GitHub and pick **Health-Tracker-App**.
+   Render reads `render.yaml` from the `main` branch and sets everything up.
+3. When asked, enter:
+   - `APP_PASSWORD`: the password you'll use to sign in. Make it long; the app is on the internet.
+   - `ANTHROPIC_API_KEY`: optional, for the photo/text calorie counter (leave blank to skip).
+4. Tap **Apply** and wait a few minutes for the first build. You get an address like
+   `https://health-tracker-xxxx.onrender.com`.
+5. On your iPhone, open that address in **Safari**, sign in, then tap **Share → Add to Home Screen**.
+   Open it from the new home-screen icon and sign in once more (iOS keeps home-screen apps separate from Safari).
+   You stay signed in for 90 days.
+6. In the app, go to **Settings → Garmin Connect** and connect your account.
+
+Costs: the blueprint uses Render's paid **Starter** instance plus a 1 GB persistent disk, because free
+instances have no disk and would lose your data on every restart. See render.com/pricing for current prices.
+Every push to `main` redeploys automatically.
+
+The `Dockerfile` also works on other hosts (Fly.io, Railway, a VPS). Mount a persistent volume at `/data`
+and set `APP_PASSWORD`.
+
+**If Garmin sign-in fails from the server:** Garmin sometimes blocks logins from cloud data centers.
+If that happens, connect Garmin once from the app running on your own computer, then copy the
+`data/garmin_tokens` folder to the server's `/data/garmin_tokens`, or ask for help.
+
 ### Configuration (environment variables)
 
 | Variable | Default | Purpose |
@@ -82,6 +111,8 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 | `DATABASE_URL` | `sqlite:///<data dir>/health.db` | Any SQLAlchemy URL |
 | `GARMIN_AUTO_SYNC_HOURS` | `6` | Background sync interval; `0` disables it |
 | `ANTHROPIC_API_KEY` | – | Enables the AI calorie counter |
+| `APP_PASSWORD` | – | Turns on the sign-in page. **Required when the app is on the internet** |
+| `SECRET_KEY` | derived from the password | Signs session cookies; changing it signs out all devices |
 | `FOOD_AI_MODEL` | `claude-opus-5-5` | Claude model used for meal analysis |
 
 ## Garmin Connect: how the connection works
@@ -98,9 +129,8 @@ library, which talks to the same endpoints as the Garmin Connect website.
   endpoints, a Garmin-side change can occasionally break sync until the library is updated
   (`pip install -U garminconnect`).
 
-**Security note:** the app has no login of its own — it's designed to run on your own machine or
-home network. Don't expose it to the internet without putting it behind authentication
-(e.g. a reverse proxy with basic auth, Tailscale, or Cloudflare Access).
+**Security note:** set `APP_PASSWORD` before putting the app on the internet. Without it there is no
+sign-in page, which is only fine on your own computer or home network. Failed sign-ins are rate-limited.
 
 ## AI calorie counter: how it works
 

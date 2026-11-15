@@ -2,18 +2,18 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app import auth
 from app.db import SessionLocal, init_db
+from app.paths import STATIC
 from app.routers import dashboard, diet, exercise, food_ai, garmin, insights, plans, profile
 from app.services.garmin import GarminError, garmin_service
 
 log = logging.getLogger("health")
-STATIC = Path(__file__).parent / "static"
 AUTO_SYNC_HOURS = float(os.getenv("GARMIN_AUTO_SYNC_HOURS", "6"))
 
 
@@ -38,6 +38,9 @@ async def auto_sync_loop():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    if not auth.enabled():
+        log.warning("APP_PASSWORD is not set: the app is open to anyone who can reach it. "
+                    "Set APP_PASSWORD before putting it on the internet.")
     task = asyncio.create_task(auto_sync_loop()) if AUTO_SYNC_HOURS > 0 else None
     yield
     if task:
@@ -45,10 +48,17 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Health Tracker", lifespan=lifespan)
+app.middleware("http")(auth.auth_middleware)
+app.include_router(auth.router)
 for r in (profile, diet, food_ai, exercise, plans, garmin, insights, dashboard):
     app.include_router(r.router)
 
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+
+
+@app.get("/healthz", include_in_schema=False)
+def healthz():
+    return {"ok": True}
 
 
 @app.get("/", include_in_schema=False)

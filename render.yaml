@@ -1,0 +1,22 @@
+# One-click deploy on Render: Dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: health-tracker
+    runtime: docker
+    branch: main
+    plan: starter          # a paid plan is needed for the persistent disk below
+    healthCheckPath: /healthz
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /data     # SQLite database and Garmin session tokens live here
+      sizeGB: 1
+    envVars:
+      - key: HEALTH_DATA_DIR
+        value: /data
+      - key: APP_PASSWORD  # you'll be asked for this during setup
+        sync: false
+      - key: ANTHROPIC_API_KEY  # optional: enables the photo/text calorie counter
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
