@@ -345,3 +345,52 @@ nav button:hover { color: var(--text); }
 /* iPhone home-screen app: keep content clear of the notch / home indicator */
 main { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 #toast { bottom: calc(20px + env(safe-area-inset-bottom)); }
+
+/* ---------- simplified Today ---------- */
+.eyebrow { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.card.hero h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: -.02em; }
+.card.hero { padding: 20px; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 10%, var(--card)), var(--card) 60%); }
+.hero-btn { width: 100%; padding: 12px; font-size: 16px; margin-top: 12px; }
+.hero-list { list-style: none; padding: 0; margin: 8px 0 0; }
+.hero-list li { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.hero-list li:last-child { border-bottom: none; }
+.hero-big { font-size: 28px; font-weight: 800; margin: 4px 0; }
+.next-up { display: flex; flex-direction: column; gap: 2px; padding: 12px; margin: 12px 0 8px; border-radius: 10px; background: var(--inset); }
+.food-big { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+.food-big .num { display: block; font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+.food-big .unit { color: var(--muted); font-size: 13px; }
+#foodToday .track { height: 8px; background: var(--raised); border-radius: 6px; overflow: hidden; }
+#foodToday .fill { height: 100%; background: var(--accent); border-radius: 6px; }
+#foodToday .fill.over { background: var(--bad); }
+#foodToday p { margin: 8px 0 0; }
+.chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+.chip { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.chip .label { font-size: 12px; color: var(--muted); }
+.chip .value { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip .sub { font-size: 11px; color: var(--muted); }
+.chip[data-log-weight] { cursor: pointer; }
+.center { text-align: center; }
+@media (max-width: 420px) { .chip .value { font-size: 16px; } .chip { padding: 8px; } }
+
+/* ---------- folded sections ---------- */
+details.fold > summary { list-style: none; cursor: pointer; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary h3 { display: inline-block; margin: 0; }
+details.fold > summary::after { content: "›"; float: right; color: var(--muted); font-size: 20px; line-height: 1; transition: transform .2s; }
+details.fold[open] > summary::after { transform: rotate(90deg); }
+details.fold[open] > summary { margin-bottom: 12px; }
+
+/* ---------- your week ---------- */
+.week { list-style: none; padding: 0; margin: 0; }
+.week li { display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.week li:last-child { border-bottom: none; }
+.week .when { display: flex; flex-direction: column; }
+.week li.is-today .when b { color: var(--accent); }
+.week li.is-rest .what { align-self: center; }
+.week summary { cursor: pointer; }
+.week details[open] .plan-day { margin-top: 8px; }
+.week .move { flex-direction: row; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; }
+.week .move select { width: auto; padding: 3px 6px; font-size: 12px; }
+.week .what { min-width: 0; }
+.week .move { display: flex; flex-wrap: nowrap; white-space: nowrap; max-width: 100%; }
+.week .move select { flex: 1; min-width: 0; max-width: 200px; }

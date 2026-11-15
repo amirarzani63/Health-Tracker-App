@@ -54,7 +54,9 @@ def dashboard(day: date | None = None, db: Session = Depends(get_db)):
         "trend": trend,
         "today_session": session,
         "today_done": any(a.start_time.date() == day for a in acts),
+        "next_session": insights.upcoming_session(db, day),
         "plan_name": plan.name if plan else None,
+        "plan_id": plan.id if plan else None,
         "recommendations": insights.recommendations(db, day)[:4],
         "setup": {
             "profile": profile.setup_done,

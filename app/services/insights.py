@@ -321,6 +321,19 @@ def _next_planned_session(db: Session, today: date):
     return None
 
 
+def upcoming_session(db: Session, day: date) -> dict | None:
+    """The next planned session after ``day`` (looks up to a week ahead, wrapping into next week)."""
+    plan = db.scalar(select(WorkoutPlan).where(WorkoutPlan.active).order_by(WorkoutPlan.created_at.desc()))
+    if not plan:
+        return None
+    for offset in range(1, 8):
+        d = day + timedelta(days=offset)
+        session = next((x for x in plan.days if x.get("weekday") == WEEKDAYS[d.weekday()] and x.get("type") != "rest"), None)
+        if session:
+            return {**session, "date": d.isoformat(), "in_days": offset}
+    return None
+
+
 def todays_session(db: Session, day: date):
     plan = db.scalar(select(WorkoutPlan).where(WorkoutPlan.active).order_by(WorkoutPlan.created_at.desc()))
     if not plan:

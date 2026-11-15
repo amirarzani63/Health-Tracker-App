@@ -170,3 +170,16 @@ def test_sync_without_login_is_400(client, tmp_path):
         assert client.post("/api/garmin/sync", json={"days": 1}).status_code == 400
     finally:
         app.dependency_overrides.clear()
+
+
+def test_move_plan_session(client):
+    plan = client.post("/api/plans/generate", json={"goal": "strength", "days_per_week": 3, "include_cardio": False}).json()
+    days = {d["weekday"]: d["title"] for d in plan["days"]}
+    assert days == {"Mon": "Full Body A", "Wed": "Full Body B", "Fri": "Full Body C"}
+    # move to an empty day
+    p = client.post(f"/api/plans/{plan['id']}/move", json={"from_day": "Mon", "to_day": "Sun"}).json()
+    assert {d["weekday"]: d["title"] for d in p["days"]} == {"Wed": "Full Body B", "Fri": "Full Body C", "Sun": "Full Body A"}
+    # move onto a busy day swaps them
+    p = client.post(f"/api/plans/{plan['id']}/move", json={"from_day": "Sun", "to_day": "Wed"}).json()
+    assert {d["weekday"]: d["title"] for d in p["days"]} == {"Wed": "Full Body A", "Fri": "Full Body C", "Sun": "Full Body B"}
+    assert client.post(f"/api/plans/{plan['id']}/move", json={"from_day": "Xyz", "to_day": "Mon"}).status_code == 400

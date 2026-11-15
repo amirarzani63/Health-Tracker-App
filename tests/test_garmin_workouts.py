@@ -220,3 +220,19 @@ def test_no_duplicate_home_swaps_in_one_workout():
     names = [e["exercise"] for e in gw.parse_workout(adapted)["exercises"]]
     assert names == ["Goblet Squat", "Dumbbell Step-up", "Dumbbell Reverse Lunge"]
     assert all(o in gw.NAMES for opts in gw.HOME_SUBS.values() for o in opts)
+
+
+def test_moving_a_session_updates_the_garmin_calendar(client, tmp_path):
+    svc = setup_service(client, tmp_path)
+    try:
+        client.post("/api/garmin/plan-from-workouts", json={"workout_ids": [101, 102], "days_per_week": 4})
+        g = svc._client
+        plan = client.get("/api/plans/active").json()
+        mon = next(d for d in plan["days"] if d["weekday"] == "Mon")
+        client.post(f"/api/plans/{plan['id']}/move", json={"from_day": "Mon", "to_day": "Sun"})
+        sched_days = {date.fromisoformat(d).weekday() for _, d in g.scheduled.values()}
+        assert 6 in sched_days and 0 not in sched_days  # Sunday now, Monday freed
+        moved = client.get("/api/plans/active").json()
+        assert next(d for d in moved["days"] if d["weekday"] == "Sun")["title"] == mon["title"]
+    finally:
+        app.dependency_overrides.clear()

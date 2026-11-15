@@ -109,6 +109,7 @@ function shiftDay(n) {
 }
 
 function show(view, focusSel) {
+  if (view === "plans") view = "exercise"; // plans now live in the Workouts tab
   state.view = view;
   $$("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
   $$(".view").forEach((v) => v.classList.toggle("active", v.id === "view-" + view));
@@ -129,70 +130,83 @@ function tile(label, value, unit, goal, sub, opts = {}) {
     <span class="sub">${sub || ""}</span></div>`;
 }
 
+const DAY_NAMES = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday" };
+function whenLabel(n) {
+  if (!n) return "";
+  return n.in_days === 1 ? "tomorrow" : DAY_NAMES[n.weekday] || n.weekday;
+}
+function sessionSummary(x) {
+  if (x.type === "cardio") return `${x.minutes} min · ${esc(x.zone)}`;
+  const n = (x.exercises || []).length;
+  return `${n} exercise${n === 1 ? "" : "s"}`;
+}
+
+function renderHero(d) {
+  const el = $("#workoutHero");
+  const ts = d.today_session, next = d.next_session;
+  const isToday = state.day === isoDate(new Date());
+  if (!d.plan_name) {
+    el.innerHTML = `<span class="eyebrow">Today's workout</span>
+      <h2>No workout plan yet</h2>
+      <p class="muted">Let the app build one from your Garmin workouts and goals. It takes a minute.</p>
+      <button class="hero-btn" data-show-setup>Set up my plan</button>`;
+    return;
+  }
+  if (ts && ts.type !== "rest") {
+    if (d.today_done) {
+      el.innerHTML = `<span class="eyebrow">Today's workout</span><h2>✓ Done: ${esc(ts.title)}</h2>
+        <p class="muted">Nice work.${next ? ` Next up: <b>${esc(next.title)}</b> ${whenLabel(next)}.` : ""}</p>`;
+      return;
+    }
+    const list = ts.type === "strength"
+      ? `<ul class="hero-list">${ts.exercises.slice(0, 5).map((x) => `<li><span>${esc(x.exercise)}</span><span class="muted">${x.sets}×${esc(x.reps)}</span></li>`).join("")}
+         ${ts.exercises.length > 5 ? `<li class="muted">+ ${ts.exercises.length - 5} more</li>` : ""}</ul>`
+      : `<p class="hero-big">${ts.minutes} min <span class="muted">in ${esc(ts.zone)}</span></p>
+         <p class="muted small">Brisk walk, bike or cross-trainer. You should be able to talk in full sentences.</p>`;
+    const ready = d.readiness && d.readiness.level !== "unknown" && d.readiness.level !== "good"
+      ? `<p class="pill ${d.readiness.level}">${esc(d.readiness.message)}</p>` : "";
+    el.innerHTML = `<span class="eyebrow">${isToday ? "Today's workout" : "Planned"} · ${ts.type}</span>
+      <h2>${esc(ts.title)}</h2>${ready}${list}
+      ${isToday ? `<button class="hero-btn" data-start-session>${ts.type === "cardio" ? "Log it when done" : "Start workout"}</button>` : ""}`;
+    return;
+  }
+  el.innerHTML = `<span class="eyebrow">${isToday ? "Today" : "This day"}</span>
+    <h2>Rest day</h2>
+    <p class="muted">Recovery is part of the plan: an easy walk and some stretching are perfect.</p>
+    ${next ? `<div class="next-up"><span class="muted small">Next up · ${whenLabel(next)}</span>
+      <b>${esc(next.title)}</b><span class="muted small">${sessionSummary(next)}</span></div>
+      ${isToday ? `<button class="ghost" data-do-today="${WD[new Date().getDay()]}" data-from="${next.weekday}" data-plan="${d.plan_id}">Do ${esc(next.title)} today instead</button>` : ""}` : ""}`;
+}
+
 loaders.dashboard = async () => {
   const d = await api(`/api/dashboard?day=${state.day}`);
   const t = d.targets, c = d.consumed, g = d.goals;
   renderSetup(d.setup);
+  renderHero(d);
 
   const left = Math.round(t.calories - c.calories);
-  $("#goalTiles").innerHTML = [
-    tile("Calories", fmt(c.calories), "kcal", t.calories, left >= 0 ? `${fmt(left)} left of ${fmt(t.calories)}` : `${fmt(-left)} over ${fmt(t.calories)}`, { over: left < -0.05 * t.calories }),
-    tile("Protein", fmt(c.protein_g), "g", t.protein_g, `goal ${fmt(t.protein_g)} g`),
-    tile("Steps", g.steps.value == null ? null : fmt(g.steps.value), "", g.steps.goal, g.steps.value == null ? "sync Garmin" : `goal ${fmt(g.steps.goal)}`),
-    tile("Workouts this week", g.workouts_week.value, `/ ${g.workouts_week.goal}`, g.workouts_week.goal, `${g.days_left_in_week} days left`),
-    tile("Active minutes", fmt(g.active_minutes_week.value), `/ ${g.active_minutes_week.goal}`, g.active_minutes_week.goal, "this week"),
-    tile("Sleep", g.sleep_h.value, "h", g.sleep_h.goal, `goal ${g.sleep_h.goal} h`),
-    tile("Weight", g.weight.value == null ? null : fmt(g.weight.value, 1), "kg", null,
-      [g.weight.change_4w != null && `${g.weight.change_4w > 0 ? "+" : ""}${g.weight.change_4w} kg in 4 wks`, g.weight.goal && `target ${g.weight.goal}`].filter(Boolean).join(" · ") || "log a weigh-in"),
+  const proteinLeft = Math.max(0, Math.round(t.protein_g - c.protein_g));
+  const pct = Math.min(100, (c.calories / t.calories) * 100);
+  $("#foodNumbers").innerHTML = `
+    <div class="food-big">
+      <div><span class="num">${fmt(Math.abs(left))}</span><span class="unit">kcal ${left >= 0 ? "left" : "over"}</span></div>
+      <div><span class="num">${fmt(proteinLeft)}</span><span class="unit">g protein to go</span></div>
+    </div>
+    <div class="track"><div class="fill${left < 0 ? " over" : ""}" style="width:${pct}%"></div></div>
+    <p class="muted small">${fmt(c.calories)} of ${fmt(t.calories)} kcal eaten${d.burned ? ` · ${fmt(d.burned)} burned on your fenix` : ""}</p>`;
+
+  const chip = (label, value, sub, attrs = "") => `<div class="chip" ${attrs}><span class="label">${label}</span><span class="value">${value}</span><span class="sub">${sub}</span></div>`;
+  $("#dayChips").innerHTML = [
+    chip("Steps", g.steps.value == null ? "–" : fmt(g.steps.value), `of ${fmt(g.steps.goal)}`),
+    chip("Sleep", g.sleep_h.value == null ? "–" : `${g.sleep_h.value} h`, `goal ${g.sleep_h.goal} h`),
+    chip("Workouts", `${g.workouts_week.value}/${g.workouts_week.goal}`, "this week"),
+    chip("Weight", g.weight.value == null ? "+ Log" : `${fmt(g.weight.value, 1)}`, g.weight.value == null ? "tap to add" : "kg · tap to log",
+      'role="button" tabindex="0" data-log-weight'),
   ].join("");
 
-  // Garmin burn + food log = today's full picture
-  const net = d.burned != null ? c.calories - d.burned : null;
-  $("#balance").innerHTML = `
-    <div><span class="label">Eaten</span><span class="value">${fmt(c.calories)}</span><span class="sub">kcal logged</span></div>
-    <div><span class="label">Burned</span><span class="value">${fmt(d.burned)}</span><span class="sub">${d.active_calories != null ? `${fmt(d.active_calories)} active` : "from Garmin"}</span></div>
-    <div><span class="label">Balance</span><span class="value">${net == null ? "–" : (net > 0 ? "+" : "") + fmt(net)}</span><span class="sub">${net == null ? "needs Garmin data" : (net < 0 ? "deficit" : "surplus") + (state.day === isoDate(new Date()) ? " so far" : "")}</span></div>`;
-  $("#todayMacros").innerHTML =
-    bar("Protein", c.protein_g, t.protein_g, css("--protein")) +
-    bar("Carbs", c.carbs_g, t.carbs_g, css("--carbs")) +
-    bar("Fat", c.fat_g, t.fat_g, css("--fat")) +
-    bar("Fibre", c.fiber_g, t.fiber_g, css("--fiber"));
-  $("#balanceNote").textContent = {
-    goal: "Calorie target comes from your goals.",
-    garmin: "Target adjusted for the activity your Garmin recorded today.",
-    estimate: "Target estimated from your profile. Connect Garmin for measured burn.",
-  }[t.source];
-
-  $("#dashRecs").innerHTML = renderRecs(d.recommendations);
-
-  const ts = d.today_session;
-  const r = $("#readiness");
-  r.className = "pill " + d.readiness.level;
-  r.textContent = d.readiness.message;
-  r.classList.toggle("hidden", ts?.type === "rest");
-  $("#todaySession").innerHTML = !ts
-    ? `<p class="muted">No active plan yet. <a href="#plans" data-goto="plans">Build one</a> from your goals.</p>`
-    : renderPlanDay(ts, true) + `<div class="row-between" style="margin-top:8px"><span class="muted small">${esc(d.plan_name)}</span>
-      ${ts.type !== "rest" ? (d.today_done ? `<span class="tag garmin">done ✓</span>` : `<button class="small-btn" data-start-session>Log this workout</button>`) : ""}</div>`;
-
-  const w = d.week;
-  $("#weekStats").innerHTML = [["Sessions", w.count], ["Time", minutes(w.duration_min * 60)], ["Distance", `${w.distance_km} km`], ["Food logged", `${w.days_logged}/7 days`]]
-    .map(([l, v]) => `<div><span class="label">${l}</span><span class="value">${v}</span></div>`).join("");
-  $("#recentActs").innerHTML = d.recent_activities.length
-    ? d.recent_activities.map((a) => `<li><span>${esc(a.name)} <span class="tag ${a.source}">${a.source}</span></span><span class="muted small">${new Date(a.start_time).toLocaleDateString(undefined, { weekday: "short" })} · ${minutes(a.duration_s)}${a.distance_m ? ` · ${(a.distance_m / 1000).toFixed(1)} km` : ""}</span></li>`).join("")
-    : `<li class="muted">No workouts this week yet.</li>`;
-
-  drawChart("trendChart", {
-    data: {
-      labels: d.trend.map((x) => shortDay(x.day)),
-      datasets: [
-        barDs("Eaten", d.trend.map((x) => (x.logged ? x.calories : null)), css("--series-1")),
-        lineDs("Burned (Garmin)", d.trend.map((x) => x.burned), css("--series-2"), { pointRadius: 2 }),
-        targetDs("Target", d.trend.map((x) => x.target_calories)),
-      ],
-    },
-    options: { scales: { y: { title: { display: true, text: "kcal" } } } },
-  });
+  const tip = (d.recommendations || []).find((r) => r.level !== "good") || (d.recommendations || [])[0];
+  $("#topTip").classList.toggle("hidden", !tip);
+  if (tip) $("#topTip").innerHTML = `<ul class="recs">${renderRecs([tip])}</ul>`;
 };
 
 function renderRecs(recs) {
@@ -262,10 +276,19 @@ function renderAutoSetup(el, garminConnected) {
   });
 }
 
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("[data-show-setup]")) return;
+  store.set("setupHidden", "0");
+  const card = $("#setupCard");
+  card.classList.remove("hidden");
+  renderAutoSetup($("[data-auto-setup]", card), true);
+  card.scrollIntoView({ behavior: "smooth" });
+});
 $("#setupDismiss").onclick = () => { store.set("setupHidden", "1"); $("#setupCard").classList.add("hidden"); };
 
 // quick weight dialog
-$("#quickWeight").onclick = () => $("#weightDialog").showModal();
+document.addEventListener("click", (e) => { if (e.target.closest("[data-log-weight]")) $("#weightDialog").showModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.closest?.("[data-log-weight]")) $("#weightDialog").showModal(); });
 $("#weightDialog").addEventListener("close", async () => {
   const dlg = $("#weightDialog");
   const v = $("#weightQuick").elements.weight_kg.value;
@@ -494,6 +517,7 @@ $("#addSet").onclick = () => {
 function nowLocalInput() { return localIso().slice(0, 16); }
 
 async function loadTodaysPlan() {
+  $("#logWorkoutCard").open = true;
   const plan = await api("/api/plans/active");
   const wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date().getDay()];
   const session = plan?.days.find((d) => d.weekday === wd);
@@ -518,6 +542,7 @@ async function loadTodaysPlan() {
 $("#loadPlan").onclick = () => loadTodaysPlan().catch((e) => toast(e.message, true));
 
 loaders.exercise = async () => {
+  loaders.plans().catch((e) => toast(e.message, true));
   const f = $("#activityForm").elements.start_time;
   if (!f.value) f.value = nowLocalInput();
   const filter = $("#actFilter").value;
@@ -579,12 +604,61 @@ function renderPlanDay(day, compact = false) {
     <table>${day.exercises.map((x) => `<tr><td>${esc(x.exercise)}</td><td>${x.sets}×${esc(x.reps)}${compact ? "" : rest(x)}</td></tr>`).join("")}</table>${changes}</div>`;
 }
 
+const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+// Rolling week starting today, with real dates, in order. Sessions repeat weekly on their weekday.
+function renderWeek(plan) {
+  const today = new Date();
+  const rows = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today); d.setDate(today.getDate() + i);
+    const wd = WD[d.getDay()];
+    const session = plan.days.find((x) => x.weekday === wd && x.type !== "rest");
+    const label = i === 0 ? "Today" : i === 1 ? "Tomorrow" : d.toLocaleDateString(undefined, { weekday: "long" });
+    const date = d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+    rows.push({ wd, label, date, session, i });
+  }
+  const options = (from) => rows.filter((r) => r.wd !== from)
+    .map((r) => `<option value="${r.wd}">${r.label} (${r.date})${r.session ? " ↔ swap" : ""}</option>`).join("");
+  return `<div class="card"><div class="row-between"><h3>Your week</h3><span class="muted small">${esc(plan.name)}</span></div>
+    <ol class="week">${rows.map((r) => `<li class="${r.i === 0 ? "is-today" : ""} ${r.session ? "" : "is-rest"}">
+      <div class="when"><b>${r.label}</b><span class="muted small">${r.date}</span></div>
+      ${r.session ? `<div class="what">
+          <details><summary><b>${esc(r.session.title)}</b> <span class="muted small">${sessionSummary(r.session)}</span></summary>
+            ${renderPlanDay(r.session)}</details>
+          <label class="move">Move to <select data-move-from="${r.wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options(r.wd)}</select></label>
+        </div>` : `<div class="what muted">Rest</div>`}
+    </li>`).join("")}</ol>
+    <p class="muted small">Moving a session changes it every week${watchNote()}.</p>
+    <details class="small"><summary class="muted">How the plan progresses</summary><ul class="tips">${plan.progression.map((p) => `<li><b>Week ${p.week}:</b> ${esc(p.note)}</li>`).join("")}</ul></details>
+  </div>`;
+}
+let _watchSending = false;
+const watchNote = () => (_watchSending ? " and on your fenix" : "");
+
+async function moveSession(planId, from, to) {
+  await api(`/api/plans/${planId}/move`, { method: "POST", body: { from_day: from, to_day: to } });
+  toast(`Moved to ${to}${watchNote()}`);
+  loaders[state.view]?.();
+}
+document.addEventListener("change", (e) => {
+  const sel = e.target.closest("[data-move-from]");
+  if (!sel || !sel.value) return;
+  moveSession(sel.dataset.plan, sel.dataset.moveFrom, sel.value).catch((err) => toast(err.message, true));
+});
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-do-today]");
+  if (!b) return;
+  b.disabled = true;
+  moveSession(b.dataset.plan, b.dataset.from, b.dataset.doToday).catch((err) => { toast(err.message, true); b.disabled = false; });
+});
+
 loaders.plans = async () => {
   const [plans, active, watch] = await Promise.all([api("/api/plans"), api("/api/plans/active"), api("/api/garmin/watch-plan").catch(() => null)]);
   renderWatchStatus(watch);
-  $("#activePlan").innerHTML = active ? `<div class="card"><h3>Active plan: ${esc(active.name)}</h3>
-    <div class="plan-days">${active.days.map((d) => renderPlanDay(d)).join("")}</div>
-    <h4>Progression</h4><ul class="tips">${active.progression.map((p) => `<li><b>Week ${p.week}:</b> ${esc(p.note)}</li>`).join("")}</ul></div>` : "";
+  _watchSending = !!(watch && watch.sending);
+  $("#activePlan").innerHTML = active ? renderWeek(active) : `<div class="card hero"><span class="eyebrow">Your plan</span>
+    <h2>No workout plan yet</h2><p class="muted">Build one from your Garmin workouts and goals.</p>
+    <button class="hero-btn" data-goto="dashboard" data-show-setup>Set up my plan</button></div>`;
   $("#planList").innerHTML = plans.map((p) => `<li><span>${esc(p.name)} <span class="muted small">${p.weeks} wk · ${new Date(p.created_at).toLocaleDateString()}</span>
     ${p.active ? '<span class="tag garmin">active</span>' : ""}</span>
     <span>${p.active ? "" : `<button class="ghost small-btn" data-activate-plan="${p.id}">Activate</button>`}
@@ -669,6 +743,7 @@ $$("#rangeSeg button").forEach((b) => b.addEventListener("click", () => {
 }));
 
 loaders.progress = async () => {
+  api("/api/recommendations").then((r) => { $("#dashRecs").innerHTML = renderRecs(r); }).catch(() => {});
   const days = state.progressDays;
   const weeks = Math.max(4, Math.ceil(days / 7));
   const [series, weekly, goals, exercises] = await Promise.all([
@@ -1101,7 +1176,7 @@ api("/api/auth/status").then((s) => $("#accountCard").classList.toggle("hidden",
   } catch {}
 })();
 
-const initial = location.hash.slice(1);
+const initial = location.hash.slice(1) === "plans" ? "exercise" : location.hash.slice(1);
 show(loaders[initial] ? initial : "dashboard");
 autoSync();
 checkReminders();

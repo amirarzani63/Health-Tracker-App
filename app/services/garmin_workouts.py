@@ -462,3 +462,27 @@ def create_plan_from_garmin(db: Session, client, goal: str, equipment: str, days
     pushed = push_plan(db, client, plan, goal, equipment) if send_to_watch else None
     return {"plan_id": row.id, "plan_name": plan["name"], "used": [w["name"] for w in chosen],
             "changes": changes, "pushed": pushed}
+
+
+def swap_weekdays(db: Session, client, a: str, b: str, today: date | None = None) -> dict:
+    """Mirror a moved session on the Garmin calendar: swap two weekdays and reschedule from today."""
+    today = today or date.today()
+    state = load_state(db)
+    if not state.get("push") or not state.get("by_weekday"):
+        return {"rescheduled": 0}
+    bw = state["by_weekday"]
+    bw[a], bw[b] = bw.get(b), bw.get(a)
+    errors = []
+    keep = []
+    for item in state.get("scheduled", []):
+        if item.get("date", "") >= today.isoformat() and item.get("id"):
+            try:
+                client.unschedule_workout(item["id"])
+            except Exception as e:
+                errors.append(f"unschedule {item.get('date')}: {e}")
+        else:
+            keep.append(item)
+    state["scheduled"] = keep
+    count, errs = _schedule(client, state, today, today + timedelta(days=SCHEDULE_DAYS - 1))
+    save_state(db, state)
+    return {"rescheduled": count, "errors": errors + errs}
