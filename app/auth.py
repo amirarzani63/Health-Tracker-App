@@ -12,10 +12,9 @@ import os
 import time
 
 from fastapi import APIRouter, HTTPException, Request, Response
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
-from app.paths import STATIC
 
 COOKIE = "ht_session"
 SESSION_DAYS = 90  # phone home-screen apps shouldn't make you log in often
@@ -97,7 +96,9 @@ class LoginIn(BaseModel):
 def login_page(request: Request):
     if not enabled() or valid_token(request.cookies.get(COOKIE)):
         return RedirectResponse("/", status_code=303)
-    return FileResponse(STATIC / "login.html")
+    from app.pages import page
+
+    return page("login.html")
 
 
 @router.get("/api/auth/status")

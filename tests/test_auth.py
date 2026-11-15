@@ -65,3 +65,23 @@ def test_tokens(monkeypatch):
     assert not auth.valid_token(t, now=time.time() + 91 * 86400)  # expired
     monkeypatch.setenv("APP_PASSWORD", "pw2")
     assert not auth.valid_token(t)  # changing the password signs everyone out
+
+
+def test_pages_are_cache_busted(client, monkeypatch):
+    import re
+
+    from app import pages
+
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "abcdef1234567")
+    pages.app_version.cache_clear()
+    pages._render.cache_clear()
+    try:
+        r = client.get("/")
+        assert r.headers["cache-control"] == "no-cache"
+        refs = re.findall(r'(?:src|href)="(/static/[^"]+)"', r.text)
+        assert refs and all(ref.endswith("?v=abcdef12") for ref in refs)
+        assert "App version abcdef12" in r.text and "{{APP_VERSION}}" not in r.text
+        assert client.get("/static/styles.css?v=abcdef12").status_code == 200
+    finally:
+        pages.app_version.cache_clear()
+        pages._render.cache_clear()

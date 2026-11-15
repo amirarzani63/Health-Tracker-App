@@ -4,11 +4,11 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app import auth
 from app.db import SessionLocal, init_db
+from app.pages import page
 from app.paths import STATIC
 from app.routers import dashboard, diet, exercise, food_ai, garmin, insights, plans, profile, strava
 from app.services.garmin import GarminError, garmin_service
@@ -70,4 +70,4 @@ def healthz():
 
 @app.get("/", include_in_schema=False)
 def index():
-    return FileResponse(STATIC / "index.html")
+    return page("index.html")
