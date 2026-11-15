@@ -339,4 +339,4 @@ nav button:hover { color: var(--text); }
 .steps-list code { user-select: all; }
 .theme-row button.active { background: var(--accent); color: var(--on-accent); }
 .brand { display: flex; align-items: center; gap: 8px; }
-.brand-logo { width: 26px; height: 26px; border-radius: 7px; display: block; }
+.brand-logo { width: 30px; height: 30px; display: block; }
