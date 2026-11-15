@@ -88,8 +88,15 @@ def _sport(w: dict) -> str:
     return ((w.get("sportType") or {}).get("sportTypeKey") or "other").lower()
 
 
+def natural_key(name: str):
+    """Sort 'Day 2' before 'Day 10', case-insensitively."""
+    import re
+
+    return [int(t) if t.isdigit() else t.lower() for t in re.split(r"(\d+)", name or "")]
+
+
 def list_saved_workouts(client) -> list[dict]:
-    """Your own saved workouts, newest first (copies this app made are skipped)."""
+    """Your own saved workouts in name order (Day 1, Day 2, ...); copies this app made are skipped."""
     try:
         raw = client.get_workouts(0, 100, my_workouts_only=True, order_by="UPDATE_DATE", order_seq="DESC")
     except TypeError:  # older library without keyword filters
@@ -104,7 +111,7 @@ def list_saved_workouts(client) -> list[dict]:
             "minutes": round((w.get("estimatedDurationInSecs") or 0) / 60) or None,
             "updated": w.get("updateDate") or w.get("updatedDate") or w.get("createdDate"),
         })
-    return out
+    return sorted(out, key=lambda w: natural_key(w["name"]))
 
 
 def _walk(steps):
@@ -258,7 +265,7 @@ def build_plan(details: list[dict], goal: str, equipment: str, days_per_week: in
         day["changes"] = changes
         day["garmin_source_id"] = d.get("workoutId")
         adapted.append(day)
-    strength = [a for a in adapted if a["type"] == "strength"] or adapted
+    strength = sorted([a for a in adapted if a["type"] == "strength"] or adapted, key=lambda a: natural_key(a["title"]))
     cardio_own = [a for a in adapted if a["type"] == "cardio" and a not in strength]
 
     plan_days = []
@@ -395,6 +402,18 @@ def keep_calendar_filled(db: Session, client, today: date | None = None) -> int:
     state = load_state(db)
     if not state.get("push") or not state.get("by_weekday"):
         return 0
+    if state.get("needs_reschedule"):  # the plan's days were re-ordered: redo the calendar from today
+        for item in state.get("scheduled", []):
+            if item.get("date", "") >= today.isoformat() and item.get("id"):
+                try:
+                    client.unschedule_workout(item["id"])
+                except Exception:
+                    pass
+        state["scheduled"] = [i for i in state.get("scheduled", []) if i.get("date", "") < today.isoformat()]
+        state["needs_reschedule"] = False
+        count, _ = _schedule(client, state, today, today + timedelta(days=SCHEDULE_DAYS - 1))
+        save_state(db, state)
+        return count
     until = date.fromisoformat(state.get("scheduled_until") or today.isoformat())
     if until >= today + timedelta(days=7):
         return 0
@@ -440,8 +459,11 @@ def create_plan_from_garmin(db: Session, client, goal: str, equipment: str, days
         wanted = {str(i) for i in workout_ids}
         chosen = [w for w in saved if str(w["id"]) in wanted]
     else:
-        strength = [w for w in saved if w["sport"] in ("strength_training", "hiit")]
-        chosen = strength[:days_per_week] + [w for w in saved if w["sport"] not in ("strength_training", "hiit")][:1]
+        # the workouts you edited most recently are your current program; then put them in name order
+        strength = sorted([w for w in saved if w["sport"] in ("strength_training", "hiit")],
+                          key=lambda w: str(w.get("updated") or ""), reverse=True)[:days_per_week]
+        strength.sort(key=lambda w: natural_key(w["name"]))
+        chosen = strength + [w for w in saved if w["sport"] not in ("strength_training", "hiit")][:1]
     if not chosen:
         return None
     details = []
@@ -486,3 +508,43 @@ def swap_weekdays(db: Session, client, a: str, b: str, today: date | None = None
     count, errs = _schedule(client, state, today, today + timedelta(days=SCHEDULE_DAYS - 1))
     save_state(db, state)
     return {"rescheduled": count, "errors": errors + errs}
+
+
+def reorder_saved_plans(db: Session) -> int:
+    """Repair plans built before workouts were ordered by name: Day 1, Day 2, ... go on the training
+    days in order (same weekdays, same sessions). Flags the Garmin calendar for rescheduling."""
+    from sqlalchemy import select
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from app.models import WorkoutPlan
+
+    fixed = 0
+    for plan in db.scalars(select(WorkoutPlan)).all():
+        days = [dict(d) for d in plan.days or []]
+        strength = [d for d in days if d.get("type") == "strength" and d.get("garmin_source_id")]
+        if len(strength) < 2:
+            continue
+        weekdays = sorted((d["weekday"] for d in strength), key=WEEKDAYS.index)
+        templates = {}
+        for d in strength:  # one template per distinct workout
+            templates.setdefault(d.get("title", ""), d)
+        names = sorted(templates, key=natural_key)
+        current = [d.get("title") for d in sorted(strength, key=lambda d: WEEKDAYS.index(d["weekday"]))]
+        wanted = [names[i % len(names)] for i in range(len(weekdays))]  # Day 1, Day 2, ... rotating
+        if current == wanted:
+            continue
+        rebuilt = [{**templates[n], "weekday": wd} for n, wd in zip(wanted, weekdays)]
+        days = [d for d in days if d not in strength] + rebuilt
+        days.sort(key=lambda d: WEEKDAYS.index(d.get("weekday", "Sun")))
+        plan.days = days
+        flag_modified(plan, "days")
+        fixed += 1
+        if plan.active:
+            state = load_state(db)
+            if state.get("push"):
+                copies = state.get("copies", {})
+                state["by_weekday"] = {d["weekday"]: copies.get(str(d.get("garmin_source_id"))) for d in days}
+                state["needs_reschedule"] = True
+                save_state(db, state)
+    db.commit()
+    return fixed

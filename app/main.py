@@ -45,6 +45,14 @@ async def auto_sync_loop():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    try:  # one-time repair: Garmin-based plans in name order (Day 1, Day 2, ...)
+        from app.services.garmin_workouts import reorder_saved_plans
+
+        with SessionLocal() as db:
+            if reorder_saved_plans(db):
+                log.info("Re-ordered saved plans by workout name")
+    except Exception:
+        log.exception("Plan re-ordering failed")
     if not auth.enabled():
         log.warning("APP_PASSWORD is not set: the app is open to anyone who can reach it. "
                     "Set APP_PASSWORD before putting it on the internet.")

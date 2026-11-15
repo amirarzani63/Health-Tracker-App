@@ -25,10 +25,10 @@ def strength(wid, name, blocks):
     return w
 
 
-UPPER = strength(101, "Gym Upper", [("BENCH_PRESS", "BARBELL_BENCH_PRESS", 5, 5, 150),
+UPPER = strength(101, "Day 1 Upper", [("BENCH_PRESS", "BARBELL_BENCH_PRESS", 5, 5, 150),
                                     ("ROW", "BARBELL_ROW", 4, 8, 90),
                                     ("CURL", "ALTERNATING_DUMBBELL_BICEPS_CURL", 3, 12, 60)])
-LOWER = strength(102, "Gym Lower", [("SQUAT", "BARBELL_BACK_SQUAT", 4, 6, 180),
+LOWER = strength(102, "Day 2 Lower", [("SQUAT", "BARBELL_BACK_SQUAT", 4, 6, 180),
                                     ("SQUAT", "LEG_PRESS", 3, 10, 90),
                                     ("LUNGE", "DUMBBELL_REVERSE_LUNGE", 3, 10, 60)])
 
@@ -44,8 +44,10 @@ class WorkoutGarmin(FakeGarmin):
         self.updates = []
 
     def get_workouts(self, start=0, limit=100, **kw):
-        return [{"workoutId": w["workoutId"], "workoutName": w["workoutName"], "sportType": w["sportType"],
-                 "estimatedDurationInSecs": 3000, "updateDate": "2026-11-01"} for w in self.library.values()]
+        # newest-edited first, like Garmin: Day 2 was edited after Day 1
+        rows = [{"workoutId": w["workoutId"], "workoutName": w["workoutName"], "sportType": w["sportType"],
+                 "estimatedDurationInSecs": 3000, "updateDate": f"2026-11-{w['workoutId'] % 100:02d}"} for w in self.library.values()]
+        return sorted(rows, key=lambda r: r["updateDate"], reverse=True)
 
     def get_workout_by_id(self, wid):
         return copy.deepcopy(self.library[int(wid)])
@@ -83,7 +85,7 @@ def all_exercise_names(w):
 
 def test_parse_garmin_workout():
     day = gw.parse_workout(UPPER)
-    assert day["type"] == "strength" and day["title"] == "Gym Upper"
+    assert day["type"] == "strength" and day["title"] == "Day 1 Upper"
     bench = day["exercises"][0]
     assert bench["exercise"] == "Barbell Bench Press" and bench["sets"] == 5 and bench["reps"] == "5" and bench["rest_s"] == 150
     assert [e["exercise"] for e in day["exercises"]] == ["Barbell Bench Press", "Barbell Row", "Alternating Dumbbell Biceps Curl"]
@@ -114,7 +116,7 @@ def test_build_plan_rotates_and_adds_cardio():
     plan = gw.build_plan([UPPER, LOWER], goal="lose", equipment="home", days_per_week=4)
     strength_days = [d for d in plan["days"] if d["type"] == "strength"]
     cardio_days = [d for d in plan["days"] if d["type"] == "cardio"]
-    assert [d["title"] for d in strength_days] == ["Gym Upper", "Gym Lower", "Gym Upper", "Gym Lower"]
+    assert [d["title"] for d in strength_days] == ["Day 1 Upper", "Day 2 Lower", "Day 1 Upper", "Day 2 Lower"]
     assert len(cardio_days) == 2 and all(d["zone"] == "Zone 2" for d in cardio_days)
     assert len({d["weekday"] for d in plan["days"]}) == 6 and plan["goal"] == "fat_loss"
 
@@ -134,12 +136,12 @@ def test_plan_from_workouts_and_send_to_watch(client, tmp_path):
         p = client.get("/api/profile").json()
         client.put("/api/profile", json={**p, "goal": "lose", "equipment": "home"})
         listed = client.get("/api/garmin/workouts").json()
-        assert [w["name"] for w in listed] == ["Gym Upper", "Gym Lower"]
+        assert [w["name"] for w in listed] == ["Day 1 Upper", "Day 2 Lower"]
 
         r = client.post("/api/garmin/plan-from-workouts", json={"workout_ids": [101, 102], "days_per_week": 4})
         assert r.status_code == 200, r.text
         body = r.json()
-        assert body["used"] == ["Gym Upper", "Gym Lower"] and body["pushed"]["errors"] == []
+        assert body["used"] == ["Day 1 Upper", "Day 2 Lower"] and body["pushed"]["errors"] == []
         assert "Barbell Bench Press → Dumbbell Floor Press (home equipment)" in body["changes"]
 
         g = svc._client
@@ -192,7 +194,7 @@ def test_auto_setup_uses_saved_garmin_workouts(client, tmp_path):
     try:
         r = client.post("/api/setup/auto", json={"focus": "lose_weight", "equipment": "home", "send_to_watch": True}).json()
         text = " ".join(r["summary"])
-        assert "Workout plan from your Garmin workouts: Gym Upper, Gym Lower" in text
+        assert "Workout plan from your Garmin workouts: Day 1 Upper, Day 2 Lower" in text
         assert "Sent to your fenix" in text and "Goblet Squat" in text
         assert client.get("/api/plans/active").json()["name"].startswith("My Garmin workouts")
         assert len(svc._client.scheduled) > 0
@@ -234,5 +236,47 @@ def test_moving_a_session_updates_the_garmin_calendar(client, tmp_path):
         assert 6 in sched_days and 0 not in sched_days  # Sunday now, Monday freed
         moved = client.get("/api/plans/active").json()
         assert next(d for d in moved["days"] if d["weekday"] == "Sun")["title"] == mon["title"]
+    finally:
+        app.dependency_overrides.clear()
+
+
+
+def test_workouts_follow_their_day_numbers_not_edit_dates():
+    """The reported bug: Day 3 came first, then Day 2, Day 1, Day 4 (most recently edited first)."""
+    days = [strength(200 + n, f"Day {n}", [("SQUAT", "GOBLET_SQUAT", 3, 10, 60)]) for n in (3, 2, 1, 4)]
+    plan = gw.build_plan(days, goal="lose", equipment="home", days_per_week=4)
+    titles = [d["title"] for d in plan["days"] if d["type"] == "strength"]
+    assert titles == ["Day 1", "Day 2", "Day 3", "Day 4"]
+    assert [d["weekday"] for d in plan["days"] if d["type"] == "strength"] == ["Mon", "Tue", "Thu", "Fri"]
+    assert sorted(["Day 10", "Day 2", "day 1"], key=gw.natural_key) == ["day 1", "Day 2", "Day 10"]
+
+
+def test_existing_plans_are_repaired_and_calendar_redone(client, tmp_path):
+    from app.db import SessionLocal
+
+    svc = setup_service(client, tmp_path)
+    try:
+        client.post("/api/garmin/plan-from-workouts", json={"workout_ids": [101, 102], "days_per_week": 4})
+        plan = client.get("/api/plans/active").json()
+        # simulate a plan saved by the old version: Day 2 on Monday, Day 1 on Tuesday
+        db = SessionLocal()
+        from app.models import WorkoutPlan
+        row = db.get(WorkoutPlan, plan["id"])
+        days = [dict(d) for d in row.days]
+        for d in days:
+            if d["type"] == "strength":
+                d["title"] = {"Day 1 Upper": "Day 2 Lower", "Day 2 Lower": "Day 1 Upper"}[d["title"]]
+        row.days = days
+        db.commit()
+        assert gw.reorder_saved_plans(db) == 1
+        assert gw.reorder_saved_plans(db) == 0  # already in order: nothing to do
+        state = gw.load_state(db)
+        assert state["needs_reschedule"] is True
+        g = svc._client
+        n = gw.keep_calendar_filled(db, g)
+        db.close()
+        assert n > 0 and gw.load_state(SessionLocal())["needs_reschedule"] is False
+        fixed = client.get("/api/plans/active").json()
+        assert [d["title"] for d in fixed["days"] if d["type"] == "strength"] == ["Day 1 Upper", "Day 2 Lower", "Day 1 Upper", "Day 2 Lower"]
     finally:
         app.dependency_overrides.clear()
