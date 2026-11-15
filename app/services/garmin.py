@@ -183,10 +183,13 @@ class GarminService:
             added = upsert_activity(db, raw)
             result["activities_added" if added else "activities_updated"] += 1
 
+        today_summary = None
         d = start
         while d <= end:
             try:
                 summary = client.get_user_summary(d.isoformat()) or {}
+                if d == end:
+                    today_summary = summary
             except Exception as e:
                 summary = {}
                 result["errors"].append(f"summary {d}: {e}")
@@ -205,6 +208,9 @@ class GarminService:
         except Exception as e:
             result["errors"].append(f"body composition: {e}")
 
+        from app.services.autosetup import refresh_from_sync
+
+        refresh_from_sync(db, today_summary)  # latest weight -> profile, goals that follow Garmin
         self._save_tokens(client)  # tokens may have been refreshed during the sync
         state = db.get(SyncState, "garmin_last_sync") or SyncState(key="garmin_last_sync")
         state.value = datetime.now().isoformat(timespec="seconds")

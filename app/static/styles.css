@@ -279,3 +279,15 @@ dialog h3 { margin: 0 0 8px; }
   main { padding: 12px; }
   .balance .value { font-size: 17px; }
 }
+
+/* ---------- automatic setup ---------- */
+.auto-setup .lead { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+.auto-setup .garmin-line { margin-bottom: 10px; font-size: 14px; }
+.auto-setup .garmin-line a { color: var(--accent); font-weight: 600; }
+.auto-setup .ok { color: var(--accent); font-weight: 600; }
+.auto-setup button.go { width: 100%; margin-top: 4px; }
+.auto-result { margin: 10px 0 0; padding-left: 18px; font-size: 14px; }
+.auto-result li { margin-bottom: 3px; }
+details.auto-again { margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+details.auto-again summary { cursor: pointer; font-weight: 600; color: var(--accent); font-size: 14px; }
+details.auto-again[open] summary { margin-bottom: 10px; }

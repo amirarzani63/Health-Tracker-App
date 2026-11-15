@@ -145,6 +145,8 @@ class Goals(Base):
     active_minutes_per_week: Mapped[int] = mapped_column(Integer, default=150)
     target_weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
     saved: Mapped[bool] = mapped_column(Boolean, default=False)
+    # When true, step / intensity-minute / sleep goals keep following your Garmin settings.
+    follow_garmin: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
 class Reminder(Base):

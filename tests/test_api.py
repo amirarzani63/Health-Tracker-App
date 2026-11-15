@@ -86,8 +86,20 @@ class FakeGarmin:
             "aerobicTrainingEffect": 3.4, "anaerobicTrainingEffect": 1.2, "activityTrainingLoad": 120.0,
         }]
 
+    full_name = "Test Runner"
+
+    def get_user_profile(self):
+        return {"userData": {"gender": "MALE", "weight": 86400.0, "height": 181.0, "birthDate": "1987-05-02"},
+                "userSleep": {"sleepTime": 81000, "wakeTime": 23400}}  # 22:30 -> 06:30 = 8 h
+
+    def get_latest_weight(self, d):
+        return {"date": d, "weight": 85900.0}
+
+    def get_weight_goal(self, start, end):
+        return {"weightGoal": {"goalValue": 80000.0}}
+
     def get_user_summary(self, d):
-        return {"totalSteps": 12000, "totalKilocalories": 2900, "activeKilocalories": 900,
+        return {"dailyStepGoal": 11000, "intensityMinutesGoal": 180, "totalSteps": 12000, "totalKilocalories": 2900, "activeKilocalories": 900,
                 "bmrKilocalories": 1800, "restingHeartRate": 48, "minHeartRate": 44, "maxHeartRate": 172, "averageStressLevel": 25,
                 "bodyBatteryHighestValue": 85, "bodyBatteryLowestValue": 20,
                 "moderateIntensityMinutes": 10, "vigorousIntensityMinutes": 30}

@@ -204,18 +204,58 @@ function renderRecs(recs) {
 
 function renderSetup(s) {
   const card = $("#setupCard");
-  const steps = [
-    ["profile", "Fill in your profile", "settings", "#profileForm input[name=name]"],
-    ["goals", "Set your goals", "settings", "#goalsForm input"],
-    ["garmin", "Connect your Garmin", "settings", "#garminLogin input"],
-    ["plan", "Build a workout plan", "plans"],
-    ["food", "Log your first meal", "diet", "#aiForm textarea"],
-  ];
-  const allDone = steps.every(([k]) => s[k]);
-  card.classList.toggle("hidden", allDone || store.get("setupHidden") === "1");
-  $("#setupSteps").innerHTML = steps.map(([k, label, view, focus], i) => `<li class="${s[k] ? "done" : ""}">
-    <span class="num">${s[k] ? "✓" : i + 1}</span>${s[k] ? esc(label) : `<a href="#${view}" data-goto="${view}" ${focus ? `data-focus="${esc(focus)}"` : ""}>${esc(label)}</a>`}</li>`).join("");
+  const show = state.justSetUp || (!s.profile && store.get("setupHidden") !== "1");
+  card.classList.toggle("hidden", !show);
+  if (show && !state.justSetUp) renderAutoSetup($("[data-auto-setup]", card), s.garmin);
 }
+
+// ---------------------------------------------------------------- automatic setup
+const FOCUS_OPTS = [["auto", "Auto (from Garmin)"], ["lose_weight", "Lose weight"], ["build_muscle", "Build muscle"],
+  ["get_stronger", "Get stronger"], ["improve_cardio", "Improve cardio / endurance"], ["stay_healthy", "Stay healthy"]];
+const EQUIP_OPTS = [["auto", "Gym (default)"], ["gym", "Gym"], ["home", "Home (dumbbells / bands)"], ["bodyweight", "No equipment"]];
+const DIET_OPTS = [["auto", "No restrictions (default)"], ["omnivore", "No restrictions"], ["vegetarian", "Vegetarian"], ["vegan", "Vegan"], ["pescatarian", "Pescatarian"]];
+const opts = (list) => list.map(([v, l]) => `<option value="${v}">${l}</option>`).join("");
+
+function renderAutoSetup(el, garminConnected) {
+  el.innerHTML = `
+    <p class="lead">Your fenix and Garmin account already know your height, weight, age, step goal, sleep and training habits.
+      The app uses them to fill in your profile and goals, pick your experience level and training days, build your workout plan
+      and set daily calorie and protein targets.</p>
+    <div class="garmin-line">${garminConnected
+      ? `<span class="ok">✓ Garmin connected.</span> Your details and last 30 days come from your watch.`
+      : `Garmin isn't connected yet. <a href="#settings" data-goto="settings" data-focus="#garminLogin input">Connect it first</a> for personal values (recommended).`}</div>
+    <form class="form auto-form">
+      <div class="row">
+        <label>Main goal <select name="focus">${opts(FOCUS_OPTS)}</select></label>
+        <label>Where you train <select name="equipment">${opts(EQUIP_OPTS)}</select></label>
+        <label>How you eat <select name="diet_type">${opts(DIET_OPTS)}</select></label>
+      </div>
+      <button type="submit" class="go">Set it all up for me</button>
+    </form>
+    <ul class="auto-result"></ul>`;
+  $(".auto-form", el).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = $("button", e.target);
+    btn.disabled = true;
+    btn.textContent = garminConnected ? "Reading your Garmin data… (up to a minute)" : "Setting up…";
+    try {
+      const r = await api("/api/setup/auto", { method: "POST", body: formData(e.target) });
+      $(".auto-result", el).innerHTML = r.summary.map((x) => `<li>${esc(x)}</li>`).join("")
+        + (r.note ? `<li class="warn-text">${esc(r.note)}</li>` : "")
+        + `<li class="muted">You can change any of this in Settings. Weight and Garmin goals keep updating automatically.</li>`;
+      e.target.classList.add("hidden");
+      $(".lead", el).textContent = "All set! Here's what was set up:";
+      toast("Everything is set up ✓");
+      state.justSetUp = true;
+      if (state.view === "dashboard") loaders.dashboard();
+    } catch (err) {
+      toast(err.message, true);
+      btn.disabled = false;
+      btn.textContent = "Set it all up for me";
+    }
+  });
+}
+
 $("#setupDismiss").onclick = () => { store.set("setupHidden", "1"); $("#setupCard").classList.add("hidden"); };
 
 // quick weight dialog
@@ -708,7 +748,8 @@ loaders.settings = async () => {
   const pf = $("#profileForm");
   for (const [k, v] of Object.entries(p)) if (pf.elements[k]) pf.elements[k].value = Array.isArray(v) ? v.join(", ") : v;
   const gf = $("#goalsForm");
-  for (const [k, v] of Object.entries(g)) if (gf.elements[k]) gf.elements[k].value = v ?? "";
+  for (const [k, v] of Object.entries(g)) if (gf.elements[k] && k !== "follow_garmin") gf.elements[k].value = v ?? "";
+  gf.elements.follow_garmin.checked = !!g.follow_garmin;
 
   $("#reminderRows").innerHTML = rem.map((r) => `<div class="rem-row" data-key="${r.key}">
     <input type="checkbox" data-k="enabled" ${r.enabled ? "checked" : ""} aria-label="Enable ${REMINDER_LABELS[r.key]}">
@@ -717,7 +758,8 @@ loaders.settings = async () => {
     <div class="rem-days">${DAYS.map((d, i) => `<label><input type="checkbox" data-day="${i}" ${r.days.includes(i) ? "checked" : ""}>${d}</label>`).join("")}</div>
   </div>`).join("");
   renderNotifyState();
-  await loadGarmin();
+  const gs = await loadGarmin();
+  renderAutoSetup($("#goalsCard [data-auto-setup]"), gs.connected);
 };
 
 $("#profileForm").addEventListener("submit", async (e) => {
@@ -737,8 +779,10 @@ $("#profileForm").addEventListener("submit", async (e) => {
 $("#goalsForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const d = formData(e.target);
+  delete d.follow_garmin;
   const body = Object.fromEntries(Object.entries(d).map(([k, v]) => [k, numOrNull(v)]));
   for (const k of ["fiber_target_g", "steps_target", "sleep_target_h", "workouts_per_week", "active_minutes_per_week"]) if (body[k] == null) body[k] = 0;
+  body.follow_garmin = e.target.elements.follow_garmin.checked;
   try {
     await api("/api/goals", { method: "PUT", body });
     toast("Goals saved");
@@ -789,6 +833,7 @@ async function loadGarmin() {
   $("#garminLogin").classList.toggle("hidden", s.connected || s.mfa_pending);
   $("#garminMfa").classList.toggle("hidden", !s.mfa_pending);
   $("#garminConnected").classList.toggle("hidden", !s.connected);
+  return s;
 }
 $("#garminLogin").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -797,7 +842,7 @@ $("#garminLogin").addEventListener("submit", (e) => {
     e.target.reset();
     toast(r.status === "needs_mfa" ? "Enter the code Garmin sent you" : "Connected to Garmin");
     await loadGarmin();
-    if (r.status === "ok") $("#syncBtn").click();
+    if (r.status === "ok") await afterGarminConnected();
   });
 });
 $("#garminMfa").addEventListener("submit", (e) => {
@@ -807,9 +852,22 @@ $("#garminMfa").addEventListener("submit", (e) => {
     e.target.reset();
     toast("Connected to Garmin");
     await loadGarmin();
-    $("#syncBtn").click();
+    await afterGarminConnected();
   });
 });
+async function afterGarminConnected() {
+  const p = await api("/api/profile");
+  if (!p.setup_done) {
+    // first connection: the one-tap setup pulls 30 days of history itself
+    store.set("setupHidden", "0");
+    toast("Garmin connected. Now tap “Set it all up for me”");
+    show("dashboard");
+    return;
+  }
+  $("#syncDays").value = 30;
+  $("#syncBtn").click();
+}
+
 $("#syncBtn").addEventListener("click", (e) => withBusy(e.target, async () => {
   $("#syncResult").textContent = "Syncing…";
   const r = await api("/api/garmin/sync", { method: "POST", body: { days: Number($("#syncDays").value) || 7 } });

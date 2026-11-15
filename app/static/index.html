@@ -42,10 +42,10 @@
   <section id="view-dashboard" class="view active">
     <div class="card setup hidden" id="setupCard">
       <div class="row-between">
-        <h3>Welcome! Let's get you set up</h3>
-        <button class="icon" id="setupDismiss" title="Hide">✕</button>
+        <h3>Let's set everything up for you</h3>
+        <button class="icon" id="setupDismiss" title="Hide" aria-label="Hide">✕</button>
       </div>
-      <ol class="steps" id="setupSteps"></ol>
+      <div class="auto-setup" data-auto-setup></div>
     </div>
 
     <div class="quick">
@@ -311,6 +311,10 @@
   <section id="view-settings" class="view">
     <div class="grid two">
       <div class="card" id="goalsCard">
+        <details class="auto-again">
+          <summary>Set everything up again automatically</summary>
+          <div class="auto-setup" data-auto-setup></div>
+        </details>
         <h3>Goals</h3>
         <form id="goalsForm" class="form">
           <p class="muted small">Leave nutrition targets blank to have them calculated from your profile (and your Garmin burn on synced days).</p>
@@ -327,6 +331,7 @@
             <label>Steps / day <input name="steps_target" type="number" min="0" step="500"></label>
             <label>Sleep h / night <input name="sleep_target_h" type="number" min="3" max="14" step="0.5"></label>
           </div>
+          <label class="check"><input type="checkbox" name="follow_garmin"> Keep step, activity and sleep goals in sync with my Garmin</label>
           <div class="row">
             <label>Workouts / week <input name="workouts_per_week" type="number" min="0" max="14"></label>
             <label>Active minutes / week <input name="active_minutes_per_week" type="number" min="0" step="10"></label>

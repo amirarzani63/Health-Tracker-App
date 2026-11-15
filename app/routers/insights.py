@@ -5,8 +5,9 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.schemas import GoalsIn, GoalsOut, ReminderIn, ReminderOut
-from app.services import insights
+from app.schemas import AutoSetupIn, GoalsIn, GoalsOut, ReminderIn, ReminderOut
+from app.services import autosetup, insights
+from app.services.garmin import GarminError, garmin_service
 
 router = APIRouter(prefix="/api", tags=["goals & insights"])
 
@@ -24,6 +25,28 @@ def update_goals(data: GoalsIn, db: Session = Depends(get_db)):
     goals.saved = True
     db.commit()
     return goals
+
+
+def garmin_svc():
+    return garmin_service
+
+
+@router.post("/setup/auto")
+def auto_setup(data: AutoSetupIn, db: Session = Depends(get_db), svc=Depends(garmin_svc)):
+    """Build profile, goals and an active workout plan from Garmin data + three quick choices."""
+    client, note = None, None
+    if svc.has_tokens():
+        try:
+            client = svc.client()
+            svc.sync(db, days=30)  # enough history to judge training frequency and habits
+        except GarminError as e:
+            note = f"Couldn't read Garmin ({e}); used your existing data and defaults instead."
+            client = None
+    else:
+        note = "Garmin isn't connected, so defaults were used. Connect Garmin and run setup again for personal values."
+    result = autosetup.run_auto_setup(db, client, data.focus, data.equipment, data.diet_type)
+    result["note"] = note
+    return result
 
 
 @router.get("/nutrition/trends")

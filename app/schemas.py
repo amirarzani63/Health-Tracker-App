@@ -163,6 +163,7 @@ class GoalsIn(BaseModel):
     workouts_per_week: int = Field(4, ge=0, le=14)
     active_minutes_per_week: int = Field(150, ge=0, le=3000)
     target_weight_kg: float | None = Field(None, gt=20, lt=400)
+    follow_garmin: bool = True
 
 
 class GoalsOut(GoalsIn, ORM):
@@ -181,3 +182,9 @@ class ReminderIn(BaseModel):
 
 class ReminderOut(ReminderIn, ORM):
     pass
+
+
+class AutoSetupIn(BaseModel):
+    focus: Literal["auto", "lose_weight", "build_muscle", "get_stronger", "improve_cardio", "stay_healthy"] = "auto"
+    equipment: Literal["auto", "gym", "home", "bodyweight"] = "auto"
+    diet_type: Literal["auto", "omnivore", "vegetarian", "vegan", "pescatarian"] = "auto"
