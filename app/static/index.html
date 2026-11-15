@@ -3,14 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0f7b6c">
+  <meta name="theme-color" content="#0b0f14">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Health Tracker</title>
   <link rel="manifest" href="/static/manifest.json">
   <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="Health">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <script>
+    // Apply the saved theme before first paint (dark by default; "auto" follows the phone).
+    (function () {
+      var t = "dark";
+      try { t = localStorage.getItem("theme") || "dark"; } catch (e) {}
+      if (t === "auto") t = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      if (t === "light") document.documentElement.setAttribute("data-theme", "light");
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute("content", t === "light" ? "#f3f5f8" : "#0b0f14");
+    })();
+  </script>
   <link rel="stylesheet" href="/static/styles.css">
   <script src="/static/vendor/chart.umd.js"></script>
 </head>
@@ -420,6 +431,18 @@
           <pre id="syncResult" class="small"></pre>
         </div>
         <p class="small muted">Synced: workouts (with heart rate, Training Effect, load), steps, calories burned, resting/min/max heart rate, stress, Body Battery, sleep and Index-scale weigh-ins. The app syncs automatically when you open it (if the last sync is over an hour old) and every 6 hours in the background.</p>
+      </div>
+    </div>
+    <div class="card" id="stravaCard">
+      <h3>Strava</h3>
+      <div id="stravaBody"><p class="muted">Checking…</p></div>
+    </div>
+    <div class="card" id="appearanceCard">
+      <h3>Appearance</h3>
+      <div class="theme-row" role="group" aria-label="Theme">
+        <button type="button" class="ghost" data-theme-choice="dark">Dark</button>
+        <button type="button" class="ghost" data-theme-choice="light">Light</button>
+        <button type="button" class="ghost" data-theme-choice="auto">Match my phone</button>
       </div>
     </div>
     <div class="card hidden" id="accountCard">

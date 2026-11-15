@@ -38,6 +38,22 @@ suggestions, and automatically pull activity and wellness data from Garmin Conne
   filled. Plans tab → **Stop sending** removes the upcoming ones.
 - Protein targets use lean-mass reference weight (BMI 27) when BMI is over 30.
 
+### Strava
+
+Settings → Strava imports your Strava activities through Strava's official API, which is a reliable second
+source if Garmin sign-in is ever blocked. Sessions that come from both Garmin and Strava are counted once:
+Garmin's copy wins because it has Training Effect and load. One-time setup:
+
+1. Create an app at strava.com/settings/api with **Authorization Callback Domain** = your app's domain
+   (e.g. `health-tracker-xxxx.onrender.com`).
+2. Add `STRAVA_CLIENT_ID` and `STRAVA_CLIENT_SECRET` to your Render service's Environment.
+3. In the app: Settings → Strava → **Connect Strava**.
+
+### Appearance
+
+Dark theme by default with WCAG-checked contrast (body text 14.7:1, secondary text 7.2:1). Switch to Light or
+"Match my phone" in Settings → Appearance.
+
 ### Recommendations
 
 Rule-based coaching from the last 7 days vs. your goals, for example: protein consistently low, calories above a
@@ -136,6 +152,7 @@ the saved session is stored in the database and the server will use it.
 | `DATABASE_URL` | `sqlite:///<data dir>/health.db` | Postgres (`postgres://…`, e.g. Neon) or any SQLAlchemy URL |
 | `GARMIN_AUTO_SYNC_HOURS` | `6` | Background sync interval; `0` disables it |
 | `ANTHROPIC_API_KEY` | – | Enables the AI calorie counter |
+| `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` | – | Enables Strava import (from strava.com/settings/api) |
 | `APP_PASSWORD` | – | Turns on the sign-in page. **Required when the app is on the internet** |
 | `SECRET_KEY` | derived from the password | Signs session cookies; changing it signs out all devices |
 | `FOOD_AI_MODEL` | `claude-opus-5-5` | Claude model used for meal analysis |

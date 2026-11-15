@@ -820,6 +820,7 @@ loaders.settings = async () => {
     <div class="rem-days">${DAYS.map((d, i) => `<label><input type="checkbox" data-day="${i}" ${r.days.includes(i) ? "checked" : ""}>${d}</label>`).join("")}</div>
   </div>`).join("");
   renderNotifyState();
+  loadStrava();
   const gs = await loadGarmin();
   renderAutoSetup($("#goalsCard [data-auto-setup]"), gs.connected);
 };
@@ -945,8 +946,59 @@ $("#logoutBtn").addEventListener("click", async () => {
   loadGarmin();
 });
 
+// ---------------------------------------------------------------- Strava
+async function loadStrava() {
+  const el = $("#stravaBody");
+  let s;
+  try { s = await api("/api/strava/status"); } catch { el.innerHTML = `<p class="muted">Couldn't check Strava.</p>`; return; }
+  if (!s.configured) {
+    const domain = esc(location.host);
+    el.innerHTML = `<p class="small muted">Strava needs a free API app (one-time, about 2 minutes):</p>
+      <ol class="steps-list">
+        <li>Go to <a href="https://www.strava.com/settings/api" target="_blank" rel="noopener">strava.com/settings/api</a> and create an app.
+          Name: <code>Health Tracker</code>, Category: <code>Training</code>, Website: <code>https://${domain}</code>.</li>
+        <li><b>Authorization Callback Domain:</b> <code>${domain}</code></li>
+        <li>Copy the <b>Client ID</b> and <b>Client Secret</b> into your Render service (Environment) as
+          <code>STRAVA_CLIENT_ID</code> and <code>STRAVA_CLIENT_SECRET</code>, then save. Render redeploys automatically.</li>
+        <li>Come back here and tap <b>Connect Strava</b>.</li>
+      </ol>`;
+    return;
+  }
+  if (!s.connected) {
+    el.innerHTML = `<p class="small muted">Import your Strava activities. Sessions that also come from Garmin are only counted once.</p>
+      <button type="button" id="stravaConnect">Connect Strava</button>`;
+    $("#stravaConnect").onclick = () => { location.href = "/api/strava/connect"; };
+    return;
+  }
+  el.innerHTML = `<p>✓ Connected${s.athlete ? ` as <b>${esc(s.athlete)}</b>` : ""}. Last sync: ${s.last_sync ? new Date(s.last_sync).toLocaleString() : "never"}.</p>
+    <div class="row actions"><button type="button" id="stravaSync">Sync now</button><button type="button" class="ghost" id="stravaOff">Disconnect</button></div>
+    <pre class="small" id="stravaResult"></pre>`;
+  $("#stravaSync").onclick = (e) => withBusy(e.target, async () => {
+    const r = await api("/api/strava/sync", { method: "POST", body: { days: 60 } });
+    $("#stravaResult").textContent = `New: ${r.activities_added} · updated: ${r.activities_updated} · already from Garmin: ${r.duplicates_skipped}`
+      + (r.errors.length ? `\n${r.errors.join("\n")}` : "");
+    toast("Strava sync complete");
+  });
+  $("#stravaOff").onclick = (e) => withBusy(e.target, async () => {
+    if (!confirm("Disconnect Strava? Imported activities stay in the app.")) return;
+    await api("/api/strava/disconnect", { method: "POST" });
+    loadStrava();
+  });
+}
+
+// Coming back from Strava's approval page
+(() => {
+  const q = new URLSearchParams(location.search);
+  if (q.has("strava")) toast("Strava connected ✓ Your activities are being imported");
+  if (q.has("strava_error")) toast(q.get("strava_error"), true);
+  if (q.has("strava") || q.has("strava_error")) history.replaceState(null, "", location.pathname + location.hash);
+})();
+
 // Sync quietly when the app opens (server skips if the last sync is recent).
 async function autoSync() {
+  api("/api/strava/sync-if-stale", { method: "POST" }).then((r) => {
+    if (r.synced && r.activities_added && ["dashboard", "exercise", "progress"].includes(state.view)) loaders[state.view]?.();
+  }).catch(() => {});
   try {
     const r = await api("/api/garmin/sync-if-stale", { method: "POST", body: { max_age_minutes: 60 } });
     if (!r.synced) return;
@@ -1005,6 +1057,26 @@ document.addEventListener("click", async (e) => {
     }
   } catch (err) { toast(err.message, true); }
 });
+
+// ---------------------------------------------------------------- theme
+function applyTheme(choice) {
+  let t = choice;
+  if (t === "auto") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  if (t === "light") document.documentElement.setAttribute("data-theme", "light");
+  else document.documentElement.removeAttribute("data-theme");
+  $('meta[name="theme-color"]')?.setAttribute("content", t === "light" ? "#f3f5f8" : "#0b0f14");
+  $$("[data-theme-choice]").forEach((b) => b.classList.toggle("active", b.dataset.themeChoice === choice));
+}
+const savedTheme = () => store.get("theme") || "dark";
+$$("[data-theme-choice]").forEach((b) => b.addEventListener("click", () => {
+  store.set("theme", b.dataset.themeChoice);
+  applyTheme(b.dataset.themeChoice);
+  loaders[state.view]?.(); // redraw charts with the new colours
+}));
+matchMedia("(prefers-color-scheme: light)").addEventListener?.("change", () => {
+  if (savedTheme() === "auto") { applyTheme("auto"); loaders[state.view]?.(); }
+});
+applyTheme(savedTheme());
 
 $$("#tabs button").forEach((b) => b.addEventListener("click", () => show(b.dataset.view)));
 $("#day").addEventListener("change", (e) => e.target.value && setDay(e.target.value));

@@ -21,6 +21,7 @@ COOKIE = "ht_session"
 SESSION_DAYS = 90  # phone home-screen apps shouldn't make you log in often
 PUBLIC_PATHS = {
     "/login", "/api/auth/login", "/api/auth/status", "/healthz",
+    "/api/strava/callback",  # Strava returns here, possibly in a browser without the app's cookie (state-protected)
     "/static/styles.css", "/static/manifest.json", "/static/icon.svg",
     "/static/apple-touch-icon.png", "/static/icon-192.png", "/static/icon-512.png",
 }

@@ -247,7 +247,14 @@ def upsert_activity(db: Session, raw: dict) -> bool:
     act = db.scalar(select(Activity).where(Activity.external_id == ext_id))
     is_new = act is None
     if is_new:
-        act = Activity(source="garmin", external_id=ext_id, sets=[])
+        from app.services.strava import find_overlap
+
+        # the same session imported from Strava earlier: Garmin's richer copy takes its place
+        act = find_overlap(db, _parse_time(raw), _num(raw.get("duration")) or 0, ("strava",))
+        if act is not None:
+            act.source, act.external_id = "garmin", ext_id
+        else:
+            act = Activity(source="garmin", external_id=ext_id, sets=[])
     type_info = raw.get("activityType") or {}
     act.start_time = _parse_time(raw)
     act.activity_type = type_info.get("typeKey", "other") if isinstance(type_info, dict) else str(type_info)

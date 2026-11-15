@@ -16,6 +16,10 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY  # optional: enables the photo/text calorie counter
         sync: false
+      - key: STRAVA_CLIENT_ID      # optional: from strava.com/settings/api
+        sync: false
+      - key: STRAVA_CLIENT_SECRET
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: REQUIRE_DATABASE_URL  # refuse to start on a throwaway local database
