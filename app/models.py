@@ -25,6 +25,7 @@ class Profile(Base):
     training_days: Mapped[int] = mapped_column(Integer, default=4)
     equipment: Mapped[str] = mapped_column(String(20), default="gym")  # gym | home | bodyweight
     setup_done: Mapped[bool] = mapped_column(Boolean, default=False)
+    units: Mapped[str] = mapped_column(String(10), default="metric")  # metric | imperial (display only)
 
 
 class WeightEntry(Base):

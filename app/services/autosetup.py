@@ -18,6 +18,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.models import Activity, DailyStats, WeightEntry, WorkoutPlan
+from app import units
 from app.services import insights
 from app.services.workout_planner import generate_plan
 
@@ -176,11 +177,12 @@ def run_auto_setup(db: Session, client, focus: str = "auto", equipment: str = "a
     done: list[str] = []
 
     # ---- profile
-    for field, label, unit in (("name", "Name", ""), ("sex", "Sex", ""), ("birth_year", "Birth year", ""),
-                               ("height_cm", "Height", " cm"), ("weight_kg", "Weight", " kg")):
+    shown = {"height_cm": lambda v: units.length(v, profile), "weight_kg": lambda v: units.mass(v, profile)}
+    for field, label in (("name", "Name"), ("sex", "Sex"), ("birth_year", "Birth year"),
+                         ("height_cm", "Height"), ("weight_kg", "Weight")):
         if garmin.get(field) is not None:
             setattr(profile, field, garmin[field])
-            done.append(f"{label}: {garmin[field]}{unit} (from Garmin)")
+            done.append(f"{label}: {shown.get(field, str)(garmin[field])} (from Garmin)")
     level = _activity_level(history["avg_steps"])
     if level:
         profile.activity_level = level
@@ -218,7 +220,7 @@ def run_auto_setup(db: Session, client, focus: str = "auto", equipment: str = "a
     weight_known = weight_known or garmin.get("weight_kg") is not None
     if goals.target_weight_kg is None and focus == "lose_weight" and weight_known:
         goals.target_weight_kg = round(profile.weight_kg * 0.93, 1)  # a realistic first milestone (~7%)
-        done.append(f"Target weight: {goals.target_weight_kg} kg (first milestone, ~7% below today)")
+        done.append(f"Target weight: {units.mass(goals.target_weight_kg, profile)} (first milestone, ~7% below today)")
     goals.follow_garmin = True
     goals.saved = True
     done.append(f"Workouts/week: {days}")

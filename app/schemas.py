@@ -30,6 +30,7 @@ class ProfileIn(BaseModel):
     experience: Experience = "intermediate"
     training_days: int = Field(4, ge=1, le=7)
     equipment: Equipment = "gym"
+    units: Literal["metric", "imperial"] = "metric"
 
 
 class ProfileOut(ProfileIn, ORM):

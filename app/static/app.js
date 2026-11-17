@@ -45,10 +45,59 @@ function toast(msg, error = false) {
   toast._t = setTimeout(() => (t.className = ""), 3500);
 }
 
+// ---------------------------------------------------------------- units (stored metric, shown either way)
+const U = {
+  imperial: (() => { try { return localStorage.getItem("units") === "imperial"; } catch { return false; } })(),
+  defs: { mass: ["kg", "lb", 2.20462], length: ["cm", "in", 1 / 2.54], distance: ["km", "mi", 0.621371] },
+  label(kind) { const d = U.defs[kind]; return U.imperial ? d[1] : d[0]; },
+  show(kind, metric, digits = 1) {  // metric number -> number in the chosen units
+    if (metric == null || metric === "") return metric;
+    const v = U.imperial ? Number(metric) * U.defs[kind][2] : Number(metric);
+    return Math.round(v * 10 ** digits) / 10 ** digits;
+  },
+  toMetric(kind, v) {
+    if (v == null || v === "") return v;
+    return U.imperial ? Number(v) / U.defs[kind][2] : Number(v);
+  },
+  fmt(kind, metric, digits = 1) { return metric == null ? "–" : `${U.show(kind, metric, digits)} ${U.label(kind)}`; },
+  height(cm) {
+    if (!U.imperial) return `${Math.round(cm)} cm`;
+    const inch = Math.round(cm / 2.54);
+    return `${Math.floor(inch / 12)}′${inch % 12}″`;
+  },
+  food(text) {  // "150 g" -> "5.3 oz", "240 ml" -> "8.1 fl oz" when imperial
+    if (!U.imperial || !text) return text;
+    return String(text).replace(/(\d+(?:\.\d+)?)\s?(g|ml)\b/g, (_, n, u) =>
+      u === "g" ? `${(n / 28.35).toFixed(1)} oz` : `${(n / 29.57).toFixed(1)} fl oz`);
+  },
+  set(imperial) {
+    U.imperial = imperial;
+    try { localStorage.setItem("units", imperial ? "imperial" : "metric"); } catch {}
+    U.apply();
+  },
+  apply(root = document) {
+    for (const el of root.querySelectorAll("[data-ulabel]")) el.textContent = U.label(el.dataset.ulabel);
+    for (const el of root.querySelectorAll("input[data-unit]")) {
+      if (el.dataset.unit === "length") {
+        el.placeholder = U.imperial ? "inches, e.g. 71 = 5′11″" : "";
+        el.min = U.imperial ? 40 : 100; el.max = U.imperial ? 100 : 250;
+      }
+      if (el.dataset.unit === "mass") { el.min = U.imperial ? 45 : 20; el.max = U.imperial ? 880 : 400; }
+      else if (el.dataset.unit === "mass") el.placeholder = el.placeholder && /^(kg|lb)$/.test(el.placeholder) ? U.label("mass") : el.placeholder;
+    }
+  },
+};
+
 function formData(form) {
   const out = {};
-  for (const [k, v] of new FormData(form)) out[k] = v;
+  for (const [k, v] of new FormData(form)) {
+    const el = form.elements[k];
+    out[k] = el?.dataset?.unit && v !== "" ? String(U.toMetric(el.dataset.unit, v)) : v;
+  }
   return out;
+}
+function setField(el, metric) {  // put a stored (metric) value into an input, converting if needed
+  el.value = el.dataset.unit && metric != null && metric !== "" ? U.show(el.dataset.unit, metric) : (metric ?? "");
 }
 
 async function withBusy(btn, fn) {
@@ -200,7 +249,7 @@ loaders.dashboard = async () => {
     chip("Steps", g.steps.value == null ? "–" : fmt(g.steps.value), `of ${fmt(g.steps.goal)}`),
     chip("Sleep", g.sleep_h.value == null ? "–" : `${g.sleep_h.value} h`, `goal ${g.sleep_h.goal} h`),
     chip("Workouts", `${g.workouts_week.value}/${g.workouts_week.goal}`, "this week"),
-    chip("Weight", g.weight.value == null ? "+ Log" : `${fmt(g.weight.value, 1)}`, g.weight.value == null ? "tap to add" : "kg · tap to log",
+    chip("Weight", g.weight.value == null ? "+ Log" : `${U.show("mass", g.weight.value)}`, g.weight.value == null ? "tap to add" : `${U.label("mass")} · tap to log`,
       'role="button" tabindex="0" data-log-weight'),
   ].join("");
 
@@ -291,7 +340,7 @@ document.addEventListener("click", (e) => { if (e.target.closest("[data-log-weig
 document.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.closest?.("[data-log-weight]")) $("#weightDialog").showModal(); });
 $("#weightDialog").addEventListener("close", async () => {
   const dlg = $("#weightDialog");
-  const v = $("#weightQuick").elements.weight_kg.value;
+  const v = U.toMetric("mass", $("#weightQuick").elements.weight_kg.value);
   $("#weightQuick").reset();
   if (dlg.returnValue !== "save" || !v) return;
   try {
@@ -325,7 +374,7 @@ loaders.diet = async () => {
   foods.forEach((f) => byMeal[f.meal].push(f));
   $("#foodLog").innerHTML = Object.entries(byMeal).map(([meal, items]) => `
     <h4><span style="text-transform:capitalize">${meal}</span> <span class="muted small">${fmt(items.reduce((a, f) => a + f.calories, 0))} kcal</span></h4>
-    <ul class="list">${items.map((f) => `<li><span>${esc(f.name)}${f.servings !== 1 ? ` ×${f.servings}` : ""}</span>
+    <ul class="list">${items.map((f) => `<li><span>${esc(U.food(f.name))}${f.servings !== 1 ? ` ×${f.servings}` : ""}</span>
       <span class="muted small">${fmt(f.calories)} kcal · P${fmt(f.protein_g)} C${fmt(f.carbs_g)} F${fmt(f.fat_g)}
       <button class="icon" data-del-food="${f.id}" title="Delete" aria-label="Delete ${esc(f.name)}">✕</button></span></li>`).join("") || `<li class="muted small">Nothing logged</li>`}</ul>`).join("");
 
@@ -354,7 +403,7 @@ $("#foodSearch").addEventListener("input", (e) => {
   searchTimer = setTimeout(async () => {
     const items = await api(`/api/food-library?q=${encodeURIComponent(q)}`);
     $("#foodResults").innerHTML = items.slice(0, 8).map((f, i) =>
-      `<li data-food-idx="${i}" tabindex="0"><span>${f.custom ? "★ " : ""}${esc(f.name)}</span><span class="muted small">${f.calories} kcal · P${f.protein_g}</span></li>`).join("")
+      `<li data-food-idx="${i}" tabindex="0"><span>${f.custom ? "★ " : ""}${esc(U.food(f.name))}</span><span class="muted small">${f.calories} kcal · P${f.protein_g}</span></li>`).join("")
       || `<li class="muted small">No matches. Enter it manually below, or use the calorie counter above.</li>`;
     $("#foodResults")._items = items;
   }, 200);
@@ -400,7 +449,7 @@ function renderAiItems() {
   $("#aiItems").innerHTML = ai.items.map((it, i) => `<tr data-i="${i}">
     <td><input type="checkbox" data-k="keep" ${it.keep ? "checked" : ""} aria-label="Include"></td>
     <td><input data-k="name" value="${esc(it.name)}" aria-label="Food"></td>
-    <td><input data-k="portion" value="${esc(it.portion)}" aria-label="Portion"></td>
+    <td><input data-k="portion" value="${esc(U.food(it.portion))}" aria-label="Portion"></td>
     ${AI_NUMS.map((k) => `<td><input type="number" min="0" step="1" data-k="${k}" value="${Math.round(it[k] ?? 0)}" aria-label="${k}"></td>`).join("")}
     <td><span class="conf ${it.confidence}" title="How sure the estimate is">${it.confidence}</span></td></tr>`).join("")
     || `<tr><td colspan="9" class="muted">No foods recognised.</td></tr>`;
@@ -504,7 +553,7 @@ function addSetRow(v = {}) {
   row.innerHTML = `<select data-k="part" aria-label="Body part">${picker.parts.map((p) => `<option ${p === part ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>
     <select data-k="exercise" aria-label="Exercise">${exerciseOptions(part, v.exercise)}</select>
     <input type="number" placeholder="Reps" data-k="reps" min="0" value="${esc(v.reps ?? "")}" aria-label="Reps">
-    <input type="number" placeholder="kg" step="0.5" min="0" data-k="weight_kg" value="${esc(v.weight_kg ?? "")}" aria-label="Weight kg">
+    <input type="number" placeholder="${U.label("mass")}" step="0.5" min="0" data-k="weight_kg" value="${esc(U.show("mass", v.weight_kg) ?? "")}" aria-label="Weight ${U.label("mass")}">
     <button type="button" class="icon" title="Remove set" aria-label="Remove set">✕</button>`;
   row.querySelector("button").onclick = () => row.remove();
   $('[data-k="exercise"]', row).value = v.exercise || "";
@@ -514,7 +563,7 @@ function addSetRow(v = {}) {
 $("#addSet").onclick = () => {
   const last = $$("#setRows .set-row").at(-1);
   addSetRow(last ? { part: $('[data-k="part"]', last).value, exercise: $('[data-k="exercise"]', last).value,
-                     reps: $('[data-k="reps"]', last).value, weight_kg: $('[data-k="weight_kg"]', last).value } : {});
+                     reps: $('[data-k="reps"]', last).value, weight_kg: U.toMetric("mass", $('[data-k="weight_kg"]', last).value) } : {});
 };
 
 function nowLocalInput() { return localIso().slice(0, 16); }
@@ -554,7 +603,7 @@ loaders.exercise = async () => {
   const acts = (await api("/api/activities?limit=200")).filter((a) => !filter || a.source === filter);
   $("#activityList").innerHTML = acts.map((a) => {
     const sets = a.sets.length ? summarizeSets(a.sets) : "";
-    const bits = [minutes(a.duration_s), a.distance_m && `${(a.distance_m / 1000).toFixed(2)} km`, a.calories && `${fmt(a.calories)} kcal`,
+    const bits = [minutes(a.duration_s), a.distance_m && U.fmt("distance", a.distance_m / 1000, 2), a.calories && `${fmt(a.calories)} kcal`,
       a.avg_hr && `♥ ${fmt(a.avg_hr)}${a.max_hr ? `/${fmt(a.max_hr)}` : ""}`, a.aerobic_te != null && `TE ${a.aerobic_te.toFixed(1)}`].filter(Boolean).join(" · ");
     return `<li><div><strong>${esc(a.name)}</strong> <span class="tag ${a.source}">${a.source}</span>
       <div class="meta">${new Date(a.start_time).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} · ${bits}</div></div>
@@ -569,7 +618,7 @@ function summarizeSets(sets) {
   for (const s of sets) {
     const k = s.exercise;
     if (!by.has(k)) by.set(k, []);
-    by.get(k).push(s.weight_kg ? `${s.reps ?? "?"}×${s.weight_kg}kg` : `${s.reps ?? "?"}`);
+    by.get(k).push(s.weight_kg ? `${s.reps ?? "?"}×${U.show("mass", s.weight_kg)}${U.label("mass")}` : `${s.reps ?? "?"}`);
   }
   return [...by].map(([ex, v]) => `${esc(ex)}: ${esc(v.join(", "))}`).join(" · ");
 }
@@ -580,7 +629,7 @@ $("#activityForm").addEventListener("submit", async (e) => {
   const sets = $$("#setRows .set-row").map((r) => ({
     exercise: $('[data-k="exercise"]', r).value.trim(),
     reps: numOrNull($('[data-k="reps"]', r).value),
-    weight_kg: numOrNull($('[data-k="weight_kg"]', r).value),
+    weight_kg: numOrNull(U.toMetric("mass", $('[data-k="weight_kg"]', r).value)),
   })).filter((s) => s.exercise);
   try {
     await api("/api/activities", { method: "POST", body: {
@@ -797,14 +846,14 @@ loaders.progress = async () => {
   const wpts = series.filter((x) => x.weight_kg != null);
   drawChart("weightChart", {
     data: { labels: wpts.map((x) => shortDay(x.day)), datasets: [
-      lineDs("Weight", wpts.map((x) => x.weight_kg), css("--series-1"), { pointRadius: 3 }),
-      ...(goals.target_weight_kg ? [targetDs("Target", wpts.map(() => goals.target_weight_kg))] : []),
+      lineDs("Weight", wpts.map((x) => U.show("mass", x.weight_kg)), css("--series-1"), { pointRadius: 3 }),
+      ...(goals.target_weight_kg ? [targetDs("Target", wpts.map(() => U.show("mass", goals.target_weight_kg)))] : []),
     ] },
-    options: { plugins: { legend: { display: !!goals.target_weight_kg } }, scales: { y: { beginAtZero: false, title: { display: true, text: "kg" } } } },
+    options: { plugins: { legend: { display: !!goals.target_weight_kg } }, scales: { y: { beginAtZero: false, title: { display: true, text: U.label("mass") } } } },
   });
   $("#weightSummary").textContent = wpts.length >= 2
-    ? `${(wpts.at(-1).weight_kg - wpts[0].weight_kg > 0 ? "+" : "")}${(wpts.at(-1).weight_kg - wpts[0].weight_kg).toFixed(1)} kg over this period`
-      + (goals.target_weight_kg ? ` · ${Math.abs(wpts.at(-1).weight_kg - goals.target_weight_kg).toFixed(1)} kg to target` : "") + "."
+    ? `${(wpts.at(-1).weight_kg - wpts[0].weight_kg > 0 ? "+" : "")}${U.fmt("mass", wpts.at(-1).weight_kg - wpts[0].weight_kg)} over this period`
+      + (goals.target_weight_kg ? ` · ${U.fmt("mass", Math.abs(wpts.at(-1).weight_kg - goals.target_weight_kg))} to target` : "") + "."
     : "Log a few weigh-ins (or sync a Garmin Index scale) to see your trend.";
 
   // workouts per week vs goal
@@ -852,17 +901,17 @@ async function drawStrength() {
   const pts = await api(`/api/progress/exercise?name=${encodeURIComponent(name)}`);
   drawChart("strengthChart", {
     data: { labels: pts.map((p) => shortDay(p.day)), datasets: [
-      lineDs("Estimated 1-rep max", pts.map((p) => p.est_1rm_kg), css("--series-1"), { pointRadius: 3 }),
-      lineDs("Heaviest set", pts.map((p) => p.top_weight_kg), css("--series-2"), { pointRadius: 3 }),
+      lineDs("Estimated 1-rep max", pts.map((p) => U.show("mass", p.est_1rm_kg)), css("--series-1"), { pointRadius: 3 }),
+      lineDs("Heaviest set", pts.map((p) => U.show("mass", p.top_weight_kg)), css("--series-2"), { pointRadius: 3 }),
     ] },
     options: {
-      scales: { y: { beginAtZero: false, title: { display: true, text: "kg" } } },
-      plugins: { tooltip: { callbacks: { footer: (items) => { const p = pts[items[0].dataIndex]; return `${p.sets} sets · ${p.reps} reps · ${fmt(p.volume_kg)} kg volume`; } } } },
+      scales: { y: { beginAtZero: false, title: { display: true, text: U.label("mass") } } },
+      plugins: { tooltip: { callbacks: { footer: (items) => { const p = pts[items[0].dataIndex]; return `${p.sets} sets · ${p.reps} reps · ${U.fmt("mass", p.volume_kg, 0)} volume`; } } } },
     },
   });
   const first = pts.find((p) => p.est_1rm_kg), last = [...pts].reverse().find((p) => p.est_1rm_kg);
   $("#strengthSummary").textContent = first && last && first !== last
-    ? `Estimated 1RM ${first.est_1rm_kg} → ${last.est_1rm_kg} kg (${last.est_1rm_kg >= first.est_1rm_kg ? "+" : ""}${(last.est_1rm_kg - first.est_1rm_kg).toFixed(1)} kg) across ${pts.length} sessions.`
+    ? `Estimated 1RM ${U.show("mass", first.est_1rm_kg)} → ${U.fmt("mass", last.est_1rm_kg)} (${last.est_1rm_kg >= first.est_1rm_kg ? "+" : ""}${U.fmt("mass", last.est_1rm_kg - first.est_1rm_kg)}) across ${pts.length} sessions.`
     : `${pts.length} session${pts.length === 1 ? "" : "s"} logged.`;
 }
 $("#exercisePick").onchange = () => drawStrength().catch((e) => toast(e.message, true));
@@ -888,9 +937,10 @@ const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 loaders.settings = async () => {
   const [p, g, rem] = await Promise.all([api("/api/profile"), api("/api/goals"), api("/api/reminders")]);
   const pf = $("#profileForm");
-  for (const [k, v] of Object.entries(p)) if (pf.elements[k]) pf.elements[k].value = Array.isArray(v) ? v.join(", ") : v;
+  U.set(p.units === "imperial");
+  for (const [k, v] of Object.entries(p)) if (pf.elements[k]) Array.isArray(v) ? (pf.elements[k].value = v.join(", ")) : setField(pf.elements[k], v);
   const gf = $("#goalsForm");
-  for (const [k, v] of Object.entries(g)) if (gf.elements[k] && k !== "follow_garmin") gf.elements[k].value = v ?? "";
+  for (const [k, v] of Object.entries(g)) if (gf.elements[k] && k !== "follow_garmin") setField(gf.elements[k], v);
   gf.elements.follow_garmin.checked = !!g.follow_garmin;
 
   $("#reminderRows").innerHTML = rem.map((r) => `<div class="rem-row" data-key="${r.key}">
@@ -1172,6 +1222,23 @@ $("#signOut").addEventListener("click", async () => {
 api("/api/auth/status").then((s) => $("#accountCard").classList.toggle("hidden", !s.enabled)).catch(() => {});
 
 
+U.apply();
+$("#unitsSelect").addEventListener("change", async (e) => {
+  // keep what's typed in the form correct when switching units
+  const pf = $("#profileForm"), gf = $("#goalsForm");
+  const metric = [...pf.querySelectorAll("input[data-unit]"), ...gf.querySelectorAll("input[data-unit]")]
+    .map((el) => [el, U.toMetric(el.dataset.unit, el.value)]);
+  U.set(e.target.value === "imperial");
+  for (const [el, v] of metric) setField(el, v);
+  try {
+    const p = await api("/api/profile");
+    await api("/api/profile", { method: "PUT", body: { ...p, units: e.target.value } });
+    toast(e.target.value === "imperial" ? "Showing lb, ft/in, miles and oz" : "Showing kg, cm, km and grams");
+  } catch (err) { toast(err.message, true); }
+});
+api("/api/profile").then((p) => {
+  if ((p.units === "imperial") !== U.imperial) { U.set(p.units === "imperial"); show(state.view || "dashboard"); }
+}).catch(() => {});
 const initial = location.hash.slice(1) === "plans" ? "exercise" : location.hash.slice(1);
 show(loaders[initial] ? initial : "dashboard");
 autoSync();

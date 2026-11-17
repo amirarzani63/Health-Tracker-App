@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.models import (Activity, DailyStats, FoodEntry, Goals, Profile, Reminder, ReminderLog,
                         WeightEntry, WorkoutPlan)
+from app import units
 from app.services import nutrition
 from app.services.workout_planner import WEEKDAYS
 
@@ -298,9 +299,9 @@ def recommendations(db: Session, today: date | None = None) -> list[dict]:
         change = vals[-1] - vals[0]
         if profile.goal == "lose" and change > 0.5:
             add("warn", "Weight is trending up",
-                f"+{change:.1f} kg over 3 weeks. If logs say you're on target, some foods may be under-counted — try weighing portions for a few days.")
+                f"{units.mass(change, profile, signed=True)} over 3 weeks. If logs say you're on target, some foods may be under-counted — try weighing portions for a few days.")
         elif profile.goal == "gain" and change < -0.3:
-            add("warn", "Weight is trending down", f"{change:.1f} kg over 3 weeks while aiming to gain. Add ~200 kcal a day.")
+            add("warn", "Weight is trending down", f"{units.mass(change, profile, signed=True)} over 3 weeks while aiming to gain. Add ~200 kcal a day.")
 
     order = {"warn": 0, "info": 1, "good": 2}
     recs.sort(key=lambda r: order[r["level"]])

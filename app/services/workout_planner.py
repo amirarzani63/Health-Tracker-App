@@ -100,7 +100,7 @@ def _week_note(week: int, weeks: int, goal: str) -> str:
     if week == 1:
         return "Find working weights: finish each set with 2–3 reps in reserve."
     if goal == "strength":
-        return "Add 2.5 kg to upper-body lifts and 5 kg to lower-body lifts if all reps were hit last week."
+        return "Add 2.5 kg / 5 lb to upper-body lifts and 5 kg / 10 lb to lower-body lifts if all reps were hit last week."
     if goal in ("endurance", "fat_loss"):
         return "Add 1–2 reps per set or ~10% cardio duration versus last week."
     return "Add a rep to each set, or add load once you hit the top of the rep range."

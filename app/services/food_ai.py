@@ -17,7 +17,8 @@ _NUMS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, 
          "a couple of": 2, "few": 3, "a few": 3, "dozen": 12, "quarter": 0.25}
 # unit word -> grams (None means "count of the food's own unit")
 _UNITS = {"g": 1, "gr": 1, "gram": 1, "grams": 1, "kg": 1000, "ml": 1, "l": 1000, "oz": 28.35,
-          "lb": 453.6, "cup": 240, "cups": 240, "tbsp": 15, "tablespoon": 15, "tablespoons": 15,
+          "lb": 453.6, "lbs": 453.6, "pound": 453.6, "pounds": 453.6,
+          "ounce": 28.35, "ounces": 28.35, "fl": 29.57, "floz": 29.57, "pint": 568, "pints": 568, "cup": 240, "cups": 240, "tbsp": 15, "tablespoon": 15, "tablespoons": 15,
           "tsp": 5, "teaspoon": 5, "teaspoons": 5,
           "slice": None, "slices": None, "piece": None, "pieces": None, "serving": None,
           "servings": None, "bowl": None, "bowls": None, "glass": None, "glasses": None,
@@ -108,7 +109,8 @@ def parse_item(chunk: str, db: Session | None = None) -> dict[str, Any] | None:
             factor *= 0.7
 
     name = chunk.strip(" .!")
-    portion = f"{round(factor * unit_g)} g" if grams_given else (
+    volume = bool(re.search(r"\b(ml|l|fl|floz|pints?|cups?)\b", text)) or re.search(r"\bml\b", unit_label)
+    portion = f"{round(factor * unit_g)} {'ml' if volume else 'g'}" if grams_given else (
         unit_label if factor == 1 else f"{round(factor, 2):g} × {unit_label}")
     return {
         "name": name[:120], "portion": portion,
