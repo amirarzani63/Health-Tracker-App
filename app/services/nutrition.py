@@ -82,42 +82,10 @@ def compute_targets(profile, garmin_active_calories: float | None = None,
 
 
 # ---------------------------------------------------------------------------
-# Food library (per serving) for quick-add and suggestions
+# The food database lives in app/data/foods.csv (see services/food_db.py).
 # ---------------------------------------------------------------------------
 
 # tags: meat, fish, dairy, egg, gluten, nuts, soy
-FOODS = [
-    {"name": "Oatmeal (1 cup cooked)", "calories": 166, "protein_g": 6, "carbs_g": 28, "fat_g": 3.6, "tags": ["gluten"]},
-    {"name": "Greek yogurt, plain (200g)", "calories": 146, "protein_g": 20, "carbs_g": 8, "fat_g": 4, "tags": ["dairy"]},
-    {"name": "Egg, large", "calories": 72, "protein_g": 6.3, "carbs_g": 0.4, "fat_g": 4.8, "tags": ["egg"]},
-    {"name": "Banana, medium", "calories": 105, "protein_g": 1.3, "carbs_g": 27, "fat_g": 0.4, "tags": []},
-    {"name": "Apple, medium", "calories": 95, "protein_g": 0.5, "carbs_g": 25, "fat_g": 0.3, "tags": []},
-    {"name": "Blueberries (1 cup)", "calories": 84, "protein_g": 1.1, "carbs_g": 21, "fat_g": 0.5, "tags": []},
-    {"name": "Chicken breast, cooked (150g)", "calories": 248, "protein_g": 46, "carbs_g": 0, "fat_g": 5.4, "tags": ["meat"]},
-    {"name": "Salmon, cooked (150g)", "calories": 312, "protein_g": 34, "carbs_g": 0, "fat_g": 19, "tags": ["fish"]},
-    {"name": "Lean ground beef 90%, cooked (150g)", "calories": 325, "protein_g": 39, "carbs_g": 0, "fat_g": 18, "tags": ["meat"]},
-    {"name": "Tofu, firm (150g)", "calories": 216, "protein_g": 24, "carbs_g": 4, "fat_g": 13, "tags": ["soy"]},
-    {"name": "Lentils, cooked (1 cup)", "calories": 230, "protein_g": 18, "carbs_g": 40, "fat_g": 0.8, "tags": []},
-    {"name": "Chickpeas, cooked (1 cup)", "calories": 269, "protein_g": 14.5, "carbs_g": 45, "fat_g": 4.2, "tags": []},
-    {"name": "Brown rice, cooked (1 cup)", "calories": 216, "protein_g": 5, "carbs_g": 45, "fat_g": 1.8, "tags": []},
-    {"name": "Quinoa, cooked (1 cup)", "calories": 222, "protein_g": 8, "carbs_g": 39, "fat_g": 3.6, "tags": []},
-    {"name": "Sweet potato, baked (medium)", "calories": 112, "protein_g": 2, "carbs_g": 26, "fat_g": 0.1, "tags": []},
-    {"name": "Whole wheat bread (slice)", "calories": 81, "protein_g": 4, "carbs_g": 14, "fat_g": 1.1, "tags": ["gluten"]},
-    {"name": "Whole wheat pasta, cooked (1 cup)", "calories": 174, "protein_g": 7.5, "carbs_g": 37, "fat_g": 0.8, "tags": ["gluten"]},
-    {"name": "Broccoli (1 cup)", "calories": 55, "protein_g": 3.7, "carbs_g": 11, "fat_g": 0.6, "tags": []},
-    {"name": "Mixed salad greens (2 cups)", "calories": 18, "protein_g": 1.5, "carbs_g": 3.5, "fat_g": 0.2, "tags": []},
-    {"name": "Avocado (half)", "calories": 120, "protein_g": 1.5, "carbs_g": 6, "fat_g": 11, "tags": []},
-    {"name": "Olive oil (1 tbsp)", "calories": 119, "protein_g": 0, "carbs_g": 0, "fat_g": 13.5, "tags": []},
-    {"name": "Almonds (28g)", "calories": 164, "protein_g": 6, "carbs_g": 6, "fat_g": 14, "tags": ["nuts"]},
-    {"name": "Peanut butter (2 tbsp)", "calories": 188, "protein_g": 8, "carbs_g": 6, "fat_g": 16, "tags": ["nuts"]},
-    {"name": "Whey protein (1 scoop)", "calories": 120, "protein_g": 24, "carbs_g": 3, "fat_g": 1.5, "tags": ["dairy"]},
-    {"name": "Pea protein (1 scoop)", "calories": 120, "protein_g": 24, "carbs_g": 2, "fat_g": 2, "tags": []},
-    {"name": "Cottage cheese, low-fat (1 cup)", "calories": 163, "protein_g": 28, "carbs_g": 6, "fat_g": 2.3, "tags": ["dairy"]},
-    {"name": "Milk, 2% (1 cup)", "calories": 122, "protein_g": 8, "carbs_g": 12, "fat_g": 4.8, "tags": ["dairy"]},
-    {"name": "Cheddar cheese (28g)", "calories": 113, "protein_g": 7, "carbs_g": 0.4, "fat_g": 9.3, "tags": ["dairy"]},
-    {"name": "Tuna, canned in water (1 can)", "calories": 120, "protein_g": 26, "carbs_g": 0, "fat_g": 1, "tags": ["fish"]},
-]
-
 # Meal ideas with approximate macros. tags as above.
 MEAL_IDEAS = [
     {"meal": "breakfast", "name": "Greek yogurt bowl with berries, oats & honey", "calories": 420, "protein_g": 30, "carbs_g": 58, "fat_g": 8, "tags": ["dairy", "gluten"]},
@@ -167,7 +135,7 @@ _FIBER = {
     "Apple with 2 tbsp peanut butter": 6.5, "Hummus with carrot & cucumber sticks": 6,
     "Hard-boiled eggs (2) & cherry tomatoes": 1.5, "Rice cakes with cottage cheese": 1,
 }
-for _item in FOODS + MEAL_IDEAS:
+for _item in MEAL_IDEAS:
     _item["fiber_g"] = _FIBER.get(_item["name"], 0)
 
 EXCLUDED_BY_DIET = {
@@ -181,11 +149,6 @@ EXCLUDED_BY_DIET = {
 def allowed(item: dict, diet_type: str, allergies: list[str]) -> bool:
     banned = EXCLUDED_BY_DIET.get(diet_type, set()) | {a.lower().strip() for a in allergies}
     return not (set(item["tags"]) & banned)
-
-
-def search_foods(query: str, diet_type: str = "omnivore", allergies: list[str] | None = None) -> list[dict]:
-    q = query.lower().strip()
-    return [f for f in FOODS if q in f["name"].lower() and allowed(f, diet_type, allergies or [])]
 
 
 def suggest_meals(profile, targets: Targets, consumed: dict, logged_meals: set[str]) -> dict:

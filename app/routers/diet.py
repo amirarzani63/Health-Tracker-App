@@ -1,13 +1,14 @@
 from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import Activity, FoodEntry
 from app.schemas import FoodIn, FoodOut
-from app.services import insights, nutrition
+from app.services import food_db, insights, nutrition
 from app.services.insights import get_profile
 
 router = APIRouter(prefix="/api", tags=["diet"])
@@ -49,7 +50,35 @@ def delete_food(entry_id: int, db: Session = Depends(get_db)):
 @router.get("/food-library")
 def food_library(q: str = "", db: Session = Depends(get_db)):
     profile = get_profile(db)
-    return nutrition.search_foods(q, profile.diet_type, profile.allergies or [])
+    banned = nutrition.EXCLUDED_BY_DIET.get(profile.diet_type, set()) | {a.lower().strip() for a in profile.allergies or []}
+    return food_db.search(q, db, banned)
+
+
+class MyFoodIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    unit: str = "1 serving"
+    calories: float = Field(ge=0)
+    protein_g: float = Field(0, ge=0)
+    carbs_g: float = Field(0, ge=0)
+    fat_g: float = Field(0, ge=0)
+    fiber_g: float = Field(0, ge=0)
+
+
+@router.post("/my-foods")
+def save_my_food(data: MyFoodIn, db: Session = Depends(get_db)):
+    """Remember a food the user typed in, so search and the calorie counter know it."""
+    row = food_db.save_custom(db, data.name, data.unit, data.model_dump())
+    return {"id": row.id, "name": row.name}
+
+
+@router.get("/my-foods")
+def list_my_foods(db: Session = Depends(get_db)):
+    return [f.as_dict() for f in food_db.custom_foods(db)]
+
+
+@router.get("/food-db/stats")
+def food_db_stats(db: Session = Depends(get_db)):
+    return {"builtin": len(food_db.builtin_foods()), "mine": len(food_db.custom_foods(db))}
 
 
 @router.get("/nutrition/summary")

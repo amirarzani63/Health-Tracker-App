@@ -354,7 +354,7 @@ $("#foodSearch").addEventListener("input", (e) => {
   searchTimer = setTimeout(async () => {
     const items = await api(`/api/food-library?q=${encodeURIComponent(q)}`);
     $("#foodResults").innerHTML = items.slice(0, 8).map((f, i) =>
-      `<li data-food-idx="${i}" tabindex="0"><span>${esc(f.name)}</span><span class="muted small">${f.calories} kcal · P${f.protein_g}</span></li>`).join("")
+      `<li data-food-idx="${i}" tabindex="0"><span>${f.custom ? "★ " : ""}${esc(f.name)}</span><span class="muted small">${f.calories} kcal · P${f.protein_g}</span></li>`).join("")
       || `<li class="muted small">No matches. Enter it manually below, or use the calorie counter above.</li>`;
     $("#foodResults")._items = items;
   }, 200);
@@ -365,9 +365,12 @@ $("#foodResults").addEventListener("click", (e) => {
   const f = $("#foodResults")._items[li.dataset.foodIdx];
   const form = $("#foodForm");
   ["name", "calories", "protein_g", "carbs_g", "fat_g", "fiber_g"].forEach((k) => (form.elements[k].value = f[k] ?? 0));
+  form._fromDb = true;
   $("#foodResults").innerHTML = "";
   $("#foodSearch").value = "";
 });
+$("#foodForm").elements.name.addEventListener("input", () => ($("#foodForm")._fromDb = false));
+api("/api/food-db/stats").then((s) => ($("#foodDbCount").textContent = `· ${s.builtin} foods${s.mine ? ` + ${s.mine} of yours` : ""}`)).catch(() => {});
 $("#foodForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const d = formData(e.target);
@@ -378,7 +381,13 @@ $("#foodForm").addEventListener("submit", async (e) => {
       calories: Number(d.calories) * s, protein_g: Number(d.protein_g) * s,
       carbs_g: Number(d.carbs_g) * s, fat_g: Number(d.fat_g) * s, fiber_g: Number(d.fiber_g) * s,
     });
+    if (e.target.elements.remember.checked && !e.target._fromDb) {
+      await api("/api/my-foods", { method: "POST", body: {
+        name: d.name.trim(), calories: Number(d.calories) || 0, protein_g: Number(d.protein_g) || 0,
+        carbs_g: Number(d.carbs_g) || 0, fat_g: Number(d.fat_g) || 0, fiber_g: Number(d.fiber_g) || 0 } }).catch(() => {});
+    }
     e.target.reset();
+    e.target._fromDb = false;
   } catch (err) { toast(err.message, true); }
 });
 

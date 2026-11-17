@@ -165,3 +165,19 @@ class ReminderLog(Base):
 
     day: Mapped[date] = mapped_column(Date, primary_key=True)
     key: Mapped[str] = mapped_column(String(30), primary_key=True)
+
+
+class CustomFood(Base):
+    """A food the user added themselves; the calorie counter and search learn it."""
+
+    __tablename__ = "custom_foods"
+    __table_args__ = (UniqueConstraint("name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(120))
+    unit: Mapped[str] = mapped_column(String(60), default="1 serving")
+    calories: Mapped[float] = mapped_column(Float, default=0)
+    protein_g: Mapped[float] = mapped_column(Float, default=0)
+    carbs_g: Mapped[float] = mapped_column(Float, default=0)
+    fat_g: Mapped[float] = mapped_column(Float, default=0)
+    fiber_g: Mapped[float] = mapped_column(Float, default=0)

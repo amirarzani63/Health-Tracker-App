@@ -26,10 +26,11 @@ async def analyze_meal(
     description: str = Form(""),
     meal: str = Form(""),
     svc=Depends(analyzer),
+    db: Session = Depends(get_db),
 ):
     """Estimate foods and macros from a typed description (built-in food table). Nothing is saved."""
     try:
-        return svc.analyze(description, None, meal if meal in MEALS else None)
+        return svc.analyze(description, None, meal if meal in MEALS else None, db=db)
     except FoodAIError as e:
         raise HTTPException(e.status, str(e))
 

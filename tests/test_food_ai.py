@@ -25,7 +25,7 @@ def test_grams_scale_portion():
 def test_longest_name_wins_and_fractions():
     assert parse_item("greek yogurt")["protein_g"] == 20
     assert parse_item("1/2 avocado")["calories"] == 80
-    assert parse_item("1 tbsp peanut butter")["calories"] == pytest.approx(88.1, abs=0.1)
+    assert parse_item("1 tbsp peanut butter")["calories"] == 94
 
 
 def test_unknown_foods_reported():
@@ -50,3 +50,35 @@ def test_endpoint_and_bulk_log(client):
     assert client.post("/api/foods/analyze", data={"description": ""}).status_code == 400
     assert client.post("/api/foods/bulk", json={"items": []}).status_code == 400
     assert client.get("/api/ai/status").json() == {"configured": True}
+
+
+def test_database_rows_are_consistent():
+    from app.services import food_db
+    foods = food_db.builtin_foods()
+    assert len(foods) > 350
+    seen = {}
+    for f in foods:
+        for n in f.names:
+            assert n not in seen, f"'{n}' listed twice ({seen[n]} and {f.name})"
+            seen[n] = f.name
+        if "alcohol" in f.tags or f.name in {"beer", "wine", "spirits", "cocktail", "prosecco", "light beer"}:
+            continue
+        est = 4 * f.protein_g + 4 * f.carbs_g + 9 * f.fat_g
+        assert abs(est - f.calories) <= max(25, 0.2 * f.calories), (f.name, f.calories, round(est))
+
+
+def test_cup_amounts_and_trailing_amounts():
+    assert parse_item("1 cup brown rice")["calories"] == 216
+    assert parse_item("pepperoni pizza 2 slices")["calories"] == 620
+    assert parse_item("3 strawberries")["calories"] == 12
+
+
+def test_my_foods_are_learned(client):
+    r = client.post("/api/foods/analyze", data={"description": "2 mama's kotlet"})
+    assert r.json()["items"] == []
+    client.post("/api/my-foods", json={"name": "Mama's kotlet", "calories": 210, "protein_g": 12, "fat_g": 13, "carbs_g": 11})
+    items = client.post("/api/foods/analyze", data={"description": "2 mama's kotlet and a banana"}).json()["items"]
+    assert [round(i["calories"]) for i in items] == [420, 105]
+    found = client.get("/api/food-library?q=kotlet").json()
+    assert found[0]["custom"] and found[0]["calories"] == 210
+    assert client.get("/api/food-db/stats").json()["mine"] == 1
