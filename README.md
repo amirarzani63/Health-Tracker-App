@@ -9,7 +9,7 @@ suggestions, and automatically pull activity and wellness data from Garmin Conne
 | Tab | What it does |
 | --- | --- |
 | **Today** | Everything at a glance: calories and protein left, steps, workouts and active minutes this week, sleep and weight vs. your goals; a "today's picture" combining what you ate with what your Garmin says you burned (energy balance); recommendations; today's planned workout with a recovery hint; a 14-day eaten-vs-burned chart; quick buttons to log food, a workout or your weight; a setup checklist for first-time use |
-| **Food** | AI calorie counter (describe a meal and/or snap photos: Claude itemizes it, you review and log); searchable food list; calories, protein, carbs, fat and fibre vs. targets; food log by meal; meal ideas that fit what's left of today's calories and protein, filtered by diet type and foods to avoid |
+| **Food** | Calorie counter (type a meal like "2 eggs, 150g chicken": the built-in food table itemizes it, you review and log; no API or cost); searchable food list; calories, protein, carbs, fat and fibre vs. targets; food log by meal; meal ideas that fit what's left of today's calories and protein, filtered by diet type and foods to avoid |
 | **Workouts** | Log workouts with type, duration, distance, calories, heart rate and sets (exercise, reps, weight). "Load today's plan" pre-fills the sets from your active plan. History merges manual workouts with those synced from your fenix |
 | **Plans** | Builds a weekly plan for strength, muscle gain, weight loss, cardio/endurance or general fitness: 2–6 days, gym/home/bodyweight, goal-specific sets/reps/rest, heart-rate-zone cardio days, weekly progression and a deload week |
 | **Progress** | Week / month / 3-month / year views: calories eaten vs. target vs. burned, daily macros, a weekly summary table (days logged, averages, days on target, workouts vs. goal, active minutes, steps, sleep, weight change), body weight vs. target, workouts per week vs. goal, strength progress per exercise (estimated 1-rep max and heaviest set), steps, resting heart rate and sleep |
@@ -80,15 +80,6 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-To use the AI calorie counter, set an Anthropic API key before starting the server
-(get one at https://console.anthropic.com):
-
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...   # Windows PowerShell: $env:ANTHROPIC_API_KEY="sk-ant-..."
-```
-
-Without a key everything else works and the counter shows a setup hint instead.
-
 Open http://localhost:8000, fill in **Profile** first (height, weight, goal, diet), then go to
 **Garmin** and sign in with your Garmin Connect account.
 
@@ -97,8 +88,7 @@ API docs are at http://localhost:8000/docs.
 ### Use it on your phone
 
 Run the server so other devices on your home Wi-Fi can reach it, then open `http://<your-computer's-IP>:8000`
-on your phone and choose **Add to Home Screen**. It then opens like an app, and the camera button in the calorie
-counter takes photos directly:
+on your phone and choose **Add to Home Screen**. It then opens like an app:
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000
@@ -121,7 +111,6 @@ Everything below can be done from your phone's browser.
 3. Fill in:
    - `DATABASE_URL`: the Neon connection string from step 1.
    - `APP_PASSWORD`: the password you'll sign in with. Make it long; the app is on the internet.
-   - `ANTHROPIC_API_KEY`: optional, for the photo/text calorie counter. Leave blank to skip.
 4. Tap **Apply** and wait a few minutes for the first build. You get an address like
    `https://health-tracker-xxxx.onrender.com`.
 
@@ -151,7 +140,6 @@ the saved session is stored in the database and the server will use it.
 | `HEALTH_DATA_DIR` | `./data` | Where the SQLite DB and Garmin session tokens live |
 | `DATABASE_URL` | `sqlite:///<data dir>/health.db` | Postgres (`postgres://…`, e.g. Neon) or any SQLAlchemy URL |
 | `GARMIN_AUTO_SYNC_HOURS` | `6` | Background sync interval; `0` disables it |
-| `ANTHROPIC_API_KEY` | – | Enables the AI calorie counter |
 | `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` | – | Enables Strava import (from strava.com/settings/api) |
 | `APP_PASSWORD` | – | Turns on the sign-in page. **Required when the app is on the internet** |
 | `SECRET_KEY` | derived from the password | Signs session cookies; changing it signs out all devices |
@@ -174,14 +162,13 @@ library, which talks to the same endpoints as the Garmin Connect website.
 **Security note:** set `APP_PASSWORD` before putting the app on the internet. Without it there is no
 sign-in page, which is only fine on your own computer or home network. Failed sign-ins are rate-limited.
 
-## AI calorie counter: how it works
+## Calorie counter: how it works
 
-- Photos are resized in your browser (max 1568 px, JPEG) before upload, so big phone photos are fast
-  and cheap to analyse. iPhone HEIC photos work in browsers that can display them (e.g. Safari).
-- The description and photos are sent to the Claude API, which returns a structured list of items.
-  Quantities you type override what's seen in the photo, so "200 g chicken" beats a visual guess.
-- Nothing is saved until you click **Add to food log**. Untick items, fix names, or adjust numbers first.
-- Each analysis is one API call, typically a few US cents with photos (set `FOOD_AI_MODEL=claude-sonnet-5-5` for roughly half the cost). Photos aren't stored by the app.
+- Runs entirely inside the app with a built-in table of about 120 common foods: no API, key or cost.
+- Type foods separated by commas or "and", with amounts: "2 eggs", "150g chicken breast", "1 cup rice",
+  "half an avocado". Grams are the most accurate; counts use a typical portion.
+- Foods it doesn't know are listed so you can add them with **Add food manually**.
+- Nothing is saved until you click **Add to food log**. Untick items or adjust numbers first.
 
 ## Project layout
 

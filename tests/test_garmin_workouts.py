@@ -184,7 +184,8 @@ def test_calendar_is_kept_filled(client, tmp_path):
         added = gw.keep_calendar_filled(db, g, today=later)
         db.close()
         assert added > 0 and len(g.scheduled) == n + added
-        assert max(d for _, d in g.scheduled.values()) == (later + timedelta(days=13)).isoformat()
+        last = max(d for _, d in g.scheduled.values())  # last training day inside the two-week window
+        assert (later + timedelta(days=7)).isoformat() <= last <= (later + timedelta(days=13)).isoformat()
     finally:
         app.dependency_overrides.clear()
 

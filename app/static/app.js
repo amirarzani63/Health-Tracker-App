@@ -383,46 +383,8 @@ $("#foodForm").addEventListener("submit", async (e) => {
 });
 
 // ---------------------------------------------------------------- AI calorie counter
-const ai = { photos: [], items: [] };
+const ai = { items: [] };
 
-// Downscale photos in the browser: keeps uploads small and converts formats
-// the browser can decode (e.g. iPhone HEIC in Safari) to JPEG.
-async function resizeImage(file, maxDim = 1568, quality = 0.85) {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise((resolve, reject) => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.onerror = () => reject(new Error(`Couldn't read ${file.name}. Try a JPEG or PNG.`));
-      i.src = url;
-    });
-    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-    return await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
-$("#aiPhotos").addEventListener("change", async (e) => {
-  const files = [...e.target.files].slice(0, 4);
-  if (e.target.files.length > 4) toast("Only the first 4 photos will be used");
-  ai.photos = [];
-  $("#aiPreviews").innerHTML = "";
-  for (const f of files) {
-    try {
-      const blob = await resizeImage(f);
-      ai.photos.push(blob);
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(blob);
-      img.alt = f.name;
-      $("#aiPreviews").appendChild(img);
-    } catch (err) { toast(err.message, true); }
-  }
-});
 
 const AI_NUMS = ["calories", "protein_g", "carbs_g", "fat_g", "fiber_g"];
 function renderAiItems() {
@@ -431,7 +393,7 @@ function renderAiItems() {
     <td><input data-k="name" value="${esc(it.name)}" aria-label="Food"></td>
     <td><input data-k="portion" value="${esc(it.portion)}" aria-label="Portion"></td>
     ${AI_NUMS.map((k) => `<td><input type="number" min="0" step="1" data-k="${k}" value="${Math.round(it[k] ?? 0)}" aria-label="${k}"></td>`).join("")}
-    <td><span class="conf ${it.confidence}" title="AI confidence">${it.confidence}</span></td></tr>`).join("")
+    <td><span class="conf ${it.confidence}" title="How sure the estimate is">${it.confidence}</span></td></tr>`).join("")
     || `<tr><td colspan="9" class="muted">No foods recognised.</td></tr>`;
   updateAiTotals();
 }
@@ -451,22 +413,20 @@ $("#aiItems").addEventListener("input", (e) => {
 });
 function resetAi() {
   ai.items = [];
-  ai.photos = [];
   $("#aiForm").reset();
-  $("#aiPreviews").innerHTML = "";
   $("#aiResult").classList.add("hidden");
 }
 $("#aiForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const description = e.target.elements.description.value.trim();
-  if (!description && !ai.photos.length) return toast("Describe your meal or add a photo", true);
+  if (!description) return toast("Type what you ate", true);
   const fd = new FormData();
   fd.append("description", description);
-  fd.append("meal", e.target.elements.meal.value);
-  ai.photos.forEach((b, i) => fd.append("photos", b, `photo${i + 1}.jpg`));
+  const h = new Date().getHours();
+  fd.append("meal", e.target.elements.meal.value || (h < 11 ? "breakfast" : h < 15 ? "lunch" : h >= 17 && h < 22 ? "dinner" : "snack"));
   const btn = $("#aiSubmit");
   btn.disabled = true;
-  btn.textContent = "Analysing…";
+  btn.textContent = "Counting…";
   try {
     const res = await fetch("/api/foods/analyze", { method: "POST", body: fd });
     if (res.status === 401) { location.href = "/login"; return; }
@@ -1202,15 +1162,6 @@ $("#signOut").addEventListener("click", async () => {
 });
 api("/api/auth/status").then((s) => $("#accountCard").classList.toggle("hidden", !s.enabled)).catch(() => {});
 
-(async () => {
-  try {
-    const { configured } = await api("/api/ai/status");
-    if (!configured) {
-      $("#aiForm").classList.add("hidden");
-      $("#aiDisabled").classList.remove("hidden");
-    }
-  } catch {}
-})();
 
 const initial = location.hash.slice(1) === "plans" ? "exercise" : location.hash.slice(1);
 show(loaders[initial] ? initial : "dashboard");

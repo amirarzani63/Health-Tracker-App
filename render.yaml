@@ -14,8 +14,6 @@ services:
         sync: false
       - key: APP_PASSWORD       # the password you'll sign in with
         sync: false
-      - key: ANTHROPIC_API_KEY  # optional: enables the photo/text calorie counter
-        sync: false
       - key: STRAVA_CLIENT_ID      # optional: from strava.com/settings/api
         sync: false
       - key: STRAVA_CLIENT_SECRET
