@@ -32,3 +32,10 @@ def test_checkins(client):
     client.post("/api/plans/checkins/all", json={"day": "2026-11-19", "done": False})
     client.post("/api/plans/checkins/all", json={"day": "2026-11-18", "done": None})
     assert client.get("/api/plans/checkins/all").json() == {"2026-11-19": False}
+
+
+def test_water(client):
+    r = client.post("/api/water", json={"day": "2026-11-18", "change": 1}).json()
+    assert r["glasses"] == 1 and 8 <= r["goal"] <= 12
+    client.post("/api/water", json={"day": "2026-11-18", "change": -5})
+    assert client.get("/api/water?day=2026-11-18").json()["glasses"] == 0

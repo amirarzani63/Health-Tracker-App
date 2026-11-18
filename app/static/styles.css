@@ -663,3 +663,11 @@ body.dlg-open { overflow: hidden; }
 #dayChips { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: row; }
 #dayChips .chip .value { white-space: normal; }
 @media (max-width: 600px) { nav button { overflow: visible; text-overflow: clip; min-width: max-content; } }
+
+/* water glasses */
+.water-glasses { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.glass { width: 26px; height: 34px; border: 2px solid #7cc4ff; border-top: none; border-radius: 0 0 7px 7px;
+  background: transparent; border-top: 2px solid #7cc4ff55; }
+.glass.full { background: linear-gradient(#bfe3ff, #3fa2ff); }
+.water-btns { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

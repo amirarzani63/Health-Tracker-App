@@ -182,3 +182,12 @@ class CustomFood(Base):
     carbs_g: Mapped[float] = mapped_column(Float, default=0)
     fat_g: Mapped[float] = mapped_column(Float, default=0)
     fiber_g: Mapped[float] = mapped_column(Float, default=0)
+
+
+class WaterLog(Base):
+    """Glasses of water drunk per day (1 glass ≈ 250 ml)."""
+
+    __tablename__ = "water_log"
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    glasses: Mapped[int] = mapped_column(Integer, default=0)

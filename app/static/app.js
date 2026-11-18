@@ -243,7 +243,9 @@ loaders.dashboard = async () => {
   renderCluster(d);
 
   const chip = (label, value, sub, attrs = "") => `<div class="chip" ${attrs}><span class="label">${label}</span><span class="value">${value}</span><span class="sub">${sub}</span></div>`;
+  const w = await api(`/api/water?day=${state.day}`).catch(() => null);
   $("#dayChips").innerHTML = [
+    w ? chip("💧 Water", `${w.glasses}/${w.goal} glasses`, waterLine(w)) : "",
     chip("Sleep", g.sleep_h.value == null ? "–" : `${g.sleep_h.value} h`, `goal ${g.sleep_h.goal} h`),
     chip("Workouts", `${g.workouts_week.value}/${g.workouts_week.goal}`, "this week"),
     chip("Weight", g.weight.value == null ? "–" : `${U.show("mass", g.weight.value)}`, g.weight.value == null ? "not logged" : U.label("mass")),
@@ -393,6 +395,7 @@ $("#weightDialog").addEventListener("close", async () => {
 
 // ================================================================ FOOD
 loaders.diet = async () => {
+  loadWater();
   const [summary, foods, sugg] = await Promise.all([
     api(`/api/nutrition/summary?day=${state.day}`),
     api(`/api/foods?day=${state.day}`),
@@ -1602,3 +1605,29 @@ document.addEventListener("visibilitychange", () => {
   window.addEventListener("popstate", () => { if (open) { const d = open; open = null; d.close(); } });
   document.addEventListener("click", (e) => { if (e.target.tagName === "DIALOG" && e.target.open) e.target.close(); });
 })();
+
+
+// ---------------------------------------------------------------- water (in glasses)
+function waterLine(w) {
+  const left = Math.max(0, w.goal - w.glasses);
+  return left ? `${left} more to go` : "Goal reached ✓";
+}
+function renderWater(w) {
+  $("#waterSub").textContent = `${w.glasses} of ${w.goal} glasses · ${waterLine(w)}`;
+  const n = Math.max(w.goal, w.glasses);
+  $("#waterGlasses").innerHTML = Array.from({ length: n }, (_, i) =>
+    `<span class="glass${i < w.glasses ? " full" : ""}" aria-hidden="true"></span>`).join("")
+    + `<span class="sr-only">${w.glasses} of ${w.goal} glasses</span>`;
+}
+async function loadWater() {
+  try { renderWater(await api(`/api/water?day=${state.day}`)); } catch {}
+}
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-water]");
+  if (!b) return;
+  try {
+    const w = await api("/api/water", { method: "POST", body: { day: state.day, change: Number(b.dataset.water) } });
+    renderWater(w);
+    if (Number(b.dataset.water) > 0) toast(w.glasses >= w.goal ? "Water goal reached 💧" : `💧 ${w.glasses} of ${w.goal} glasses`);
+  } catch (err) { toast(err.message, true); }
+});

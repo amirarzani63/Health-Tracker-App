@@ -103,3 +103,35 @@ def diet_suggestions(day: date, db: Session = Depends(get_db)):
             break
     result["targets"] = targets.dict()
     return result
+
+
+# ---------------------------------------------------------------- water, counted in glasses
+from app.models import WaterLog  # noqa: E402
+
+GLASS_ML = 250
+
+
+def water_goal(db: Session) -> int:
+    """About 30 ml per kg of body weight, in 250 ml glasses (8 to 12)."""
+    kg = get_profile(db).weight_kg or 75
+    return max(8, min(12, round(kg * 30 / GLASS_ML)))
+
+
+class WaterIn(BaseModel):
+    day: date
+    change: int = Field(0, ge=-20, le=20)
+
+
+@router.get("/water")
+def get_water(day: date, db: Session = Depends(get_db)) -> dict:
+    row = db.get(WaterLog, day)
+    return {"day": day, "glasses": row.glasses if row else 0, "goal": water_goal(db), "glass_ml": GLASS_ML}
+
+
+@router.post("/water")
+def add_water(data: WaterIn, db: Session = Depends(get_db)) -> dict:
+    row = db.get(WaterLog, data.day) or WaterLog(day=data.day, glasses=0)
+    row.glasses = max(0, min(40, row.glasses + data.change))
+    db.add(row)
+    db.commit()
+    return get_water(data.day, db)
