@@ -233,20 +233,10 @@ loaders.dashboard = async () => {
   renderSetup(d.setup);
   renderHero(d);
 
-  const left = Math.round(t.calories - c.calories);
-  const proteinLeft = Math.max(0, Math.round(t.protein_g - c.protein_g));
-  const pct = Math.min(100, (c.calories / t.calories) * 100);
-  $("#foodNumbers").innerHTML = `
-    <div class="food-big">
-      <div><span class="num">${fmt(Math.abs(left))}</span><span class="unit">kcal ${left >= 0 ? "left" : "over"}</span></div>
-      <div><span class="num">${fmt(proteinLeft)}</span><span class="unit">g protein to go</span></div>
-    </div>
-    <div class="track"><div class="fill${left < 0 ? " over" : ""}" style="width:${pct}%"></div></div>
-    <p class="muted small">${fmt(c.calories)} of ${fmt(t.calories)} kcal eaten${d.burned ? ` · ${fmt(d.burned)} burned on your fenix` : ""}</p>`;
+  renderCluster(d);
 
   const chip = (label, value, sub, attrs = "") => `<div class="chip" ${attrs}><span class="label">${label}</span><span class="value">${value}</span><span class="sub">${sub}</span></div>`;
   $("#dayChips").innerHTML = [
-    chip("Steps", g.steps.value == null ? "–" : fmt(g.steps.value), `of ${fmt(g.steps.goal)}`),
     chip("Sleep", g.sleep_h.value == null ? "–" : `${g.sleep_h.value} h`, `goal ${g.sleep_h.goal} h`),
     chip("Workouts", `${g.workouts_week.value}/${g.workouts_week.goal}`, "this week"),
     chip("Weight", g.weight.value == null ? "+ Log" : `${U.show("mass", g.weight.value)}`, g.weight.value == null ? "tap to add" : `${U.label("mass")} · tap to log`,
@@ -257,6 +247,51 @@ loaders.dashboard = async () => {
   $("#topTip").classList.toggle("hidden", !tip);
   if (tip) $("#topTip").innerHTML = `<ul class="recs">${renderRecs([tip])}</ul>`;
 };
+
+// ---------------------------------------------------------------- car-style dashboard
+function renderCluster(d) {
+  const t = d.targets, c = d.consumed, g = d.goals;
+  const eaten = c.calories, target = t.calories, left = Math.round(target - eaten);
+  const burned = d.burned ?? null;  // full-day burn from the fenix (resting + active)
+  const burnGoal = Math.max(t.tdee || 0, burned || 0, 2000);
+  const protGoal = t.protein_g || 1;
+  const net = burned != null ? Math.round(eaten - burned) : null;
+  const steps = g.steps.value || 0;
+  const eatState = eaten > target ? "bad" : eaten > target * 0.9 ? "warn" : "";
+  const lights = [
+    { on: eaten > target, cls: "bad", icon: "⚠", text: "Over calories" },
+    { on: eaten > 0 && c.protein_g < protGoal * 0.5 && new Date().getHours() >= 15, cls: "warn", icon: "P", text: "Protein low" },
+    { on: !!d.today_session && !d.today_done, cls: "info", icon: "🏋", text: "Workout due" },
+    { on: d.today_done, cls: "good", icon: "✓", text: "Workout done" },
+    { on: g.steps.goal && steps >= g.steps.goal, cls: "good", icon: "👟", text: "Steps goal hit" },
+    { on: eaten === 0, cls: "muted", icon: "⛽", text: "Nothing logged yet" },
+  ].filter((l) => l.on);
+
+  $("#cluster").innerHTML = `
+    <div class="cluster">
+      <div class="g-main">${Gauge.dial({ id: "eat", value: eaten, max: Math.max(target * 1.3, eaten * 1.05), target,
+        label: "EATEN", unit: `of ${fmt(target)} kcal`, readout: fmt(eaten), scale: 100, scaleLabel: "×100 kcal", state: eatState })}</div>
+      <div class="g-side">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
+        label: "BURNED", unit: burned == null ? "sync Garmin" : "kcal", readout: burned == null ? "–" : fmt(burned), scale: 1000, scaleLabel: "×1000" })}</div>
+      <div class="g-side">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
+        label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), state: c.protein_g >= protGoal ? "good" : "" })}</div>
+    </div>
+    <div class="cluster-strip">
+      <div class="strip-cell">${Gauge.fuel(Math.max(0, left) / target, "Calories left", `${fmt(Math.abs(left))} ${left >= 0 ? "left" : "over"}`)}
+        <span class="strip-label">CALORIES LEFT</span></div>
+      <div class="strip-cell">
+        <span class="strip-label">STEPS</span>${Gauge.odometer(steps, 5)}
+        <span class="strip-sub">${g.steps.goal ? `goal ${fmt(g.steps.goal)}` : ""}</span>
+        <span class="strip-label">NET ENERGY</span>
+        <span class="lcd ${net == null ? "" : net > 0 ? "warn" : "good"}">${net == null ? "– –" : `${net > 0 ? "+" : ""}${fmt(net)}`}<small> kcal</small></span>
+        <span class="strip-sub">${net == null ? "eaten − burned" : net < 0 ? "deficit (burning fat)" : "surplus"}</span>
+      </div>
+    </div>
+    <div class="macro-bars">${[["Carbs", c.carbs_g, t.carbs_g, "carbs"], ["Fat", c.fat_g, t.fat_g, "fat"], ["Fibre", c.fiber_g || 0, t.fiber_g, "fiber"]]
+      .map(([n, v, goal, k]) => `<div class="mbar"><span>${n}</span><div class="mtrack"><div class="mfill ${k}" style="width:${Math.min(100, goal ? (v / goal) * 100 : 0)}%"></div></div><span class="muted">${fmt(v)}/${fmt(goal)} g</span></div>`).join("")}</div>
+    ${lights.length ? `<div class="lights">${lights.map((l) => `<span class="light ${l.cls}"><b>${l.icon}</b>${l.text}</span>`).join("")}</div>` : ""}`;
+  Gauge.animate($("#cluster"));
+}
 
 function renderRecs(recs) {
   const icon = { warn: "!", info: "i", good: "✓" };
@@ -395,6 +430,109 @@ async function logFood(entry) {
   loaders.diet();
 }
 
+// ---------------------------------------------------------------- log food by amount (servings, pieces, g, oz, lb, ml, fl oz, cups, spoons)
+const pick = { food: null, items: [] };
+const MASS_UNITS = { g: 1, kg: 1000, oz: 28.3495, lb: 453.592 };
+const VOL_UNITS = { ml: 1, "fl oz": 29.5735, cup: 240, tbsp: 15, tsp: 5 };
+const QUICK = { serving: [0.5, 1, 1.5, 2, 3], g: [50, 100, 150, 200, 250], kg: [0.25, 0.5, 1], oz: [2, 4, 6, 8, 12], lb: [0.25, 0.5, 1],
+  ml: [100, 250, 330, 500], "fl oz": [4, 8, 12, 16], cup: [0.5, 1, 1.5, 2], tbsp: [1, 2, 3], tsp: [1, 2, 3] };
+const defaultMeal = () => { const h = new Date().getHours(); return h < 11 ? "breakfast" : h < 15 ? "lunch" : h >= 17 && h < 22 ? "dinner" : "snack"; };
+
+function gramsPer(food, unit) {  // grams in one of `unit` for this food (null = unit not usable)
+  if (unit === "serving") return food.grams || null;
+  if (!food.grams) return null;
+  if (MASS_UNITS[unit]) return MASS_UNITS[unit];
+  // the food's own label may say how much a cup/tbsp weighs, e.g. "1 cup cooked (160 g)"
+  const m = /^\s*(\d+(?:\/\d+)?|\d*\.\d+)\s+(cups?|tbsp|tsp)\b/i.exec(food.unit);
+  if (m && m[2].toLowerCase().replace(/s$/, "") === unit) {
+    const n = m[1].includes("/") ? m[1].split("/").reduce((a, b) => a / b) : Number(m[1]);
+    return food.grams / n;
+  }
+  return VOL_UNITS[unit] || null;  // liquids & most foods: 1 ml ≈ 1 g
+}
+function pickUnits(food) {
+  if (!food.grams) return ["serving"];
+  const base = ["serving", "g", "oz", "lb", "kg"];
+  return [...base, ...Object.keys(VOL_UNITS)];
+}
+function unitLabel(unit, food) {
+  return unit === "serving" ? `× ${food.unit}` : unit;
+}
+function openPick(food) {
+  pick.food = food;
+  $("#pickResults").innerHTML = "";
+  $("#pickPanel").classList.remove("hidden");
+  $("#pickName").textContent = food.food || food.name;
+  $("#pickBase").textContent = `${food.unit}: ${fmt(food.calories)} kcal · P ${food.protein_g} g · C ${food.carbs_g} g · F ${food.fat_g} g`;
+  const units = pickUnits(food);
+  $("#pickUnit").innerHTML = units.map((u) => `<option value="${u}">${esc(unitLabel(u, food))}</option>`).join("");
+  const start = U.imperial && units.includes("oz") && /\b\d+ g\b/.test(food.unit) ? "oz" : "serving";
+  $("#pickUnit").value = start;
+  $("#pickAmount").value = start === "oz" ? Math.round(food.grams / 28.35) || 1 : 1;
+  $("#pickMeal").value = defaultMeal();
+  updatePick();
+  $("#pickAmount").focus();
+}
+function pickTotals() {
+  const f = pick.food, unit = $("#pickUnit").value, amt = Number($("#pickAmount").value) || 0;
+  const per = gramsPer(f, unit);
+  const factor = unit === "serving" ? amt : per && f.grams ? (amt * per) / f.grams : 0;
+  const out = { factor, grams: f.grams ? factor * f.grams : null };
+  for (const k of ["calories", "protein_g", "carbs_g", "fat_g", "fiber_g"]) out[k] = (f[k] || 0) * factor;
+  return out;
+}
+function updatePick() {
+  const t = pickTotals(), unit = $("#pickUnit").value;
+  $("#pickQuick").innerHTML = (QUICK[unit] || []).map((q) => `<button type="button" class="chip-btn" data-q="${q}">${q}</button>`).join("");
+  const w = t.grams != null && unit !== "g" ? `≈ ${U.imperial ? `${(t.grams / 28.35).toFixed(1)} oz` : `${Math.round(t.grams)} g`}` : "";
+  $("#pickResult").innerHTML = `<span class="kcal">${fmt(t.calories)}<small> kcal</small></span>
+    <span class="macros"><b class="p">P ${t.protein_g.toFixed(1)}</b><b class="c">C ${t.carbs_g.toFixed(1)}</b><b class="f">F ${t.fat_g.toFixed(1)}</b></span>
+    <span class="muted small">${w}</span>`;
+  $("#pickAdd").disabled = !(t.factor > 0);
+}
+$("#pickAmount").addEventListener("input", updatePick);
+$("#pickUnit").addEventListener("change", () => {
+  // keep roughly the same quantity when switching units
+  const f = pick.food, prev = pick.lastGrams, unit = $("#pickUnit").value, per = gramsPer(f, unit);
+  if (prev && per) { const v = prev / per; $("#pickAmount").value = v >= 10 ? Math.round(v) : Math.round(v * 4) / 4 || 0.25; }
+  updatePick();
+});
+$("#pickAmount").addEventListener("change", () => (pick.lastGrams = pickTotals().grams));
+$("#pickPanel").addEventListener("click", (e) => {
+  const q = e.target.closest("[data-q]"), st = e.target.closest("[data-step]");
+  if (q) $("#pickAmount").value = q.dataset.q;
+  if (st) {
+    const unit = $("#pickUnit").value, inc = { g: 25, ml: 50, kg: 0.1, lb: 0.25, oz: 1, "fl oz": 1, tsp: 1, tbsp: 1 }[unit] || 0.5;
+    $("#pickAmount").value = Math.max(0, Math.round(((Number($("#pickAmount").value) || 0) + Number(st.dataset.step) * inc) * 100) / 100);
+  }
+  if (q || st) { pick.lastGrams = pickTotals().grams; updatePick(); }
+});
+$("#pickClose").onclick = () => { $("#pickPanel").classList.add("hidden"); pick.food = null; };
+$("#pickAdd").addEventListener("click", (e) => withBusy(e.target, async () => {
+  const f = pick.food, t = pickTotals(), unit = $("#pickUnit").value, amt = Number($("#pickAmount").value);
+  const qty = unit === "serving" ? `${amt} × ${f.unit}` : `${amt} ${unit}`;
+  await api("/api/foods", { method: "POST", body: { day: state.day, meal: $("#pickMeal").value,
+    name: `${f.food || f.name} — ${qty}`.slice(0, 200), servings: 1,
+    calories: Math.round(t.calories), protein_g: +t.protein_g.toFixed(1), carbs_g: +t.carbs_g.toFixed(1),
+    fat_g: +t.fat_g.toFixed(1), fiber_g: +t.fiber_g.toFixed(1) } });
+  toast(`Logged ${f.food || f.name} · ${fmt(t.calories)} kcal`);
+  $("#pickPanel").classList.add("hidden"); $("#foodPick").value = ""; pick.food = null; pick.lastGrams = null;
+  loaders.diet();
+}));
+let pickTimer;
+$("#foodPick").addEventListener("input", (e) => {
+  clearTimeout(pickTimer);
+  const q = e.target.value.trim();
+  if (!q) return ($("#pickResults").innerHTML = "");
+  pickTimer = setTimeout(async () => {
+    pick.items = await api(`/api/food-library?q=${encodeURIComponent(q)}`);
+    $("#pickResults").innerHTML = pick.items.slice(0, 12).map((f, i) =>
+      `<li data-pick="${i}" tabindex="0"><span>${f.custom ? "★ " : ""}${esc(f.food || f.name)} <span class="muted small">${esc(U.food(f.unit || ""))}</span></span><span class="muted small">${fmt(f.calories)} kcal</span></li>`).join("")
+      || `<li class="muted small">Not in the database yet. Add it below under "Add food manually" and it'll be remembered.</li>`;
+  }, 150);
+});
+$("#pickResults").addEventListener("click", (e) => { const li = e.target.closest("[data-pick]"); if (li) { openPick(pick.items[li.dataset.pick]); pick.lastGrams = pickTotals().grams; } });
+
 let searchTimer;
 $("#foodSearch").addEventListener("input", (e) => {
   clearTimeout(searchTimer);
@@ -419,7 +557,7 @@ $("#foodResults").addEventListener("click", (e) => {
   $("#foodSearch").value = "";
 });
 $("#foodForm").elements.name.addEventListener("input", () => ($("#foodForm")._fromDb = false));
-api("/api/food-db/stats").then((s) => ($("#foodDbCount").textContent = `· ${s.builtin} foods${s.mine ? ` + ${s.mine} of yours` : ""}`)).catch(() => {});
+api("/api/food-db/stats").then((s) => { for (const id of ["#foodDbCount", "#foodDbCount2"]) $(id).textContent = `· ${s.builtin} foods${s.mine ? ` + ${s.mine} of yours` : ""}`; }).catch(() => {});
 $("#foodForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const d = formData(e.target);

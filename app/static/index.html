@@ -60,12 +60,12 @@
 
     <div class="card hero" id="workoutHero"></div>
 
-    <div class="card" id="foodToday">
+    <div class="card cluster-card" id="foodToday">
       <div class="row-between">
-        <h3>Food today</h3>
-        <button class="small-btn" data-goto="diet" data-focus="#aiForm textarea">＋ Log food</button>
+        <h3>Today's dashboard</h3>
+        <button class="small-btn" data-goto="diet" data-focus="#foodPick">＋ Log food</button>
       </div>
-      <div id="foodNumbers"></div>
+      <div id="cluster"></div>
     </div>
 
     <div class="chips" id="dayChips"></div>
@@ -77,8 +77,32 @@
 
   <!-- FOOD -->
   <section id="view-diet" class="view">
+    <div class="card" id="pickCard">
+      <h3>Log food</h3>
+      <label class="search-label">Find a food <span class="muted small" id="foodDbCount2"></span>
+        <input id="foodPick" type="search" placeholder="Search: chicken, rice, latte, kebab…" autocomplete="off">
+      </label>
+      <ul class="list suggestions" id="pickResults"></ul>
+      <div id="pickPanel" class="pick-panel hidden">
+        <div class="row-between"><strong id="pickName"></strong><button class="icon" id="pickClose" aria-label="Cancel">✕</button></div>
+        <p class="muted small" id="pickBase"></p>
+        <div class="amount-row">
+          <button type="button" class="step" data-step="-1" aria-label="Less">−</button>
+          <input id="pickAmount" type="number" inputmode="decimal" min="0" step="any" value="1" aria-label="Amount">
+          <button type="button" class="step" data-step="1" aria-label="More">＋</button>
+          <select id="pickUnit" aria-label="Unit"></select>
+        </div>
+        <div class="quick-amounts" id="pickQuick"></div>
+        <div class="pick-result" id="pickResult"></div>
+        <div class="row">
+          <label>Meal <select id="pickMeal"><option>breakfast</option><option>lunch</option><option>dinner</option><option>snack</option></select></label>
+          <button type="button" id="pickAdd">Add to log</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card" id="aiCard">
-      <h3>Calorie counter</h3>
+      <h3>Or type a whole meal</h3>
       <p class="muted small">Type what you ate with amounts, e.g. "2 eggs, 150g chicken and a banana". You'll check the numbers before anything is logged.</p>
       <form id="aiForm" class="form">
         <label>What did you eat?
@@ -442,6 +466,7 @@
 </dialog>
 
 <div id="toast" role="status"></div>
-<script src="/static/app.js"></script>
+<script src="/static/visuals.js"></script>
+  <script src="/static/app.js"></script>
 </body>
 </html>

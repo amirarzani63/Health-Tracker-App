@@ -41,7 +41,8 @@ class Food:
         return {"name": f"{self.name.capitalize()}, {self.unit}", "calories": round(self.calories),
                 "protein_g": round(self.protein_g, 1), "carbs_g": round(self.carbs_g, 1),
                 "fat_g": round(self.fat_g, 1), "fiber_g": round(self.fiber_g, 1),
-                "tags": self.tags, "custom": self.custom}
+                "tags": self.tags, "custom": self.custom,
+                "food": self.name.capitalize(), "unit": self.unit, "grams": self.grams}
 
 
 @lru_cache
