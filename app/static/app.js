@@ -285,16 +285,27 @@ function renderCluster(d) {
       <div class="g-side tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
         label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), ticks: 4, state: c.protein_g >= protGoal ? "good" : "" })}</div>
     </div>
-    <div class="cluster-strip">
-      <div class="strip-cell tap" role="button" tabindex="0" data-goto="diet">${Gauge.fuel(Math.max(0, left) / target, "Calories you can still eat today", `${fmt(Math.abs(left))} ${left >= 0 ? "to eat" : "over"}`)}
-        <span class="strip-label">${left >= 0 ? "YOU CAN STILL EAT" : "OVER YOUR LIMIT"}</span>
-        <span class="strip-sub">${left >= 0 ? `Daily limit ${fmt(target)} − eaten ${fmt(eaten)}` : `Ate ${fmt(eaten)}, limit ${fmt(target)}`}</span></div>
-      <div class="strip-cell">
-        <span class="tap steps-tap" role="button" tabindex="0" data-quick="steps"><span class="strip-label">STEPS · tap to log</span>${Gauge.odometer(steps, 5)}</span>
-        <span class="strip-sub">${g.steps.goal ? `goal ${fmt(g.steps.goal)}` : ""}</span>
-        <span class="strip-label">NET ENERGY</span>
-        <span class="lcd ${net == null ? "" : net > 0 ? "warn" : "good"}">${net == null ? "– –" : `${net > 0 ? "+" : ""}${fmt(net)}`}<small> kcal</small></span>
-        <span class="strip-sub">${net == null ? "eaten minus burned (log calories burned)" : net < 0 ? `burned ${fmt(-net)} more than you ate: good for losing weight` : `ate ${fmt(net)} more than you burned`}</span>
+    <div class="info-boxes">
+      <div class="ibox tap" role="button" tabindex="0" data-goto="diet">
+        <span class="ibox-title">🍽 Food left for today</span>
+        <span class="ibox-big ${left >= 0 ? "good" : "bad"}">${left >= 0 ? `${fmt(left)} calories` : `${fmt(-left)} calories over`}</span>
+        <div class="ibar"><div class="ibar-fill ${left >= 0 ? "good" : "bad"}" style="width:${Math.min(100, (eaten / target) * 100)}%"></div></div>
+        <span class="ibox-sum">Your daily limit <b>${fmt(target)}</b> − eaten so far <b>${fmt(eaten)}</b> = <b>${left >= 0 ? `${fmt(left)} left` : `${fmt(-left)} over`}</b></span>
+        <span class="ibox-hint">${left >= 0 ? "This is how much more you can eat today and still lose weight." : "You've eaten more than your limit today, so you'll lose less than planned. Try a walk and a lighter dinner."}</span>
+      </div>
+      <div class="ibox tap" role="button" tabindex="0" data-quick="burned">
+        <span class="ibox-title">⚖️ Eaten vs. burned today</span>
+        ${burned == null ? `<span class="ibox-big">–</span><span class="ibox-hint">Tap to log the calories your watch says you burned today. Then you'll see if you ate less than you burned.</span>` : `
+        <div class="vs-row"><span>Eaten</span><div class="ibar"><div class="ibar-fill eat" style="width:${Math.min(100, (eaten / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(eaten)}</b></div>
+        <div class="vs-row"><span>Burned</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (burned / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(burned)}</b></div>
+        <span class="ibox-big ${net <= 0 ? "good" : "bad"}">${net <= 0 ? `You burned ${fmt(-net)} more than you ate` : `You ate ${fmt(net)} more than you burned`}</span>
+        <span class="ibox-hint">${net <= 0 ? "Good: burning more than you eat is what makes you lose weight." : "To lose weight, you need to burn more than you eat."}</span>`}
+      </div>
+      <div class="ibox tap" role="button" tabindex="0" data-quick="steps">
+        <span class="ibox-title">👟 Steps today <small>· tap to log</small></span>
+        <span class="ibox-row">${Gauge.odometer(steps, 5)}<span class="ibox-goal">of ${fmt(g.steps.goal || 10000)}</span></span>
+        <div class="ibar"><div class="ibar-fill ${steps >= (g.steps.goal || 10000) ? "good" : "eat"}" style="width:${Math.min(100, (steps / (g.steps.goal || 10000)) * 100)}%"></div></div>
+        <span class="ibox-hint">${steps >= (g.steps.goal || 10000) ? "Goal reached ✓" : `${fmt((g.steps.goal || 10000) - steps)} more steps to reach your goal`}</span>
       </div>
     </div>
     <div class="macro-bars">${[["Carbs", c.carbs_g, t.carbs_g, "carbs"], ["Fat", c.fat_g, t.fat_g, "fat"], ["Fibre", c.fiber_g || 0, t.fiber_g, "fiber"]]
