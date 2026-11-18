@@ -1536,3 +1536,23 @@ document.addEventListener("visibilitychange", () => {
   loaders[state.view]?.();
   autoSync();
 });
+
+
+// Every popup: closes with its Back button, the phone's back gesture, a tap outside, or Escape.
+(function dialogsBack() {
+  let open = null;
+  const show = HTMLDialogElement.prototype.showModal;
+  HTMLDialogElement.prototype.showModal = function () {
+    show.call(this);
+    open = this;
+    document.body.classList.add("dlg-open");
+    history.pushState({ dlg: this.id }, "");
+  };
+  document.addEventListener("close", (e) => {
+    if (e.target.tagName !== "DIALOG") return;
+    document.body.classList.remove("dlg-open");
+    if (open === e.target) { open = null; if (history.state?.dlg) history.back(); }
+  }, true);
+  window.addEventListener("popstate", () => { if (open) { const d = open; open = null; d.close(); } });
+  document.addEventListener("click", (e) => { if (e.target.tagName === "DIALOG" && e.target.open) e.target.close(); });
+})();

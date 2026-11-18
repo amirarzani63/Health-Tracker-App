@@ -84,7 +84,7 @@
       </label>
       <ul class="list suggestions" id="pickResults"></ul>
       <div id="pickPanel" class="pick-panel hidden">
-        <div class="row-between"><strong id="pickName"></strong><button class="icon" id="pickClose" aria-label="Cancel">✕</button></div>
+        <div class="dlg-bar inline"><button type="button" class="back-btn" id="pickClose" aria-label="Back">‹ Back</button><strong id="pickName"></strong></div>
         <p class="muted small" id="pickBase"></p>
         <div class="amount-row">
           <button type="button" class="step" data-step="-1" aria-label="Less">−</button>
@@ -466,7 +466,7 @@
 </main>
 
 <dialog id="exDialog" class="ex-dialog">
-  <div class="row-between"><h3 id="exTitle"></h3><button class="icon" id="exClose" aria-label="Close">✕</button></div>
+  <div class="dlg-bar"><button type="button" class="back-btn" id="exClose" aria-label="Back">‹ Back</button><h3 id="exTitle"></h3></div>
   <div class="ex-pic hidden" id="exPic"></div>
   <h4 class="ex-h">Muscles worked</h4>
   <div class="ex-body">
