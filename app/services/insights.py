@@ -140,7 +140,7 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
             "target_protein_g": round(t.protein_g),
             "burned": round(burned) if burned else None,
             "net": round(i["calories"] - burned) if i and burned else None,
-            "steps": max([v for v in ((s.steps if s else None), typed.get(d)) if v is not None], default=None),
+            "steps": typed[d] if d in typed else (s.steps if s else None),  # what the user typed last wins
             "resting_hr": s.resting_hr if s else None,
             "sleep_h": (lg.sleep_h if lg and lg.sleep_h is not None else None)
                        or (round(s.sleep_s / 3600, 1) if s and s.sleep_s else None),

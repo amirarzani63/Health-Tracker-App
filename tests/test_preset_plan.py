@@ -74,3 +74,12 @@ def test_remove_garmin_data(client):
     assert db.query(DailyStats).count() == 0 and db.get(StoredSecret, "garmin_tokens") is None
     assert [w.source for w in db.query(WeightEntry)] == ["manual"] and db.query(Activity).count() == 0
     db.close()
+
+
+def test_latest_typed_value_wins(client):
+    for steps in (1200, 8000, 7000):
+        client.post("/api/steps", json={"day": "2026-11-18", "steps": steps})
+    assert client.get("/api/dashboard?day=2026-11-18").json()["goals"]["steps"]["value"] == 7000
+    for h in (8, 6.5):
+        client.post("/api/day-log", json={"day": "2026-11-18", "sleep_h": h})
+    assert client.get("/api/dashboard?day=2026-11-18").json()["goals"]["sleep_h"]["value"] == 6.5
