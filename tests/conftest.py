@@ -5,6 +5,7 @@ import tempfile
 _tmp = tempfile.mkdtemp()
 os.environ["HEALTH_DATA_DIR"] = _tmp
 os.environ["GARMIN_AUTO_SYNC_HOURS"] = "0"
+os.environ["INSTALL_PRESET_PLAN"] = "0"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

@@ -96,6 +96,10 @@ def _score(q: set[str], item: dict) -> float:
 
 # Common names whose closest-word match would be wrong: pattern -> library exercise name
 ALIASES = [
+    (r"^push.?ups?$|^push.?ups? \(", "Pushups"),
+    (r"rear delt fly|reverse fly", "Seated Bent-Over Rear Delt Raise"),
+    (r"single.?leg (romanian )?deadlift|single.?leg rdl|one.?leg(ged)? (romanian )?deadlift", "Kettlebell One-Legged Deadlift"),
+    (r"interval|sprint", "Wind Sprints"),
     (r"lateral raise|side raise|side lateral", "Side Lateral Raise"),
     (r"band.*(lat )?pull.?down|(lat )?pull.?down.*band", "Wide-Grip Lat Pulldown"),
     (r"lat pull.?down|pull.?down", "Wide-Grip Lat Pulldown"),

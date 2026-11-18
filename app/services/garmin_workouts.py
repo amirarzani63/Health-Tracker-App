@@ -400,6 +400,11 @@ def keep_calendar_filled(db: Session, client, today: date | None = None) -> int:
     """Called after each sync: keep two weeks of the plan scheduled on the Garmin calendar."""
     today = today or date.today()
     state = load_state(db)
+    if state.get("clear_on_sync"):  # a new non-Garmin plan replaced the pushed one
+        state.pop("clear_on_sync")
+        save_state(db, state)
+        stop_pushing(db, client, today)
+        return 0
     if not state.get("push") or not state.get("by_weekday"):
         return 0
     if state.get("needs_reschedule"):  # the plan's days were re-ordered: redo the calendar from today

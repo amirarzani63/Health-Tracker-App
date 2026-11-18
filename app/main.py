@@ -53,6 +53,14 @@ async def lifespan(app: FastAPI):
                 log.info("Re-ordered saved plans by workout name")
     except Exception:
         log.exception("Plan re-ordering failed")
+    try:
+        from app.services.preset_plan import install
+
+        with SessionLocal() as db:
+            if os.environ.get("INSTALL_PRESET_PLAN", "1") != "0" and install(db):
+                log.info("Installed the 13-week fat-loss plan and diet targets")
+    except Exception:
+        log.exception("Installing the preset plan failed")
     if not auth.enabled():
         log.warning("APP_PASSWORD is not set: the app is open to anyone who can reach it. "
                     "Set APP_PASSWORD before putting it on the internet.")
