@@ -662,16 +662,17 @@ async function openExercise(name, part) {
   $("#exPic").classList.add("hidden"); $("#exTips").innerHTML = ""; $("#exCredit").innerHTML = "";
   const lib = (await exlibLookup([name]))[name];
   if (lib) {
-    if (lib.primary.length) { info.primary = lib.primary; info.secondary = lib.secondary; }
+    if (lib.primary.length && !lib.similar) { info.primary = lib.primary; info.secondary = lib.secondary; }
     info.primaryNames = info.primary.map((m) => MUSCLE_NAMES[m]); info.secondaryNames = info.secondary.map((m) => MUSCLE_NAMES[m]);
-    if (lib.instructions.length) info.cues = lib.instructions;
+    if (lib.instructions.length && !lib.similar) info.cues = lib.instructions;
     if (lib.images.length) {
       $("#exPic").innerHTML = `<div class="pimg big${lib.images.length > 1 ? " anim" : ""}">${lib.images.map((src, i) => `<img src="${src}" alt="${esc(lib.name)}${i ? " (end position)" : " (start position)"}" class="${i ? "peak" : "start"}">`).join("")}</div>
-        ${lib.images.length > 1 ? `<div class="pic-steps"><span>Start</span><span>Finish</span></div>` : ""}`;
+        ${lib.images.length > 1 ? `<div class="pic-steps"><span>Start</span><span>Finish</span></div>` : ""}
+        ${lib.similar ? `<p class="muted small">No photo of this exact exercise. Shown: ${esc(lib.name)}, a similar movement.</p>` : ""}`;
       $("#exPic").classList.remove("hidden");
     }
     $("#exTips").innerHTML = lib.tips.map((t) => `<li>💡 ${esc(t)}</li>`).join("");
-    $("#exCredit").textContent = `Photos & instructions: ${lib.name} (free-exercise-db, public domain)`;
+    $("#exCredit").textContent = `${lib.similar ? "Photo" : "Photos & instructions"}: ${lib.name} (free-exercise-db, public domain)`;
   }
   const box = $("#exDemo");
   if (Anatomy3D.supported()) {
@@ -908,15 +909,17 @@ async function hydratePosters(root = document) {
     t.dataset.done = "1";
     const m = info[t.dataset.poster];
     const local = ExerciseInfo.lookup(t.dataset.poster);
-    const prim = m?.primary?.length ? m.primary : local.primary;
-    const sec = (m?.secondary?.length ? m.secondary : local.secondary).filter((k) => !prim.includes(k));
+    const own = m && !m.similar;
+    const prim = own && m.primary.length ? m.primary : local.primary;
+    const sec = (own && m.secondary.length ? m.secondary : local.secondary).filter((k) => !prim.includes(k));
     t.querySelector(".exmus").innerHTML = `<span class="lbl">Works</span>${prim.map((k) => `<i class="p">${esc(MUSCLE_NAMES[k] || k)}</i>`).join("")}`
       + (sec.length ? `<span class="lbl">Helps</span>${sec.slice(0, 3).map((k) => `<i>${esc(MUSCLE_NAMES[k] || k)}</i>`).join("")}` : "");
-    const steps = (m?.instructions?.length ? m.instructions : local.cues || []).slice(0, t.dataset.compact ? 2 : 3);
+    const steps = (own && m.instructions.length ? m.instructions : local.cues || []).slice(0, t.dataset.compact ? 2 : 3);
     t.querySelector(".exsteps").innerHTML = steps.map((s) => `<li>${esc(s)}</li>`).join("");
     if (m?.images?.length) {
       t.querySelector(".pimg").innerHTML = m.images.map((src, i) => `<img src="${src}" alt="${esc(t.dataset.poster)} ${i ? "finish" : "start"} position" loading="lazy" class="${i ? "peak" : "start"}">`).join("");
       t.querySelector(".pimg").classList.toggle("anim", m.images.length > 1);
+      if (m.similar) t.querySelector(".pimg").insertAdjacentHTML("beforeend", `<span class="pimg-note">Similar movement</span>`);
     } else {
       t.querySelector(".pimg").innerHTML = `<div class="pimg-map">${BodyMap.render(local.primary, local.secondary)}</div>`;
     }

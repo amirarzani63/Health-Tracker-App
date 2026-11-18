@@ -113,8 +113,75 @@ ALIASES = [
 ]
 
 
+# When no photo of the exact exercise exists, show a real photo of the closest movement.
+SIMILAR = [
+    (r"roll.?out|slide.?out|ab wheel", "Ab Roller"),
+    (r"back extension|spine extension|superman|u-boat|opposite arm|arm and leg", "Superman"),
+    (r"dead.?bug", "Dead Bug"),
+    (r"lat.?pull|pull.?over|power pull|y fly", "Straight-Arm Dumbbell Pullover"),
+    (r"hang pull|jump shrug", "Clean Pull"),
+    (r"\bdips?\b", "Dips - Triceps Version"),
+    (r"toes to bar|teaser|pike|x abs|windshield|knee drive", "Hanging Leg Raise"),
+    (r"wall ball|slam|sledge", "Overhead Slam"),
+    (r"triple under|moguls|power switch|duck under|step.?over|lateral slide", "Knee Tuck Jump"),
+    (r"chest fly", "Dumbbell Flyes"),
+    (r"get.?up|step.?up|floor to shelf", "Dumbbell Step Ups"),
+    (r"hip drop|hip crossover|lateral roll|pendulum|reach, roll|roll.?down|flex and extend|kick tabletop|pretzel|inner.?thigh|t.?stabil|stability|reverse leg raise", "Hip Circles (prone)"),
+    (r"wall slide|reach to sky|shoulder flexion|plate reach", "Front Raise And Pullover"),
+    (r"dorsiflexion", "Calf Stretch Hands Against Wall"),
+    (r"warm.?up|total body|core|suspension|banded exercises", "Mountain Climbers"),
+    (r"burpee|man maker|sprawl", "Mountain Climbers"),
+    (r"hollow|l.?sit|leg lever|leg lowering|elevator abs|front lever", "Flat Bench Lying Leg Raise"),
+    (r"plank|bear crawl|crawl|quadruped|bird.?dog", "Plank"),
+    (r"handstand", "Handstand Push-Ups"),
+    (r"deadlift|hip hinge|good morning|rdl", "Barbell Deadlift"),
+    (r"chest.?supported.*row|towel.*row|door.*row|inverted row", "Alternating Kettlebell Row"),
+    (r"row(?!ing)", "Bent Over Barbell Row"),
+    (r"battle rope|battling", "Battling Ropes"),
+    (r"jump rope|double under|skip", "Rope Jumping"),
+    (r"bike|cycl|assault", "Bicycling, Stationary"),
+    (r"rowing|calorie row|erg", "Rowing, Stationary"),
+    (r"elliptical|cross.?trainer", "Elliptical Trainer"),
+    (r"stair|step.?mill", "Stairmaster"),
+    (r"\brun|jog|walk|track|treadmill|cardio|ladder|agility", "Trail Running/Walking"),
+    (r"thruster", "Kettlebell Thruster"),
+    (r"chop|woodchop|rotation|twist", "Standing Cable Wood Chop"),
+    (r"clam|fire hydrant|abduct|lateral walk|monster", "Monster Walk"),
+    (r"donkey kick|kickback|kick-back", "Glute Kickback"),
+    (r"carry|waiter|farmer|hold", "Farmer's Walk"),
+    (r"crunch|curl.?up|roll.?up|sit.?up|ab ", "Cross-Body Crunch"),
+    (r"stretch|pose|mobility|swing", "Cat Stretch"),
+    (r"bridge|hip raise|hip thrust", "Butt Lift (Bridge)"),
+    (r"lunge|split", "Dumbbell Lunges"),
+    (r"squat|plie|plié", "Bodyweight Squat"),
+    (r"jack", "Rope Jumping"),
+    (r"punch|jab|strike|bob and weave", "Battling Ropes"),
+    (r"press.?down|tricep", "Triceps Pushdown"),
+    (r"push.?up", "Pushups"),
+    (r"[iytwl] raise|scapular|serratus", "Bent Over Dumbbell Rear Delt Raise With Head On Bench"),
+    (r"curl", "Dumbbell Bicep Curl"),
+    (r"press", "Dumbbell Shoulder Press"),
+]
+
+
+def _by_name(target: str) -> dict | None:
+    t = target.lower()
+    return next((i for i in library()["items"] if i["name"].lower() == t and i["images"]), None)
+
+
 @lru_cache(maxsize=4096)
 def match(name: str) -> dict | None:
+    exact = _match_exact(name)
+    if exact and exact.get("images"):
+        return exact
+    lower = name.lower()
+    for pattern, target in SIMILAR:
+        if re.search(pattern, lower) and (it := _by_name(target)):
+            return {k: v for k, v in it.items() if k != "words"} | {"score": 0.3, "similar": True}
+    return exact
+
+
+def _match_exact(name: str) -> dict | None:
     lower = name.lower()
     for pattern, target in ALIASES:
         if re.search(pattern, lower):
