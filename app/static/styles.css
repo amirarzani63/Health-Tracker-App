@@ -620,3 +620,24 @@ body.dlg-open { overflow: hidden; }
 /* Declutter: things the user chose not to see (kept in the code, just not shown) */
 .trim { display: none !important; }
 .week li:not(:has(details[open])) .move { display: none; }
+
+/* ---------- workout calendar ---------- */
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cal-head h3 { margin: 0; }
+.cal-head .icon { font-size: 22px; width: 40px; height: 40px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-dow { text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; padding-bottom: 2px; }
+.cal-cell { aspect-ratio: 1; min-width: 0; padding: 2px; border-radius: 10px; border: 1px solid var(--border); background: var(--inset);
+  color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-weight: 600; }
+.cal-cell.empty { border: none; background: none; }
+.cal-cell.none { opacity: .45; }
+.cal-cell.strength { background: color-mix(in srgb, var(--accent) 16%, var(--inset)); }
+.cal-cell.cardio { background: color-mix(in srgb, var(--series-1) 16%, var(--inset)); }
+.cal-cell.past { opacity: .55; }
+.cal-cell.today { border: 2px solid var(--accent); }
+.cal-cell.sel { background: var(--accent); color: var(--on-accent); opacity: 1; }
+.cal-n { font-size: 14px; line-height: 1; } .cal-i { font-size: 14px; line-height: 1; min-height: 14px; }
+.cal-key { margin: 8px 0 0; text-align: center; }
+.cal-day h3 { margin-top: 0; }
+.cal-day .move { display: flex; margin-top: 10px; }
+.cal-day .plan-day > .wd { display: none; }

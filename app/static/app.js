@@ -931,33 +931,55 @@ function renderPlanDay(day, compact = false) {
 }
 
 const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-// Rolling week starting today, with real dates, in order. Sessions repeat weekly on their weekday.
-function renderWeek(plan) {
-  const today = new Date();
-  const rows = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today); d.setDate(today.getDate() + i);
-    const wd = WD[d.getDay()];
-    const session = plan.days.find((x) => x.weekday === wd && x.type !== "rest");
-    const label = dayName(wd) + (i === 0 ? " · today" : i === 1 ? " · tomorrow" : "");
-    const date = d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
-    rows.push({ wd, label, date, session, i });
-  }
-  const options = (from) => rows.filter((r) => r.wd !== from)
-    .map((r) => `<option value="${r.wd}">${r.label} (${r.date})${r.session ? " ↔ swap" : ""}</option>`).join("");
-  return `<div class="card"><div class="row-between"><h3>Your week</h3><span class="muted small">${esc(plan.name)}</span></div>
-    <ol class="week">${rows.map((r) => `<li class="${r.i === 0 ? "is-today" : ""} ${r.session ? "" : "is-rest"}">
-      <div class="when"><b>${r.label}</b><span class="muted small">${r.date}</span></div>
-      ${r.session ? `<div class="what">
-          <details${r.i === 0 ? " open" : ""}><summary><b>${esc(sessionTitle(r.session))}</b> <span class="muted small">${sessionSummary(r.session)}</span></summary>
-            ${renderPlanDay(r.session)}</details>
-          <label class="move">Move to <select data-move-from="${r.wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options(r.wd)}</select></label>
-        </div>` : `<div class="what muted">Rest</div>`}
-    </li>`).join("")}</ol>
-    <p class="trim muted small">Moving a session changes it every week${watchNote()}.</p>
-    <details class="small"><summary class="muted">How the plan progresses</summary><ul class="tips">${plan.progression.map((p) => `<li><b>Week ${p.week}:</b> ${esc(p.note)}</li>`).join("")}</ul></details>
-  </div>`;
+// Month calendar: tap a day to see that day's workout underneath.
+const cal = { plan: null, month: null, sel: null };
+const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function sessionOn(plan, d) {
+  const start = new Date(plan.created_at); start.setHours(0, 0, 0, 0);
+  const end = new Date(start); end.setDate(start.getDate() + plan.weeks * 7);
+  if (d < start || d >= end) return null;
+  return plan.days.find((x) => x.weekday === WD[d.getDay()] && x.type !== "rest") || { type: "rest" };
 }
+function renderWeek(plan) {
+  cal.plan = plan;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  cal.month ||= new Date(today.getFullYear(), today.getMonth(), 1);
+  cal.sel ||= iso(today);
+  const m = cal.month, first = new Date(m), lead = (first.getDay() + 6) % 7;
+  const days = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push(`<span class="cal-cell empty"></span>`);
+  for (let n = 1; n <= days; n++) {
+    const d = new Date(m.getFullYear(), m.getMonth(), n), s = sessionOn(plan, d), key = iso(d);
+    const kind = s ? s.type : "none";
+    const icon = kind === "strength" ? "💪" : kind === "cardio" ? "🏃" : "";
+    cells.push(`<button type="button" class="cal-cell ${kind}${key === iso(today) ? " today" : ""}${key === cal.sel ? " sel" : ""}${d < today ? " past" : ""}" data-cal-day="${key}">
+      <span class="cal-n">${n}</span><span class="cal-i">${icon}</span></button>`);
+  }
+  const sd = new Date(cal.sel + "T12:00:00"), ss = sessionOn(plan, sd);
+  const wd = WD[sd.getDay()];
+  const label = sd.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  const options = WD.filter((x) => x !== wd).map((x) => `<option value="${x}">${dayName(x)}</option>`).join("");
+  const detail = !ss ? `<p class="muted">Outside your ${plan.weeks}-week plan.</p>`
+    : ss.type === "rest" ? `<p class="muted">Rest day. An easy walk and some stretching are perfect.</p>`
+    : `${renderPlanDay(ss)}<label class="move">Move ${dayName(wd)}'s session to <select data-move-from="${wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options}</select></label>`;
+  return `<div class="card cal-card">
+    <div class="cal-head"><button type="button" class="icon" data-cal-nav="-1" aria-label="Previous month">‹</button>
+      <h3>${m.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h3>
+      <button type="button" class="icon" data-cal-nav="1" aria-label="Next month">›</button></div>
+    <div class="cal-grid">${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((x) => `<span class="cal-dow">${x.slice(0, 1)}</span>`).join("")}${cells.join("")}</div>
+    <p class="cal-key muted small">💪 Strength · 🏃 Cardio · blank = rest</p>
+  </div>
+  <div class="card cal-day"><h3>${label}</h3>${detail}</div>`;
+}
+document.addEventListener("click", (e) => {
+  const d = e.target.closest("[data-cal-day]"), n = e.target.closest("[data-cal-nav]");
+  if (!d && !n) return;
+  if (d) cal.sel = d.dataset.calDay;
+  if (n) cal.month = new Date(cal.month.getFullYear(), cal.month.getMonth() + Number(n.dataset.calNav), 1);
+  $("#activePlan").innerHTML = renderWeek(cal.plan);
+  if (d) $(".cal-day")?.scrollIntoView({ behavior: "smooth", block: "start" });
+});
 let _watchSending = false;
 const watchNote = () => (_watchSending ? " and on your fenix" : "");
 

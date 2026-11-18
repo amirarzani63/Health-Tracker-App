@@ -100,7 +100,7 @@ ALIASES = [
     (r"rear delt fly|reverse fly", "Seated Bent-Over Rear Delt Raise"),
     (r"single.?leg (romanian )?deadlift|single.?leg rdl|one.?leg(ged)? (romanian )?deadlift", "Kettlebell One-Legged Deadlift"),
     (r"incline push.?ups?", "Incline Push-Up"),
-    (r"split squat", "Split Squats"),
+    (r"split squat", "Split Squat with Dumbbells"),
     (r"sumo (dumbbell |db )?squat|plie squat", "Plie Dumbbell Squat"),
     (r"brisk walk|walking|zone 2 walk", "Trail Running/Walking"),
     (r"interval|sprint", "Wind Sprints"),
