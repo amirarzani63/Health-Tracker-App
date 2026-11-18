@@ -711,7 +711,7 @@ async function openExercise(name, part) {
       $("#exPic").classList.remove("hidden");
     }
     $("#exTips").innerHTML = lib.tips.map((t) => `<li>💡 ${esc(t)}</li>`).join("");
-    $("#exCredit").textContent = `${lib.similar ? "Photo" : "Photos & instructions"}: ${lib.name} (free-exercise-db, public domain)`;
+    $("#exCredit").textContent = lib.credit || `${lib.similar ? "Photo" : "Photos & instructions"}: ${lib.name} (free-exercise-db, public domain)`;
   }
   $("#exMuscles").innerHTML = (info.primaryNames.length
     ? `<span class="mtag prim">Main: ${info.primaryNames.map(esc).join(", ")}</span>` : `<span class="mtag">General movement</span>`)
@@ -964,7 +964,7 @@ new MutationObserver(() => { clearTimeout(exlib.pending); exlib.pending = setTim
 // ---------------------------------------------------------------- choose your cardio machine/activity
 // met = effort at a steady, can-still-talk pace (Compendium of Physical Activities)
 const CARDIO_OPTS = {
-  walk: { label: "Fast walk outside", photo: "Walking, Treadmill", met: 4.3,
+  walk: { label: "Fast walk outside", photo: "Fast Walking (outdoors)", met: 4.3,
     how: ["Walk fast, as if you're in a hurry.", "Swing your arms and keep going without stopping."] },
   treadmill_walk: { label: "Treadmill walk (incline)", photo: "Walking, Treadmill", met: 5.0,
     how: ["Set speed 5–6 km/h (3–3.7 mph) and incline 5–8%.", "Don't hold the handrails; swing your arms."] },

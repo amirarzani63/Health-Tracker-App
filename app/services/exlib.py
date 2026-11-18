@@ -44,11 +44,22 @@ def words(name: str) -> list[str]:
     return [w[:-1] if len(w) > 4 and w.endswith("s") and not w.endswith("ss") and w not in keep else w for w in out if w]
 
 
+# Photos the app ships itself, for activities the free-exercise-db library has no photo of.
+EXTRA = [
+    {"id": "fast_walking_outdoors", "name": "Fast Walking (outdoors)", "words": {"fast", "walking", "outdoors"},
+     "category": "cardio", "equipment": "body only", "level": "beginner",
+     "primary": ["quads", "glutes", "calves"], "secondary": ["hamstrings"],
+     "instructions": ["Walk fast, as if you're in a hurry.", "Swing your arms and keep going without stopping."], "tips": [],
+     "images": ["/static/img/fast-walk-outdoors.jpg"],
+     "credit": "Photo: MauroWalker, CC BY-SA 4.0, via Wikimedia Commons"},
+]
+
+
 @lru_cache(maxsize=1)
 def library() -> dict:
     f = DIR / "exercises.json"
     if not f.exists():
-        return {"items": [], "by_id": {}}
+        return {"items": list(EXTRA), "by_id": {i["id"]: i for i in EXTRA}, "idf": {}}
     items = []
     for e in json.loads(f.read_text()):
         if not isinstance(e, dict) or not e.get("name"):
@@ -62,6 +73,7 @@ def library() -> dict:
             "images": ["/static/exlib/img/" + p for p in e.get("images", [])
                        if isinstance(p, str) and ".." not in p and (DIR / "img" / p).exists()],
         })
+    items.extend(EXTRA)
     import math
     df: dict[str, int] = {}
     for it in items:
