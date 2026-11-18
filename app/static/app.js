@@ -502,6 +502,8 @@ function pickTotals() {
 }
 function updatePick() {
   const t = pickTotals(), unit = $("#pickUnit").value;
+  const can = pick.food && pick.food.grams;
+  document.querySelectorAll("#unitSeg [data-seg]").forEach((b) => { b.classList.toggle("on", b.dataset.seg === unit); b.hidden = b.dataset.seg !== "serving" && !can; });
   $("#pickQuick").innerHTML = (QUICK[unit] || []).map((q) => `<button type="button" class="chip-btn" data-q="${q}">${q}</button>`).join("");
   const w = t.grams != null && unit !== "g" ? `≈ ${U.imperial ? `${(t.grams / 28.35).toFixed(1)} oz` : `${Math.round(t.grams)} g`}` : "";
   $("#pickResult").innerHTML = `<span class="kcal">${fmt(t.calories)}<small> kcal</small></span>
@@ -510,6 +512,13 @@ function updatePick() {
   $("#pickAdd").disabled = !(t.factor > 0);
 }
 $("#pickAmount").addEventListener("input", updatePick);
+$("#unitSeg").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-seg]");
+  if (!b) return;
+  pick.lastGrams = pickTotals().grams;
+  $("#pickUnit").value = b.dataset.seg;
+  $("#pickUnit").dispatchEvent(new Event("change"));
+});
 $("#pickUnit").addEventListener("change", () => {
   // keep roughly the same quantity when switching units
   const f = pick.food, prev = pick.lastGrams, unit = $("#pickUnit").value, per = gramsPer(f, unit);

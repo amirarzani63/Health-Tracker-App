@@ -696,3 +696,7 @@ body.dlg-open { overflow: hidden; }
 .per-grid > span { display: flex; flex-direction: column; background: var(--inset); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; color: var(--text); }
 .per-grid b { font-size: 16px; } .per-grid small { color: var(--muted); font-size: 11px; }
 .manual-h { margin: 16px 0 6px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+.unit-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 10px 0 8px; background: var(--inset); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
+.unit-seg button { background: transparent; color: var(--text); border: none; padding: 9px 4px; border-radius: 9px; font-weight: 700; }
+.unit-seg button.on { background: var(--accent); color: var(--on-accent); }

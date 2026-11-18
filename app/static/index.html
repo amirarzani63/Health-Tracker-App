@@ -141,6 +141,11 @@
         <div id="pickPanel" class="pick-panel hidden">
         <div class="dlg-bar inline"><button type="button" class="back-btn" id="pickClose" aria-label="Back">‹ Back</button><strong id="pickName"></strong></div>
         <p class="muted small" id="pickBase"></p>
+        <div class="unit-seg" id="unitSeg" role="group" aria-label="Measure by">
+          <button type="button" data-seg="serving">Servings</button>
+          <button type="button" data-seg="g">Grams</button>
+          <button type="button" data-seg="oz">Ounces</button>
+        </div>
         <div class="amount-row">
           <button type="button" class="step" data-step="-1" aria-label="Less">−</button>
           <input id="pickAmount" type="number" inputmode="decimal" min="0" step="any" value="1" aria-label="Amount">
