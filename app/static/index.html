@@ -205,10 +205,6 @@
           <label>👟 Steps walked today <span class="muted small" id="stepsSub"></span>
             <span class="daylog-in"><input name="steps" type="number" inputmode="numeric" min="0" max="200000" placeholder="e.g. 8500" required><button type="submit">Save</button></span></label>
         </form>
-        <form id="sleepForm" class="daylog-row">
-          <label>😴 Hours slept last night <span class="muted small" id="sleepSub"></span>
-            <span class="daylog-in"><input name="sleep_h" type="number" inputmode="decimal" min="0" max="24" step="0.25" placeholder="e.g. 7.5" required><button type="submit">Save</button></span></label>
-        </form>
         <form id="burnForm" class="daylog-row">
           <label>🔥 Calories burned today <span class="muted small" id="burnSub"></span>
             <span class="daylog-in"><input name="burned" type="number" inputmode="numeric" min="0" max="10000" placeholder="from your watch, e.g. 3100" required><button type="submit">Save</button></span></label>
@@ -507,6 +503,18 @@
     <label>Weight <span data-ulabel="mass">kg</span> <input data-unit="mass" name="weight_kg" type="number" step="0.1" required autofocus></label>
     <div class="row actions">
       <button value="save">Save</button>
+      <button value="cancel" class="ghost" formnovalidate>Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="quickDialog">
+  <form method="dialog" id="quickForm" class="form">
+    <h3 id="quickTitle"></h3>
+    <p class="muted small" id="quickHelp"></p>
+    <div id="quickBody"></div>
+    <div class="row actions">
+      <button value="save" id="quickSave">Save</button>
       <button value="cancel" class="ghost" formnovalidate>Cancel</button>
     </div>
   </form>

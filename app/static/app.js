@@ -245,11 +245,11 @@ loaders.dashboard = async () => {
   const chip = (label, value, sub, attrs = "") => `<div class="chip" ${attrs}><span class="label">${label}</span><span class="value">${value}</span><span class="sub">${sub}</span></div>`;
   const w = await api(`/api/water?day=${state.day}`).catch(() => null);
   $("#dayChips").innerHTML = [
-    w ? chip("💧 Water", `${w.glasses}/${w.goal} glasses`, waterLine(w)) : "",
-    chip("Sleep", g.sleep_h.value == null ? "–" : `${g.sleep_h.value} h`, `goal ${g.sleep_h.goal} h`),
-    chip("Workouts", `${g.workouts_week.value}/${g.workouts_week.goal}`, "this week"),
-    chip("Weight", g.weight.value == null ? "–" : `${U.show("mass", g.weight.value)}`, g.weight.value == null ? "not logged" : U.label("mass")),
-    chip("Workout", d.today_session && d.today_session.type !== "rest" ? esc(sessionTitle(d.today_session)) : "Rest", d.today_done ? "✓ done" : "today"),
+    w ? chip("💧 Water", `${w.glasses}/${w.goal} glasses`, `${waterLine(w)} · tap to log`, 'role="button" tabindex="0" data-quick="water"') : "",
+    chip("😴 Sleep", g.sleep_h.value == null ? "–" : hm(g.sleep_h.value), `goal ${g.sleep_h.goal} h · tap to log`, 'role="button" tabindex="0" data-quick="sleep"'),
+    chip("Workouts", `${g.workouts_week.value}/${g.workouts_week.goal}`, "this week · tap to open", 'role="button" tabindex="0" data-goto="exercise"'),
+    chip("⚖️ Weight", g.weight.value == null ? "–" : `${U.show("mass", g.weight.value)}`, `${g.weight.value == null ? "" : U.label("mass") + " · "}tap to log`, 'role="button" tabindex="0" data-log-weight'),
+    chip("Workout", d.today_session && d.today_session.type !== "rest" ? esc(sessionTitle(d.today_session)) : "Rest", d.today_done ? "✓ done" : "today · tap to open", 'role="button" tabindex="0" data-goto="exercise"'),
   ].join("");
 
   const tip = (d.recommendations || []).find((r) => r.level !== "good") || (d.recommendations || [])[0];
@@ -277,19 +277,19 @@ function renderCluster(d) {
 
   $("#cluster").innerHTML = `
     <div class="cluster">
-      <div class="g-main">${Gauge.dial({ id: "eat", value: eaten, max: Math.max(target * 1.3, eaten * 1.05), target,
+      <div class="g-main tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "eat", value: eaten, max: Math.max(target * 1.3, eaten * 1.05), target,
         label: "EATEN", unit: `of ${fmt(target)} kcal`, readout: fmt(eaten), ticks: 6, state: eatState })}</div>
-      <div class="g-side">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
-        label: "BURNED", unit: burned == null ? "log it in Workouts" : `goal ${fmt(t.tdee || burnGoal)} kcal`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
+      <div class="g-side tap" role="button" tabindex="0" data-quick="burned" title="Log calories burned">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
+        label: "BURNED", unit: burned == null ? "tap to log" : `goal ${fmt(t.tdee || burnGoal)} kcal`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
         state: burned != null && t.tdee && burned >= t.tdee ? "good" : "" })}</div>
-      <div class="g-side">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
+      <div class="g-side tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
         label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), ticks: 4, state: c.protein_g >= protGoal ? "good" : "" })}</div>
     </div>
     <div class="cluster-strip">
-      <div class="strip-cell">${Gauge.fuel(Math.max(0, left) / target, "Calories left", `${fmt(Math.abs(left))} ${left >= 0 ? "left" : "over"}`)}
+      <div class="strip-cell tap" role="button" tabindex="0" data-goto="diet">${Gauge.fuel(Math.max(0, left) / target, "Calories left", `${fmt(Math.abs(left))} ${left >= 0 ? "left" : "over"}`)}
         <span class="strip-label">CALORIES LEFT</span></div>
       <div class="strip-cell">
-        <span class="strip-label">STEPS</span>${Gauge.odometer(steps, 5)}
+        <span class="tap steps-tap" role="button" tabindex="0" data-quick="steps"><span class="strip-label">STEPS · tap to log</span>${Gauge.odometer(steps, 5)}</span>
         <span class="strip-sub">${g.steps.goal ? `goal ${fmt(g.steps.goal)}` : ""}</span>
         <span class="strip-label">NET ENERGY</span>
         <span class="lcd ${net == null ? "" : net > 0 ? "warn" : "good"}">${net == null ? "– –" : `${net > 0 ? "+" : ""}${fmt(net)}`}<small> kcal</small></span>
@@ -1644,9 +1644,8 @@ async function loadSteps() {
     const f = (id, typed, garmin, unit) => {
       $(id).textContent = typed != null ? `· saved: ${fmt(typed, 2)} ${unit}` : garmin != null ? `· watch says ${fmt(garmin, 1)} ${unit}` : "";
     };
-    f("#stepsSub", st.typed, st.garmin, "steps"); f("#sleepSub", lg.sleep_h, lg.garmin_sleep_h, "h"); f("#burnSub", lg.burned, lg.garmin_burned, "kcal");
+    f("#stepsSub", st.typed, st.garmin, "steps"); f("#burnSub", lg.burned, lg.garmin_burned, "kcal");
     if (st.typed != null) $("#stepsForm").steps.value = st.typed;
-    if (lg.sleep_h != null) $("#sleepForm").sleep_h.value = lg.sleep_h;
     if (lg.burned != null) $("#burnForm").burned.value = lg.burned;
   } catch {}
 }
@@ -1662,5 +1661,56 @@ function dayLogForm(id, url, key, msg) {
   });
 }
 dayLogForm("#stepsForm", "/api/steps", "steps", (v) => `👟 ${fmt(v)} steps saved`);
-dayLogForm("#sleepForm", "/api/day-log", "sleep_h", (v) => `😴 ${fmt(v, 2)} hours of sleep saved`);
 dayLogForm("#burnForm", "/api/day-log", "burned", (v) => `🔥 ${fmt(v)} calories burned saved`);
+
+
+// ---------------------------------------------------------------- tap a Dashboard item to log it
+const hm = (h) => { const H = Math.floor(h), M = Math.round((h - H) * 60); return M ? `${H} h ${M} min` : `${H} h`; };
+const QUICKLOG = {
+  sleep: { title: "😴 Log sleep", help: "How long did you sleep last night?",
+    field: `<span class="hm"><input name="h" type="number" inputmode="numeric" min="0" max="24" step="1" required placeholder="7" aria-label="Hours"><b>hours</b>
+      <input name="m" type="number" inputmode="numeric" min="0" max="59" step="1" placeholder="30" aria-label="Minutes"><b>minutes</b></span>`,
+    fill: (f, v) => { f.h.value = Math.floor(v); f.m.value = Math.round((v % 1) * 60); },
+    read: (f) => Math.round(((Number(f.h.value) || 0) + (Number(f.m.value) || 0) / 60) * 100) / 100,
+    load: async () => (await api(`/api/day-log?day=${state.day}`)).sleep_h,
+    save: (v) => api("/api/day-log", { method: "POST", body: { day: state.day, sleep_h: v } }), done: (v) => `😴 ${hm(v)} saved` },
+  steps: { title: "👟 Log steps", help: "Total steps you walked today, from your watch or phone.",
+    field: `<input name="v" type="number" inputmode="numeric" min="0" max="200000" required placeholder="e.g. 8500">`,
+    load: async () => (await api(`/api/steps?day=${state.day}`)).typed,
+    save: (v) => api("/api/steps", { method: "POST", body: { day: state.day, steps: v } }), done: (v) => `👟 ${fmt(v)} steps saved` },
+  burned: { title: "🔥 Log calories burned", help: "Total calories burned today, from your watch.",
+    field: `<input name="v" type="number" inputmode="numeric" min="0" max="10000" required placeholder="e.g. 3100">`,
+    load: async () => (await api(`/api/day-log?day=${state.day}`)).burned,
+    save: (v) => api("/api/day-log", { method: "POST", body: { day: state.day, burned: v } }), done: (v) => `🔥 ${fmt(v)} calories saved` },
+  water: { title: "💧 Water", help: "Tap once for each glass you drank (1 glass = a normal cup, about 250 ml).", water: true },
+};
+let quickKey = null;
+async function openQuick(key) {
+  const q = QUICKLOG[key]; quickKey = key;
+  $("#quickTitle").textContent = q.title; $("#quickHelp").textContent = q.help;
+  if (q.water) {
+    $("#quickSave").textContent = "Done";
+    $("#quickBody").innerHTML = `<div class="water-glasses" id="waterGlasses"></div><p class="small" id="waterSub"></p>
+      <div class="water-btns"><button type="button" class="ghost" data-water="-1">− 1 glass</button><button type="button" data-water="1">＋ 1 glass</button></div>`;
+    loadWater();
+  } else {
+    $("#quickSave").textContent = "Save";
+    $("#quickBody").innerHTML = `<label>${q.field}</label>`;
+    try { const v = await q.load(); if (v != null) (q.fill ? q.fill($("#quickForm"), v) : ($("#quickForm").v.value = v)); } catch {}
+  }
+  $("#quickDialog").showModal();
+  if (!q.water) setTimeout(() => $("#quickForm").querySelector("input")?.focus(), 50);
+}
+$("#quickDialog").addEventListener("close", async () => {
+  const q = QUICKLOG[quickKey];
+  if ($("#quickDialog").returnValue === "save" && q && !q.water) {
+    const v = q.read ? q.read($("#quickForm")) : Number($("#quickForm").v.value);
+    try { await q.save(v); toast(q.done(v)); } catch (err) { toast(err.message, true); }
+  }
+  if (state.view === "dashboard") loaders.dashboard();
+});
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-quick]");
+  if (t) openQuick(t.dataset.quick);
+});
+document.addEventListener("keydown", (e) => { const t = e.key === "Enter" && e.target.closest?.("[data-quick]"); if (t) openQuick(t.dataset.quick); });
