@@ -556,7 +556,7 @@ $("#foodResults").addEventListener("click", (e) => {
   $("#foodSearch").value = "";
 });
 $("#foodForm").elements.name.addEventListener("input", () => ($("#foodForm")._fromDb = false));
-api("/api/food-db/stats").then((s) => { for (const id of ["#foodDbCount", "#foodDbCount2"]) $(id).textContent = `· ${s.builtin} foods${s.mine ? ` + ${s.mine} of yours` : ""}`; }).catch(() => {});
+api("/api/food-db/stats").then((s) => { for (const id of ["#foodDbCount", "#foodDbCount2"]) $(id).textContent = `${s.builtin} foods${s.mine ? ` + ${s.mine} of yours` : ""}`; }).catch(() => {});
 $("#foodForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const d = formData(e.target);
@@ -1173,10 +1173,12 @@ async function drawStrength() {
   const name = $("#exercisePick").value;
   if (!name) {
     charts.strengthChart?.destroy();
+    $("#strengthChart").closest(".chart").hidden = true;
     $("#strengthSummary").textContent = "Log sets (exercise, reps, weight) with your workouts to track strength over time.";
     return;
   }
   const pts = await api(`/api/progress/exercise?name=${encodeURIComponent(name)}`);
+  $("#strengthChart").closest(".chart").hidden = false;
   drawChart("strengthChart", {
     data: { labels: pts.map((p) => shortDay(p.day)), datasets: [
       lineDs("Estimated 1-rep max", pts.map((p) => U.show("mass", p.est_1rm_kg)), css("--series-1"), { pointRadius: 3 }),

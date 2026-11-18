@@ -580,3 +580,22 @@ details.fold[open] > summary { margin-bottom: 12px; }
 .week .plan-day > .wd, .week .plan-day > strong { display: none; }
 .week .plan-day { border-left: none; padding-left: 0; padding-right: 0; background: none; border: none; }
 .exsteps { font-size: 13px; } .exsteps li { border: none; padding: 0; }
+
+/* ---------- fit & alignment pass (phone first) ---------- */
+.chart[hidden] { display: none; }
+.chips { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); grid-auto-flow: column; }
+.card { min-width: 0; overflow: hidden; }
+.card, .chip, .excard { box-shadow: var(--shadow); }
+.table-wrap { margin: 0 -4px; padding: 0 4px; -webkit-overflow-scrolling: touch;
+  background: linear-gradient(to right, var(--card) 30%, transparent) left / 24px 100% no-repeat local,
+              linear-gradient(to left, var(--card) 30%, transparent) right / 24px 100% no-repeat local,
+              radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.45), transparent) right / 10px 100% no-repeat scroll; }
+#weeklyTable th, #weeklyTable td { white-space: nowrap; }
+.rem-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.rem-days label { flex-direction: column; justify-content: center; gap: 2px; font-size: 11px; text-align: center; }
+@media (max-width: 600px) {
+  .topbar { display: grid; grid-template-columns: auto 1fr auto; align-items: center; }
+  nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; overflow: visible; }
+  nav button { padding: 8px 2px; font-size: 13px; text-align: center; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (max-width: 360px) { nav button { font-size: 12px; } }
