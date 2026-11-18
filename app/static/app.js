@@ -286,14 +286,15 @@ function renderCluster(d) {
         label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), ticks: 4, state: c.protein_g >= protGoal ? "good" : "" })}</div>
     </div>
     <div class="cluster-strip">
-      <div class="strip-cell tap" role="button" tabindex="0" data-goto="diet">${Gauge.fuel(Math.max(0, left) / target, "Calories left", `${fmt(Math.abs(left))} ${left >= 0 ? "left" : "over"}`)}
-        <span class="strip-label">CALORIES LEFT</span></div>
+      <div class="strip-cell tap" role="button" tabindex="0" data-goto="diet">${Gauge.fuel(Math.max(0, left) / target, "Calories you can still eat today", `${fmt(Math.abs(left))} ${left >= 0 ? "to eat" : "over"}`)}
+        <span class="strip-label">${left >= 0 ? "YOU CAN STILL EAT" : "OVER YOUR LIMIT"}</span>
+        <span class="strip-sub">${left >= 0 ? `Daily limit ${fmt(target)} − eaten ${fmt(eaten)}` : `Ate ${fmt(eaten)}, limit ${fmt(target)}`}</span></div>
       <div class="strip-cell">
         <span class="tap steps-tap" role="button" tabindex="0" data-quick="steps"><span class="strip-label">STEPS · tap to log</span>${Gauge.odometer(steps, 5)}</span>
         <span class="strip-sub">${g.steps.goal ? `goal ${fmt(g.steps.goal)}` : ""}</span>
         <span class="strip-label">NET ENERGY</span>
         <span class="lcd ${net == null ? "" : net > 0 ? "warn" : "good"}">${net == null ? "– –" : `${net > 0 ? "+" : ""}${fmt(net)}`}<small> kcal</small></span>
-        <span class="strip-sub">${net == null ? "eaten − burned" : net < 0 ? "deficit (burning fat)" : "surplus"}</span>
+        <span class="strip-sub">${net == null ? "eaten minus burned (log calories burned)" : net < 0 ? `burned ${fmt(-net)} more than you ate: good for losing weight` : `ate ${fmt(net)} more than you burned`}</span>
       </div>
     </div>
     <div class="macro-bars">${[["Carbs", c.carbs_g, t.carbs_g, "carbs"], ["Fat", c.fat_g, t.fat_g, "fat"], ["Fibre", c.fiber_g || 0, t.fiber_g, "fiber"]]
