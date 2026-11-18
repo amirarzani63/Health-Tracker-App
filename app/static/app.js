@@ -1466,7 +1466,7 @@ function applyTheme(choice) {
   if (t === "auto") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   if (t === "light") document.documentElement.setAttribute("data-theme", "light");
   else document.documentElement.removeAttribute("data-theme");
-  $('meta[name="theme-color"]')?.setAttribute("content", t === "light" ? "#f3f5f8" : "#0b0f14");
+  $('meta[name="theme-color"]')?.setAttribute("content", t === "light" ? "#f4f6fb" : "#0b1426");
   $$("[data-theme-choice]").forEach((b) => b.classList.toggle("active", b.dataset.themeChoice === choice));
 }
 const savedTheme = () => store.get("theme") || "dark";
