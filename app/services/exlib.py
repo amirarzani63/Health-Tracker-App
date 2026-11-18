@@ -44,15 +44,7 @@ def words(name: str) -> list[str]:
     return [w[:-1] if len(w) > 4 and w.endswith("s") and not w.endswith("ss") and w not in keep else w for w in out if w]
 
 
-# Photos the app ships itself, for activities the free-exercise-db library has no photo of.
-EXTRA = [
-    {"id": "fast_walking_outdoors", "name": "Fast Walking (outdoors)", "words": {"fast", "walking", "outdoors"},
-     "category": "cardio", "equipment": "body only", "level": "beginner",
-     "primary": ["quads", "glutes", "calves"], "secondary": ["hamstrings"],
-     "instructions": ["Walk fast, as if you're in a hurry.", "Swing your arms and keep going without stopping."], "tips": [],
-     "images": ["/static/img/fast-walk-outdoors.jpg"],
-     "credit": "Photo: MauroWalker, CC BY-SA 4.0, via Wikimedia Commons"},
-]
+EXTRA: list[dict] = []  # photos the app ships itself (none at the moment)
 
 
 @lru_cache(maxsize=1)

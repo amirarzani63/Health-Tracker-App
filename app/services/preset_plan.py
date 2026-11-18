@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Goals, Profile, StoredSecret, WeightEntry, WorkoutPlan
 
-MARKER = "preset:fatloss-95-v4"
+MARKER = "preset:fatloss-95-v5"
 PLAN_NAME = "Lose 10.5 kg in 13 weeks · home"
 PLAN_NAME_GYM = "Lose 10.5 kg in 13 weeks · building gym"
 
@@ -21,7 +21,7 @@ def ex(name, sets, reps, rest=75, pattern=""):
 
 # Beginner-friendly: 3 sets, simple moves, 60-75 s rest, then a steady cardio block so every
 # session burns ~500+ kcal at ~105 kg (weights ~3.5 MET, brisk walk/bike ~4.5-6.5 MET).
-CARDIO_FINISH = ex("Fast walk or easy bike ride (no stopping)", 1, "25 minutes", 0, "cardio")
+CARDIO_FINISH = ex("Treadmill walk or bike (no stopping)", 1, "25 minutes", 0, "cardio")
 
 
 def gx(name, photo, sets, reps, rest=75, pattern=""):
@@ -69,7 +69,7 @@ DAYS = [
         gx("Hip thrust (shoulders on bench, dumbbell on hips)", "Barbell Hip Thrust", 3, "12", 60, "hinge"),
         gx("Leg curl (cable station)", "Seated Leg Curl", 2, "12-15", 60, "hinge"),
         gx("Dead bug", "Dead Bug", 3, "8 each side (left + right = 1)", 45, "core"),
-        ex("Walk: 1 minute fast, then 2 minutes slow", 1, "24 minutes", 0, "cardio"),
+        ex("Treadmill: 1 minute fast, then 2 minutes slow", 1, "24 minutes", 0, "cardio"),
     ]},
     {"weekday": "Sat", "type": "cardio", "title": "Cardio machines (longer)", "zone": "Zone 2", "minutes": 70,
      "est_kcal": 580, "exercises": []},

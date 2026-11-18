@@ -14,6 +14,7 @@ from app.services import nutrition
 
 ACTIVITIES = {
     "walk": ("Fast walk outside", 4.3),
+    "treadmill_walk_flat": ("Treadmill walk (flat, brisk)", 4.3),
     "treadmill_walk": ("Treadmill walk (incline)", 5.0),
     "run": ("Jog / run outside", 7.0),
     "treadmill_run": ("Treadmill jog", 7.0),

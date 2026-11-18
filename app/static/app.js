@@ -964,8 +964,8 @@ new MutationObserver(() => { clearTimeout(exlib.pending); exlib.pending = setTim
 // ---------------------------------------------------------------- choose your cardio machine/activity
 // met = effort at a steady, can-still-talk pace (Compendium of Physical Activities)
 const CARDIO_OPTS = {
-  walk: { label: "Fast walk outside", photo: "Fast Walking (outdoors)", met: 4.3,
-    how: ["Walk fast, as if you're in a hurry.", "Swing your arms and keep going without stopping."] },
+  treadmill_walk_flat: { label: "Treadmill walk (flat, brisk)", machine: true, photo: "Walking, Treadmill", met: 4.3,
+    how: ["Incline 0–1%, speed about 5.5–6.5 km/h (3.5–4 mph): walk briskly.", "Don't hold the handrails; swing your arms."] },
   treadmill_walk: { label: "Treadmill walk (incline)", machine: true, photo: "Walking, Treadmill", met: 5.0,
     how: ["Set speed 5–6 km/h (3–3.7 mph) and incline 5–8%.", "Don't hold the handrails; swing your arms."] },
   run: { label: "Jog / run outside", photo: "Trail Running/Walking", met: 7.0,
@@ -982,6 +982,8 @@ const CARDIO_OPTS = {
     how: ["Small, low hops on the balls of your feet; turn the rope with your wrists.", "Beginners: skip 30 seconds, rest 30 seconds, and repeat. Count only the time you skip."] },
 };
 const cardioState = { picks: {}, kg: 105 };
+const LEGACY_CARDIO = { walk: "treadmill_walk_flat", rower: "bike", stairs: "elliptical" };
+const fixCardio = (k) => LEGACY_CARDIO[k] || k;
 const cardioFor = (iso) => { const v = cardioState.picks[iso]; return typeof v === "string" ? v : Array.isArray(v) ? v[0].activity : cardioState.picks.default || "treadmill_walk"; };
 // The day's cardio as a list of {activity, minutes}; planned minutes go to one activity unless the user split them
 const MACHINE_MAX = 30;  // building gym rule: cardio machines 30 minutes at a time
@@ -991,7 +993,7 @@ function cardioList(iso, planMin) {
   const first = typeof v === "string" ? v : cardioState.picks.default || "treadmill_walk";
   if (!CARDIO_OPTS[first]?.machine || planMin <= MACHINE_MAX) return [{ activity: first, minutes: planMin }];
   // split long sessions across machines so none goes over 30 minutes
-  const order = [first, ...["bike", "elliptical", "treadmill_walk", "recumbent"].filter((k) => k !== first)], out = [];
+  const order = [first, ...["bike", "elliptical", "treadmill_walk_flat", "recumbent"].filter((k) => k !== first)], out = [];
   for (let left = planMin, i = 0; left > 0; i++) { const m = Math.min(MACHINE_MAX, left); out.push({ activity: order[i % order.length], minutes: m }); left -= m; }
   return out;
 }
@@ -1001,6 +1003,7 @@ const plannedCardioMin = (d) => d.type === "cardio" ? d.minutes
 async function loadCardio() {
   try {
     const [p, prof] = await Promise.all([api("/api/plans/cardio/all"), api("/api/profile")]);
+    for (const [k, v] of Object.entries(p)) p[k] = Array.isArray(v) ? v.map((x) => ({ ...x, activity: fixCardio(x.activity) })) : fixCardio(v);
     cardioState.picks = p; cardioState.kg = prof.weight_kg || 105;
   } catch {}
 }
