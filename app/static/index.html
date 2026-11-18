@@ -180,6 +180,16 @@
   <!-- WORKOUTS (plan + log + history) -->
   <section id="view-exercise" class="view">
     <div id="activePlan"></div>
+      <details class="card fold" id="exGuide">
+        <summary><h3>Exercise guide</h3></summary>
+        <p class="muted small">Every exercise with a moving demonstration and the muscles it works. Tap one to see it.</p>
+        <div class="row">
+          <label>Body part <select id="guidePart"></select></label>
+          <label>Search <input id="guideSearch" type="search" placeholder="e.g. row, squat" autocomplete="off"></label>
+        </div>
+        <ul class="list guide-list" id="guideList"></ul>
+      </details>
+
       <details class="card fold" id="logWorkoutCard">
         <summary><h3>＋ Log a workout</h3></summary>
         <div class="row-between">
@@ -453,6 +463,17 @@
       </div>
   </section>
 </main>
+
+<dialog id="exDialog" class="ex-dialog">
+  <div class="row-between"><h3 id="exTitle"></h3><button class="icon" id="exClose" aria-label="Close">✕</button></div>
+  <div class="ex-body">
+    <div class="ex-demo" id="exDemo"></div>
+    <div id="exMap"></div>
+  </div>
+  <div class="ex-muscles" id="exMuscles"></div>
+  <h4>How to do it</h4>
+  <ol class="ex-cues" id="exCues"></ol>
+</dialog>
 
 <dialog id="weightDialog">
   <form method="dialog" id="weightQuick" class="form">

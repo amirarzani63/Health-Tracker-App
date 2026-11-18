@@ -208,7 +208,7 @@ function renderHero(d) {
       return;
     }
     const list = ts.type === "strength"
-      ? `<ul class="hero-list">${ts.exercises.slice(0, 5).map((x) => `<li><span>${esc(x.exercise)}</span><span class="muted">${x.sets}×${esc(x.reps)}</span></li>`).join("")}
+      ? `<ul class="hero-list">${ts.exercises.slice(0, 5).map((x) => `<li><button class="ex-link" data-ex="${esc(x.exercise)}">${esc(x.exercise)}</button><span class="muted">${x.sets}×${esc(x.reps)}</span></li>`).join("")}
          ${ts.exercises.length > 5 ? `<li class="muted">+ ${ts.exercises.length - 5} more</li>` : ""}</ul>`
       : `<p class="hero-big">${ts.minutes} min <span class="muted">in ${esc(ts.zone)}</span></p>
          <p class="muted small">Brisk walk, bike or cross-trainer. You should be able to talk in full sentences.</p>`;
@@ -655,6 +655,50 @@ $("#aiLog").addEventListener("click", (e) => withBusy(e.target, async () => {
 $("#aiDiscard").addEventListener("click", resetAi);
 
 // ================================================================ WORKOUTS
+// ---------------------------------------------------------------- exercise demo pop-up + guide
+function openExercise(name, part) {
+  part = part || picker.lookup?.[(name || "").toLowerCase()];
+  const info = ExerciseInfo.lookup(name, part);
+  $("#exTitle").textContent = name;
+  Demo.mount($("#exDemo"), info);
+  $("#exMap").innerHTML = BodyMap.render(info.primary, info.secondary);
+  $("#exMuscles").innerHTML = (info.primaryNames.length
+    ? `<span class="mtag prim">Main: ${info.primaryNames.map(esc).join(", ")}</span>` : `<span class="mtag">General movement</span>`)
+    + (info.secondaryNames.length ? `<span class="mtag sec">Also: ${info.secondaryNames.map(esc).join(", ")}</span>` : "");
+  $("#exCues").innerHTML = info.cues.map((c) => `<li>${esc(c)}</li>`).join("");
+  $("#exDialog").showModal();
+}
+$("#exClose").onclick = () => $("#exDialog").close();
+$("#exDialog").addEventListener("close", () => Demo.stop($("#exDemo")));
+$("#exDialog").addEventListener("click", (e) => { if (e.target === $("#exDialog")) $("#exDialog").close(); });
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-ex]");
+  if (!b) return;
+  e.preventDefault();
+  openExercise(b.dataset.ex, b.dataset.part);
+});
+async function renderGuide() {
+  if (!picker.parts.length) await loadPicker();
+  const sel = $("#guidePart");
+  if (!sel.options.length) sel.innerHTML = `<option value="">Your plan</option>` + picker.parts.map((p) => `<option>${esc(p)}</option>`).join("");
+  const norm = (x) => x.toLowerCase().replace(/[-_\s]+/g, "");
+  const q = norm($("#guideSearch").value.trim()), part = sel.value;
+  let rows;
+  if (!part && !q) rows = Object.entries(picker.mine).flatMap(([p, names]) => names.map((n) => [n, p]));
+  else rows = Object.entries(picker.groups).filter(([p]) => !part || p === part)
+    .flatMap(([p, names]) => names.map((n) => [n, p])).filter(([n]) => !q || norm(n).includes(q));
+  const shown = rows.slice(0, 80);
+  $("#guideList").innerHTML = shown.map(([n, p]) => {
+    const info = ExerciseInfo.lookup(n, p);
+    return `<li><button class="ex-row" data-ex="${esc(n)}" data-part="${esc(p)}"><span>${esc(n)}</span><span class="muted small">${esc(info.primaryNames.join(", ") || p)}</span></button></li>`;
+  }).join("") + (rows.length > shown.length ? `<li class="muted small">${rows.length - shown.length} more — search to narrow down</li>` : "")
+    || `<li class="muted small">${part || q ? "No matches" : "No plan exercises yet — pick a body part above"}</li>`;
+}
+$("#exGuide").addEventListener("toggle", () => { if ($("#exGuide").open) renderGuide().catch((e) => toast(e.message, true)); });
+$("#guidePart").addEventListener("change", () => renderGuide());
+let guideTimer;
+$("#guideSearch").addEventListener("input", () => { clearTimeout(guideTimer); guideTimer = setTimeout(renderGuide, 200); });
+
 // ---------------------------------------------------------------- exercise picker (body part -> exercise)
 const picker = { groups: {}, parts: [], mine: {}, sessions: [], lookup: {} };
 async function loadPicker() {
@@ -692,8 +736,10 @@ function addSetRow(v = {}) {
     <select data-k="exercise" aria-label="Exercise">${exerciseOptions(part, v.exercise)}</select>
     <input type="number" placeholder="Reps" data-k="reps" min="0" value="${esc(v.reps ?? "")}" aria-label="Reps">
     <input type="number" placeholder="${U.label("mass")}" step="0.5" min="0" data-k="weight_kg" value="${esc(U.show("mass", v.weight_kg) ?? "")}" aria-label="Weight ${U.label("mass")}">
-    <button type="button" class="icon" title="Remove set" aria-label="Remove set">✕</button>`;
+    <button type="button" class="icon" title="Remove set" aria-label="Remove set">✕</button>
+    <button type="button" class="icon ex-info" title="How to do it" aria-label="Show how to do this exercise">ⓘ</button>`;
   row.querySelector("button").onclick = () => row.remove();
+  row.querySelector(".ex-info").onclick = () => { const n = $('[data-k="exercise"]', row).value; n ? openExercise(n, $('[data-k="part"]', row).value) : toast("Pick an exercise first", true); };
   $('[data-k="exercise"]', row).value = v.exercise || "";
   $('[data-k="part"]', row).onchange = (e) => { $('[data-k="exercise"]', row).innerHTML = exerciseOptions(e.target.value); };
   $("#setRows").appendChild(row);
@@ -793,7 +839,7 @@ function renderPlanDay(day, compact = false) {
   const changes = !compact && day.changes?.length
     ? `<details class="small"><summary class="muted">${day.changes.length} adjustment${day.changes.length > 1 ? "s" : ""} for your goal</summary><ul class="tips">${day.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></details>` : "";
   return `<div class="plan-day strength"><div class="wd">${day.weekday} · strength${day.garmin_source_id ? " · from Garmin" : ""}</div><strong>${esc(day.title)}</strong>
-    <table>${day.exercises.map((x) => `<tr><td>${esc(x.exercise)}</td><td>${x.sets}×${esc(x.reps)}${compact ? "" : rest(x)}</td></tr>`).join("")}</table>${changes}</div>`;
+    <table>${day.exercises.map((x) => `<tr><td><button class="ex-link" data-ex="${esc(x.exercise)}">${esc(x.exercise)}</button></td><td>${x.sets}×${esc(x.reps)}${compact ? "" : rest(x)}</td></tr>`).join("")}</table>${changes}</div>`;
 }
 
 const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

@@ -138,12 +138,13 @@ label.check input { width: auto; }
 .actions { margin-top: 8px; }
 fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
 legend { font-size: 13px; color: var(--muted); }
-.set-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+.set-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 6px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
 .set-row select[data-k="part"] { grid-column: 1 / 2; }
-.set-row select[data-k="exercise"] { grid-column: 2 / 4; }
+.set-row select[data-k="exercise"] { grid-column: 2 / 5; }
 .set-row input[data-k="reps"] { grid-column: 1 / 2; }
 .set-row input[data-k="weight_kg"] { grid-column: 2 / 3; }
-.set-row button { grid-column: 3 / 4; grid-row: 2; }
+.set-row button { grid-column: 4 / 5; grid-row: 2; }
+.set-row button.ex-info { grid-column: 3 / 4; color: var(--accent); }
 
 .list { list-style: none; margin: 0; padding: 0; }
 .list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
@@ -474,3 +475,38 @@ details.fold[open] > summary { margin-bottom: 12px; }
 .pick-result .kcal small { font-size: 13px; color: var(--muted); }
 .pick-result .macros { display: flex; gap: 8px; font-size: 13px; }
 .pick-result .p { color: var(--protein); } .pick-result .c { color: var(--carbs); } .pick-result .f { color: var(--fat); }
+
+/* ---------------------------------------------------------------- exercise demo + body map */
+.ex-dialog { width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto; }
+.ex-body { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 520px) { .ex-body { grid-template-columns: 1.1fr 1fr; align-items: center; } }
+.ex-demo { background: radial-gradient(90% 80% at 50% 40%, #17212d, #070a0e); border: 1px solid var(--g-bezel); border-radius: 14px; }
+.demo { width: 100%; height: auto; max-height: 34dvh; display: block; margin: 0 auto; }
+.demo .bone { stroke: #e9eef3; stroke-width: 7; stroke-linecap: round; }
+.demo .bone.torso { stroke-width: 10; }
+.demo .bone.thin { stroke-width: 5; }
+.demo .far .bone, .demo .far .prop { opacity: .45; }
+.demo .head { fill: #e9eef3; }
+.demo .joint { fill: var(--accent); }
+.demo .floor { stroke: #3a4554; stroke-width: 2; }
+.demo .gear { fill: #2c3746; stroke: #4a5768; }
+.demo .gear-leg { stroke: #4a5768; stroke-width: 3; }
+.demo .gear-bar { stroke: #9aa7b6; stroke-width: 4; stroke-linecap: round; }
+.demo .prop { fill: #ff7a45; } .demo .prop.plate { fill: #ff7a45; stroke: #7a2e12; stroke-width: 2; }
+.demo .band { fill: none; stroke: #f5c242; stroke-width: 3; stroke-linecap: round; }
+.bodymap { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.bodyview { margin: 0; text-align: center; }
+.bodyview svg { width: 100%; max-height: 260px; }
+.bodyview figcaption { font-size: 11px; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; }
+.bodyview .sil > * { fill: #2a3442; }
+.mu { fill: #3b4757; stroke: #1a2129; stroke-width: .8; }
+.mu.sec { fill: #f59e0b; }
+.mu.prim { fill: #ff3b30; filter: drop-shadow(0 0 3px #ff3b3088); }
+.ex-muscles { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+.mtag { font-size: 12px; padding: 4px 10px; border-radius: 99px; background: var(--raised); border: 1px solid var(--border); }
+.mtag.prim { border-color: #ff3b30; color: #ffb4ad; } .mtag.sec { border-color: #f59e0b; color: #fcd58a; }
+.ex-cues { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 4px; }
+.ex-link { background: none; border: 0; padding: 0; min-height: 0; color: var(--accent-strong); text-align: left; font: inherit; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+.ex-row { width: 100%; display: flex; justify-content: space-between; gap: 10px; background: none; border: 0; color: var(--text); text-align: left; padding: 8px 2px; font: inherit; min-height: 0; }
+.ex-row .small { text-align: right; }
+.guide-list { max-height: 420px; overflow: auto; }
