@@ -379,7 +379,7 @@ def _reminder_message(db: Session, key: str, today: date) -> dict | None:
         _, session = todays_session(db, today)
         if not session or session.get("type") == "rest":
             return None
-        detail = (f"{session['minutes']} min in {session['zone']}" if session.get("type") == "cardio"
+        detail = (f"{session['minutes']} minutes at an easy pace (you can still talk)" if session.get("type") == "cardio"
                   else f"{len(session.get('exercises', []))} exercises")
         return {"title": f"Today's workout: {session['title']}", "body": detail}
     if key == "evening_review":

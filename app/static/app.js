@@ -184,9 +184,16 @@ function whenLabel(n) {
   if (!n) return "";
   return n.in_days === 1 ? "tomorrow" : DAY_NAMES[n.weekday] || n.weekday;
 }
+// Plain-language effort levels (the watch calls these heart-rate zones).
+function pace(zone) {
+  const z = String(zone || "");
+  if (/4.?5|5/.test(z)) return { short: "hard pace", long: "hard: you're breathing hard and can't really talk", watch: z };
+  if (/3/.test(z)) return { short: "medium-hard pace", long: "medium-hard: you can only say a few words at a time", watch: z };
+  return { short: "easy pace", long: "easy and steady: you breathe a bit harder but can still talk in full sentences", watch: z || "Zone 2" };
+}
 function sessionSummary(x) {
   const kcal = x.est_kcal ? ` · ~${x.est_kcal} kcal` : "";
-  if (x.type === "cardio") return `${x.minutes} min · ${esc(x.zone)}${kcal}`;
+  if (x.type === "cardio") return `${x.minutes} min · ${pace(x.zone).short}${kcal}`;
   const n = (x.exercises || []).length;
   return `${n} exercises${x.minutes ? ` · ${x.minutes} min` : ""}${kcal}`;
 }
@@ -210,7 +217,7 @@ function renderHero(d) {
     }
     const list = ts.type === "strength"
       ? posterHTML("", ts.exercises, { compact: true })
-      : `<p class="hero-big">${ts.minutes} min <span class="muted">in ${esc(ts.zone)}</span></p>
+      : `<p class="hero-big">${ts.minutes} minutes <span class="muted">· ${pace(ts.zone).short}</span></p>
          <p class="muted small">Brisk walk, bike or cross-trainer. You should be able to talk in full sentences.</p>`;
     const ready = d.readiness && d.readiness.level !== "unknown" && d.readiness.level !== "good"
       ? `<p class="pill ${d.readiness.level}">${esc(d.readiness.message)}</p>` : "";
@@ -881,11 +888,11 @@ const dayName = (wd) => DAY_LONG[wd] || wd;
 function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
   return `<div class="exlist${compact ? " compact" : ""}">
     ${title ? `<h3 class="poster-title">${esc(title)}</h3>` : ""}${sub ? `<p class="poster-sub">${sub}</p>` : ""}
-    ${exercises.map((x, i) => `<article class="excard" data-poster="${esc(x.exercise)}" data-compact="${compact ? 1 : ""}">
+    ${exercises.map((x, i) => `<article class="excard" data-poster="${esc(x.exercise)}" data-cardio="${x.pattern === "cardio" ? 1 : ""}" data-compact="${compact ? 1 : ""}">
       <header><span class="exnum">${i + 1}</span><h4>${esc(x.exercise)}</h4></header>
       <div class="pimg"><span class="pimg-ph">${esc(x.exercise.slice(0, 1))}</span></div>
-      <dl class="exstats"><div><dt>Sets</dt><dd>${x.sets}</dd></div><div><dt>Reps</dt><dd>${esc(x.reps)}</dd></div>
-        ${x.rest_s ? `<div><dt>Rest</dt><dd>${x.rest_s}s</dd></div>` : ""}</dl>
+      ${x.pattern === "cardio" ? `<dl class="exstats one"><div><dt>How long</dt><dd>${esc(x.reps)}</dd></div></dl>` : `<dl class="exstats"><div><dt>Rounds</dt><dd>${x.sets}</dd></div><div><dt>Times each round</dt><dd>${esc(x.reps)}</dd></div>
+        ${x.rest_s ? `<div><dt>Rest between rounds</dt><dd>${x.rest_s} sec</dd></div>` : ""}</dl>`}
       <div class="exmus"></div>
       <ol class="exsteps"></ol>
       <button class="ghost small" data-ex="${esc(x.exercise)}">How to do it</button>
@@ -904,7 +911,10 @@ async function hydratePosters(root = document) {
     const sec = (own && m.secondary.length ? m.secondary : local.secondary).filter((k) => !prim.includes(k));
     t.querySelector(".exmus").innerHTML = `<span class="lbl">Works</span>${prim.map((k) => `<i class="p">${esc(MUSCLE_NAMES[k] || k)}</i>`).join("")}`
       + (sec.length ? `<span class="lbl">Helps</span>${sec.slice(0, 3).map((k) => `<i>${esc(MUSCLE_NAMES[k] || k)}</i>`).join("")}` : "");
-    const steps = (own && m.instructions.length ? m.instructions : local.cues || []).slice(0, t.dataset.compact ? 2 : 3);
+    const steps = t.dataset.cardio ? (/1 minute fast/.test(t.dataset.poster)
+      ? ["Walk fast for 1 minute, as if you're late for a bus.", "Then walk slowly for 2 minutes to catch your breath.", "Repeat this 8 times. Use your phone or watch as a timer."]
+      : ["Walk fast outside or on a treadmill, or ride a bike (an exercise bike is fine).", "Keep going without stopping for the whole time.", "Go at a pace where you breathe harder but can still talk in full sentences."])
+      : (own && m.instructions.length ? m.instructions : local.cues || []).slice(0, t.dataset.compact ? 2 : 3);
     t.querySelector(".exsteps").innerHTML = steps.map((s) => `<li>${esc(s)}</li>`).join("");
     if (m?.images?.length) {
       t.querySelector(".pimg").innerHTML = m.images.map((src, i) => `<img src="${src}" alt="${esc(t.dataset.poster)} ${i ? "finish" : "start"} position" loading="lazy" class="${i ? "peak" : "start"}">`).join("");
@@ -922,11 +932,13 @@ new MutationObserver(() => { clearTimeout(exlib.pending); exlib.pending = setTim
 function renderPlanDay(day, compact = false) {
   if (day.type === "rest") return `<div class="plan-day"><div class="wd">${dayName(day.weekday)}</div><strong>Rest / mobility</strong><p class="muted small">Easy walk and stretching. Let your Garmin recovery time come down.</p></div>`;
   if (day.type === "cardio") return `<div class="plan-day cardio"><div class="wd">${dayName(day.weekday)} · cardio</div><strong>${esc(sessionTitle(day))}</strong>
-    <p class="small">${day.minutes} min in <b>${esc(day.zone)}</b>${day.est_kcal ? ` · 🔥 about <b>${day.est_kcal} kcal</b>` : ""}. Set your fenix data screen to show HR zone.</p></div>`;
+    <p>Walk fast or ride a bike for <b>${day.minutes} minutes</b> without stopping.</p>
+    <p class="small"><b>How hard:</b> ${pace(day.zone).long}. (Your watch calls this heart-rate ${esc(pace(day.zone).watch)}.)</p>
+    ${day.est_kcal ? `<p class="burn">🔥 You'll burn about <b>${day.est_kcal} calories</b>.</p>` : ""}</div>`;
   const changes = !compact && day.changes?.length
     ? `<details class="small"><summary class="muted">${day.changes.length} adjustment${day.changes.length > 1 ? "s" : ""} for your goal</summary><ul class="tips">${day.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></details>` : "";
   return `<div class="plan-day strength"><div class="wd">${dayName(day.weekday)}${day.garmin_source_id ? " · from your Garmin workout" : ""}</div><strong>${esc(sessionTitle(day))}</strong>
-    ${day.est_kcal ? `<p class="burn">🔥 About <b>${day.est_kcal} kcal</b> · ${day.minutes} min · strength first, then the cardio block</p>` : ""}
+    ${day.est_kcal ? `<p class="burn">🔥 About <b>${day.est_kcal} calories</b> · ${day.minutes} minutes in total. Do the exercises in order, then finish with the walk or bike ride.</p>` : ""}
     ${posterHTML("", day.exercises, { compact })}${changes}</div>`;
 }
 

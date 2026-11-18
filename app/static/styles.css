@@ -653,3 +653,5 @@ body.dlg-open { overflow: hidden; }
 .ck { padding: 8px 16px; border-radius: 99px; font-weight: 700; background: transparent; }
 .ck.yes { color: #4ade80; border: 2px solid #4ade80; } .ck.yes.on { background: #4ade80; color: #062a12; }
 .ck.no { color: #f87171; border: 2px solid #f87171; } .ck.no.on { background: #f87171; color: #3a0b0b; }
+.exstats.one { grid-template-columns: 1fr; }
+.excard[data-cardio="1"] > button[data-ex] { display: none; }

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Goals, Profile, StoredSecret, WeightEntry, WorkoutPlan
 
-MARKER = "preset:fatloss-95-v2"
+MARKER = "preset:fatloss-95-v3"
 PLAN_NAME = "Lose 10.5 kg in 13 weeks · home"
 
 
@@ -20,7 +20,7 @@ def ex(name, sets, reps, rest=75, pattern=""):
 
 # Beginner-friendly: 3 sets, simple moves, 60-75 s rest, then a steady cardio block so every
 # session burns ~500+ kcal at ~105 kg (weights ~3.5 MET, brisk walk/bike ~4.5-6.5 MET).
-CARDIO_FINISH = ex("Brisk walk or easy bike (Zone 2)", 1, "25 min", 0, "cardio")
+CARDIO_FINISH = ex("Fast walk or easy bike ride (no stopping)", 1, "25 minutes", 0, "cardio")
 
 DAYS = [
     {"weekday": "Mon", "type": "strength", "title": "Upper body A", "minutes": 65, "est_kcal": 520, "exercises": [
@@ -37,10 +37,10 @@ DAYS = [
         ex("Dumbbell Romanian deadlift", 3, "10-12", 75, "hinge"),
         ex("Dumbbell step-ups", 3, "10 each leg", 75, "lunge"),
         ex("Glute bridge", 3, "15", 60, "hinge"),
-        ex("Plank", 3, "20-30s", 45, "core"),
+        ex("Plank", 3, "hold 20-30 seconds", 45, "core"),
         CARDIO_FINISH,
     ]},
-    {"weekday": "Wed", "type": "cardio", "title": "Zone 2 brisk walk or bike", "zone": "Zone 2", "minutes": 60,
+    {"weekday": "Wed", "type": "cardio", "title": "Fast walk or bike ride", "zone": "Zone 2", "minutes": 60,
      "est_kcal": 500, "exercises": []},
     {"weekday": "Thu", "type": "strength", "title": "Upper body B", "minutes": 65, "est_kcal": 510, "exercises": [
         ex("Incline push-ups (hands on bench)", 3, "8-12", 75, "h_push"),
@@ -55,29 +55,29 @@ DAYS = [
         ex("Split squat (hold a chair)", 3, "8-10 each leg", 75, "lunge"),
         ex("Sumo dumbbell squat", 3, "10-12", 75, "squat"),
         ex("Hip thrust", 3, "12", 60, "hinge"),
-        ex("Dead bug", 3, "8 each side", 45, "core"),
-        ex("Walking intervals: 1 min fast / 2 min easy", 1, "8 rounds (24 min)", 0, "cardio"),
+        ex("Dead bug", 3, "8 each side (left + right = 1)", 45, "core"),
+        ex("Walk: 1 minute fast, then 2 minutes slow", 1, "24 minutes", 0, "cardio"),
     ]},
-    {"weekday": "Sat", "type": "cardio", "title": "Long Zone 2 walk or bike", "zone": "Zone 2", "minutes": 70,
+    {"weekday": "Sat", "type": "cardio", "title": "Long walk or bike ride", "zone": "Zone 2", "minutes": 70,
      "est_kcal": 580, "exercises": []},
     {"weekday": "Sun", "type": "rest", "title": "Rest day", "exercises": []},
 ]
 
 PROGRESSION = [
     {"week": w, "note": n} for w, n in [
-        (1, "Learn the moves with light weights; stop every set with 3 reps left. Weigh in 3+ mornings. ~104.5 kg."),
-        (2, "Same weights, aim for the top of each rep range. ~104 kg."),
-        (3, "Top of the range on every set? Go heavier / stronger band. ~103 kg."),
-        (4, "Keep adding reps or weight. Check-in: ~102 kg."),
-        (5, "Deload: 2 sets per exercise, same weights. Keep walking."),
-        (6, "Back to full sets; beat week 4's numbers. ~101 kg."),
-        (7, "Progress weights. Cardio blocks up to 30 min. ~100 kg."),
-        (8, "Check-in: ~98.5 kg. Slower than 0.5 kg/wk for 2 weeks? Cut 150 kcal or add 2k steps."),
-        (9, "Add a 4th set to squats, rows and presses if you feel good. ~98 kg."),
-        (10, "Deload: 2 sets per exercise. ~97.5 kg."),
-        (11, "Full sets, heaviest weights yet. ~96.5 kg."),
-        (12, "Keep protein at 180 g; sleep 7.5 h. ~95.5 kg."),
-        (13, "Goal week: 95 kg. Then raise calories by 200-300 to maintain."),
+        (1, "Use light weights and learn each move. Stop each round when you could still do 3 more. Weigh yourself 3 mornings this week. Goal: about 104.5 kg."),
+        (2, "Same weights as last week. Try to reach the higher number of times in each round. Goal: about 104 kg."),
+        (3, "If every round felt easy, use slightly heavier dumbbells or a stronger band. Goal: about 103 kg."),
+        (4, "Keep going a little heavier or a few more times. Goal: about 102 kg."),
+        (5, "Easy week: do only 2 rounds of each exercise, same weights. Keep walking."),
+        (6, "Back to normal rounds. Try to beat what you did in week 4. Goal: about 101 kg."),
+        (7, "A little heavier again. Make the walk or bike ride after your exercises 30 minutes. Goal: about 100 kg."),
+        (8, "Goal: about 98.5 kg. If you lost less than half a kilo a week for 2 weeks, eat a little less (150 calories, e.g. one slice of bread) or walk 2,000 more steps a day."),
+        (9, "If you feel strong, add a 4th round to squats, rows and presses. Goal: about 98 kg."),
+        (10, "Easy week: 2 rounds of each exercise. Goal: about 97.5 kg."),
+        (11, "Back to normal rounds with your heaviest weights so far. Goal: about 96.5 kg."),
+        (12, "Keep eating 180 g of protein a day and sleep 7 to 8 hours. Goal: about 95.5 kg."),
+        (13, "Goal week: 95 kg! After this, eat 200 to 300 calories more per day to stay at your new weight."),
     ]
 ]
 
@@ -92,6 +92,10 @@ def install(db: Session, today: date | None = None) -> bool:
     plan.days, plan.progression, plan.active = DAYS, PROGRESSION, True
     db.add(plan)
     first_time = not db.get(StoredSecret, "preset:fatloss-95-v1")
+    if db.get(StoredSecret, "preset:fatloss-95-v2"):  # goals/profile already set; only refresh the plan
+        db.add(StoredSecret(key=MARKER, value=today.isoformat()))
+        db.commit()
+        return True
 
     p = db.scalar(select(Profile)) or Profile()
     p.birth_year, p.height_cm, p.weight_kg = 1984, p.height_cm or 180, 105.5

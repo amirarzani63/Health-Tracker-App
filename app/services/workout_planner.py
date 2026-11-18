@@ -85,8 +85,8 @@ CARDIO = {
         {"name": "Long steady session", "zone": "Zone 2", "minutes": 75},
     ],
     "fat_loss": [
-        {"name": "Zone 2 walk/jog/cycle", "zone": "Zone 2", "minutes": 40},
-        {"name": "HIIT 8×30s hard / 90s easy", "zone": "Zone 4-5", "minutes": 25},
+        {"name": "Fast walk, jog or bike ride", "zone": "Zone 2", "minutes": 40},
+        {"name": "Intervals: 30 seconds hard, 90 seconds easy, 8 times", "zone": "Zone 4-5", "minutes": 25},
     ],
     "general": [{"name": "Easy cardio of choice", "zone": "Zone 2", "minutes": 30}],
     "hypertrophy": [{"name": "Light recovery cardio", "zone": "Zone 1-2", "minutes": 20}],

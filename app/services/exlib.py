@@ -102,7 +102,7 @@ ALIASES = [
     (r"incline push.?ups?", "Incline Push-Up"),
     (r"split squat", "~Split Squat with Dumbbells"),
     (r"sumo (dumbbell |db )?squat|plie squat", "Plie Dumbbell Squat"),
-    (r"brisk walk|walking|zone 2 walk", "Trail Running/Walking"),
+    (r"brisk walk|fast walk|walking|^walk|zone 2 walk", "Trail Running/Walking"),
     (r"interval|sprint", "Wind Sprints"),
     (r"lateral raise|side raise|side lateral", "Side Lateral Raise"),
     (r"band.*(lat )?pull.?down|(lat )?pull.?down.*band", "Wide-Grip Lat Pulldown"),
