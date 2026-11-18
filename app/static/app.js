@@ -465,15 +465,24 @@ function pickUnits(food) {
   const base = ["serving", "g", "oz", "lb", "kg"];
   return [...base, ...Object.keys(VOL_UNITS)];
 }
+function kcalPer(food, unit) {  // calories in one of `unit`
+  if (unit === "serving") return food.calories;
+  const g = gramsPer(food, unit);
+  return g && food.grams ? (food.calories * g) / food.grams : null;
+}
 function unitLabel(unit, food) {
-  return unit === "serving" ? `× ${food.unit}` : unit;
+  const k = kcalPer(food, unit);
+  const per = k == null ? "" : unit === "g" ? ` — ${fmt(k * 100)} kcal per 100 g` : ` — ${fmt(k, k < 10 ? 1 : 0)} kcal per ${unit === "serving" ? "serving" : unit}`;
+  return unit === "serving" ? `servings of ${food.unit}${per}` : `${unit}${per}`;
 }
 function openPick(food) {
   pick.food = food;
   $("#pickResults").innerHTML = "";
   $("#pickPanel").classList.remove("hidden");
   $("#pickName").textContent = food.food || food.name;
-  $("#pickBase").textContent = `${food.unit}: ${fmt(food.calories)} kcal · P ${food.protein_g} g · C ${food.carbs_g} g · F ${food.fat_g} g`;
+  const per = [[food.unit, food.calories, ""]].concat(food.grams ? [["100 g", kcalPer(food, "g") * 100], ["1 oz", kcalPer(food, "oz")]] : []);
+  $("#pickBase").innerHTML = `<span class="per-grid">${per.map(([u, k, sub]) => `<span><b>${fmt(k)} kcal</b><small>per ${u}${sub ? ` (${esc(sub)})` : ""}</small></span>`).join("")}</span>
+    <span class="small muted">1 serving: protein ${food.protein_g} g · carbs ${food.carbs_g} g · fat ${food.fat_g} g · fibre ${food.fiber_g ?? 0} g</span>`;
   const units = pickUnits(food);
   $("#pickUnit").innerHTML = units.map((u) => `<option value="${u}">${esc(unitLabel(u, food))}</option>`).join("");
   const start = U.imperial && units.includes("oz") && /\b\d+ g\b/.test(food.unit) ? "oz" : "serving";
@@ -537,7 +546,7 @@ $("#foodPick").addEventListener("input", (e) => {
   pickTimer = setTimeout(async () => {
     pick.items = await api(`/api/food-library?q=${encodeURIComponent(q)}`);
     $("#pickResults").innerHTML = pick.items.slice(0, 12).map((f, i) =>
-      `<li data-pick="${i}" tabindex="0"><span>${f.custom ? "★ " : ""}${esc(f.food || f.name)} <span class="muted small">${esc(U.food(f.unit || ""))}</span></span><span class="muted small">${fmt(f.calories)} kcal</span></li>`).join("")
+      `<li data-pick="${i}" tabindex="0"><span>${f.custom ? "★ " : ""}${esc(f.food || f.name)} <span class="muted small">${esc(U.food(f.unit || ""))}</span></span><span class="muted small">${fmt(f.calories)} kcal per serving</span></li>`).join("")
       || `<li class="muted small">Not in the database yet. Add it below under "Add food manually" and it'll be remembered.</li>`;
   }, 150);
 });
