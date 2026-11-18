@@ -118,6 +118,10 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
     for a in activities_between(db, start, end):
         acts[a.start_time.date()].append(a)
     weights = weights_between(db, start, end)
+    from app.models import DayLog, StepLog
+    typed = {r.day: r.steps for r in db.scalars(select(StepLog).where(StepLog.day >= start, StepLog.day <= end))}
+    logs = {r.day: r for r in db.scalars(select(DayLog).where(DayLog.day >= start, DayLog.day <= end))}
+    checked = checkins(db)
 
     out = []
     d = start
@@ -125,7 +129,8 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
         i = intake.get(d)
         s = stats.get(d)
         t = targets_for(db, d)
-        burned = s.total_calories if s and s.total_calories else None
+        lg = logs.get(d)
+        burned = (lg.burned if lg and lg.burned else None) or (s.total_calories if s and s.total_calories else None)
         day_acts = acts.get(d, [])
         out.append({
             "day": d.isoformat(),
@@ -135,11 +140,12 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
             "target_protein_g": round(t.protein_g),
             "burned": round(burned) if burned else None,
             "net": round(i["calories"] - burned) if i and burned else None,
-            "steps": s.steps if s else None,
+            "steps": max([v for v in ((s.steps if s else None), typed.get(d)) if v is not None], default=None),
             "resting_hr": s.resting_hr if s else None,
-            "sleep_h": round(s.sleep_s / 3600, 1) if s and s.sleep_s else None,
+            "sleep_h": (lg.sleep_h if lg and lg.sleep_h is not None else None)
+                       or (round(s.sleep_s / 3600, 1) if s and s.sleep_s else None),
             "intensity_minutes": s.intensity_minutes if s else None,
-            "workouts": len(day_acts),
+            "workouts": max(len(day_acts), 1 if checked.get(d.isoformat()) is True else 0),
             "workout_minutes": round(sum(a.duration_s for a in day_acts) / 60),
             "weight_kg": weights.get(d),
         })
@@ -458,3 +464,15 @@ def _clean_title(title: str) -> str:
     import re
     t = re.sub(r"^\s*(day|workout|session)\s*\d+\s*[-:·]?\s*", "", title or "", flags=re.I)
     return t or "your workout"
+
+
+
+def checkins(db: Session) -> dict:
+    """{"2026-11-18": True/False}: the user's answers to "Did you complete this workout?"."""
+    import json
+    from app.models import StoredSecret
+    row = db.get(StoredSecret, "workout_checkins")
+    try:
+        return json.loads(row.value) if row and row.value else {}
+    except ValueError:
+        return {}

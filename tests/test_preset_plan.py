@@ -39,3 +39,20 @@ def test_water(client):
     assert r["glasses"] == 1 and 8 <= r["goal"] <= 12
     client.post("/api/water", json={"day": "2026-11-18", "change": -5})
     assert client.get("/api/water?day=2026-11-18").json()["glasses"] == 0
+
+
+def test_steps_typed(client):
+    client.post("/api/steps", json={"day": "2026-11-18", "steps": 8500})
+    assert client.get("/api/steps?day=2026-11-18").json()["typed"] == 8500
+    d = client.get("/api/dashboard?day=2026-11-18").json()
+    assert d["goals"]["steps"]["value"] == 8500
+
+
+def test_day_log(client):
+    client.post("/api/day-log", json={"day": "2026-11-18", "sleep_h": 7})
+    client.post("/api/day-log", json={"day": "2026-11-18", "burned": 3100})
+    d = client.get("/api/dashboard?day=2026-11-18").json()
+    assert d["burned"] == 3100 and d["goals"]["sleep_h"]["value"] == 7
+    client.post("/api/plans/checkins/all", json={"day": "2026-11-18", "done": True})
+    d = client.get("/api/dashboard?day=2026-11-18").json()
+    assert d["today_done"] and d["goals"]["workouts_week"]["value"] >= 1

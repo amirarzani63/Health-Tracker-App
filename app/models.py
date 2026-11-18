@@ -191,3 +191,22 @@ class WaterLog(Base):
 
     day: Mapped[date] = mapped_column(Date, primary_key=True)
     glasses: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class StepLog(Base):
+    """Steps the user typed in for a day (used when it's higher than what Garmin reported)."""
+
+    __tablename__ = "step_log"
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    steps: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class DayLog(Base):
+    """Numbers the user typed in for a day; these take priority over Garmin's."""
+
+    __tablename__ = "day_log"
+
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    sleep_h: Mapped[float | None] = mapped_column(Float, nullable=True)
+    burned: Mapped[float | None] = mapped_column(Float, nullable=True)

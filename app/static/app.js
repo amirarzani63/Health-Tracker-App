@@ -280,7 +280,7 @@ function renderCluster(d) {
       <div class="g-main">${Gauge.dial({ id: "eat", value: eaten, max: Math.max(target * 1.3, eaten * 1.05), target,
         label: "EATEN", unit: `of ${fmt(target)} kcal`, readout: fmt(eaten), ticks: 6, state: eatState })}</div>
       <div class="g-side">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
-        label: "BURNED", unit: burned == null ? "sync Garmin" : `goal ${fmt(t.tdee || burnGoal)} kcal`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
+        label: "BURNED", unit: burned == null ? "log it in Workouts" : `goal ${fmt(t.tdee || burnGoal)} kcal`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
         state: burned != null && t.tdee && burned >= t.tdee ? "good" : "" })}</div>
       <div class="g-side">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
         label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), ticks: 4, state: c.protein_g >= protGoal ? "good" : "" })}</div>
@@ -801,6 +801,7 @@ async function loadTodaysPlan() {
 $("#loadPlan").onclick = () => loadTodaysPlan().catch((e) => toast(e.message, true));
 
 loaders.exercise = async () => {
+  loadSteps();
   loaders.plans().catch((e) => toast(e.message, true));
   loadPicker().catch(() => {});
   const f = $("#activityForm").elements.start_time;
@@ -1632,3 +1633,33 @@ document.addEventListener("click", async (e) => {
     if (Number(b.dataset.water) > 0) toast(w.glasses >= w.goal ? "Water goal reached 💧" : `💧 ${w.glasses} of ${w.goal} glasses`);
   } catch (err) { toast(err.message, true); }
 });
+
+
+// ---------------------------------------------------------------- today's activity typed in by hand
+const today = () => isoDate(new Date());
+async function loadSteps() {
+  try {
+    const [st, lg] = await Promise.all([api(`/api/steps?day=${today()}`), api(`/api/day-log?day=${today()}`)]);
+    const f = (id, typed, garmin, unit) => {
+      $(id).textContent = typed != null ? `· saved: ${fmt(typed, 2)} ${unit}` : garmin != null ? `· watch says ${fmt(garmin, 1)} ${unit}` : "";
+    };
+    f("#stepsSub", st.typed, st.garmin, "steps"); f("#sleepSub", lg.sleep_h, lg.garmin_sleep_h, "h"); f("#burnSub", lg.burned, lg.garmin_burned, "kcal");
+    if (st.typed != null) $("#stepsForm").steps.value = st.typed;
+    if (lg.sleep_h != null) $("#sleepForm").sleep_h.value = lg.sleep_h;
+    if (lg.burned != null) $("#burnForm").burned.value = lg.burned;
+  } catch {}
+}
+function dayLogForm(id, url, key, msg) {
+  $(id).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const v = Number(e.target[key].value);
+    try {
+      await api(url, { method: "POST", body: { day: today(), [key]: v } });
+      toast(msg(v));
+      loadSteps();
+    } catch (err) { toast(err.message, true); }
+  });
+}
+dayLogForm("#stepsForm", "/api/steps", "steps", (v) => `👟 ${fmt(v)} steps saved`);
+dayLogForm("#sleepForm", "/api/day-log", "sleep_h", (v) => `😴 ${fmt(v, 2)} hours of sleep saved`);
+dayLogForm("#burnForm", "/api/day-log", "burned", (v) => `🔥 ${fmt(v)} calories burned saved`);

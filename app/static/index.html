@@ -198,6 +198,23 @@
         <ul class="list guide-list" id="guideList"></ul>
       </details>
 
+      <div class="card" id="stepsCard">
+        <h3>Today's activity</h3>
+        <p class="muted small">Type today's numbers here. They show on the Dashboard. You can change them any time.</p>
+        <form id="stepsForm" class="daylog-row">
+          <label>👟 Steps walked today <span class="muted small" id="stepsSub"></span>
+            <span class="daylog-in"><input name="steps" type="number" inputmode="numeric" min="0" max="200000" placeholder="e.g. 8500" required><button type="submit">Save</button></span></label>
+        </form>
+        <form id="sleepForm" class="daylog-row">
+          <label>😴 Hours slept last night <span class="muted small" id="sleepSub"></span>
+            <span class="daylog-in"><input name="sleep_h" type="number" inputmode="decimal" min="0" max="24" step="0.25" placeholder="e.g. 7.5" required><button type="submit">Save</button></span></label>
+        </form>
+        <form id="burnForm" class="daylog-row">
+          <label>🔥 Calories burned today <span class="muted small" id="burnSub"></span>
+            <span class="daylog-in"><input name="burned" type="number" inputmode="numeric" min="0" max="10000" placeholder="from your watch, e.g. 3100" required><button type="submit">Save</button></span></label>
+        </form>
+      </div>
+
       <details class="card fold" id="logWorkoutCard">
         <summary><h3>＋ Log a workout</h3></summary>
         <div class="row-between">

@@ -673,3 +673,6 @@ body.dlg-open { overflow: hidden; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .zone-good { stroke-width: 7; opacity: .8; }
 .tk-num.long { font-size: 9px; }
+.steps-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin: 8px 0; } .steps-form input { font-size: 18px; }
+.daylog-row { margin: 10px 0; } .daylog-row label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
+.daylog-in { display: grid; grid-template-columns: 1fr auto; gap: 8px; } .daylog-in input { font-size: 17px; }

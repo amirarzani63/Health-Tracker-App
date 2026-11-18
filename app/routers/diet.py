@@ -135,3 +135,55 @@ def add_water(data: WaterIn, db: Session = Depends(get_db)) -> dict:
     db.add(row)
     db.commit()
     return get_water(data.day, db)
+
+
+# ---------------------------------------------------------------- steps typed in by hand
+from app.models import DailyStats, StepLog  # noqa: E402
+
+
+class StepsIn(BaseModel):
+    day: date
+    steps: int = Field(ge=0, le=200000)
+
+
+@router.get("/steps")
+def get_steps(day: date, db: Session = Depends(get_db)) -> dict:
+    row, g = db.get(StepLog, day), db.get(DailyStats, day)
+    return {"day": day, "typed": row.steps if row else None, "garmin": g.steps if g else None}
+
+
+@router.post("/steps")
+def set_steps(data: StepsIn, db: Session = Depends(get_db)) -> dict:
+    row = db.get(StepLog, data.day) or StepLog(day=data.day)
+    row.steps = data.steps
+    db.add(row)
+    db.commit()
+    return get_steps(data.day, db)
+
+
+# ---------------------------------------------------------------- sleep and calories burned typed in by hand
+from app.models import DayLog  # noqa: E402
+
+
+class DayLogIn(BaseModel):
+    day: date
+    sleep_h: float | None = Field(None, ge=0, le=24)
+    burned: float | None = Field(None, ge=0, le=10000)
+
+
+@router.get("/day-log")
+def get_day_log(day: date, db: Session = Depends(get_db)) -> dict:
+    row, g = db.get(DayLog, day), db.get(DailyStats, day)
+    return {"day": day, "sleep_h": row.sleep_h if row else None, "burned": row.burned if row else None,
+            "garmin_sleep_h": round(g.sleep_s / 3600, 1) if g and g.sleep_s else None,
+            "garmin_burned": round(g.total_calories) if g and g.total_calories else None}
+
+
+@router.post("/day-log")
+def set_day_log(data: DayLogIn, db: Session = Depends(get_db)) -> dict:
+    row = db.get(DayLog, data.day) or DayLog(day=data.day)
+    for k in data.model_fields_set - {"day"}:
+        setattr(row, k, getattr(data, k))
+    db.add(row)
+    db.commit()
+    return get_day_log(data.day, db)
