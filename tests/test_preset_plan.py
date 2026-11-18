@@ -56,3 +56,21 @@ def test_day_log(client):
     client.post("/api/plans/checkins/all", json={"day": "2026-11-18", "done": True})
     d = client.get("/api/dashboard?day=2026-11-18").json()
     assert d["today_done"] and d["goals"]["workouts_week"]["value"] >= 1
+
+
+def test_remove_garmin_data(client):
+    from datetime import date, datetime
+
+    from app.models import Activity, DailyStats, StoredSecret, WeightEntry
+    from app.services.remove_garmin import remove_garmin_data
+    db = SessionLocal()
+    db.query(StoredSecret).filter(StoredSecret.key == "garmin-removed-v1").delete()
+    db.add_all([DailyStats(day=date(2026, 11, 1), steps=5000), StoredSecret(key="garmin_tokens", value="x"),
+                WeightEntry(day=date(2026, 11, 1), weight_kg=106, source="garmin"),
+                WeightEntry(day=date(2026, 11, 2), weight_kg=105.5, source="manual"),
+                Activity(name="run", activity_type="running", start_time=datetime(2026, 11, 1, 8), duration_s=600, source="garmin")])
+    db.commit()
+    assert remove_garmin_data(db)
+    assert db.query(DailyStats).count() == 0 and db.get(StoredSecret, "garmin_tokens") is None
+    assert [w.source for w in db.query(WeightEntry)] == ["manual"] and db.query(Activity).count() == 0
+    db.close()

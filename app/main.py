@@ -15,7 +15,7 @@ from app.services.garmin import GarminError, garmin_service
 from app.services.strava import strava_service
 
 log = logging.getLogger("health")
-AUTO_SYNC_HOURS = float(os.getenv("GARMIN_AUTO_SYNC_HOURS", "6"))
+AUTO_SYNC_HOURS = float(os.getenv("GARMIN_AUTO_SYNC_HOURS", "0"))  # off: the user logs everything by hand
 
 
 async def auto_sync_loop():
@@ -61,6 +61,14 @@ async def lifespan(app: FastAPI):
                 log.info("Installed the 13-week fat-loss plan and diet targets")
     except Exception:
         log.exception("Installing the preset plan failed")
+    try:
+        from app.services.remove_garmin import remove_garmin_data
+
+        with SessionLocal() as db:
+            if remove_garmin_data(db):
+                log.info("Removed Garmin data and sign-in")
+    except Exception:
+        log.exception("Removing Garmin data failed")
     if not auth.enabled():
         log.warning("APP_PASSWORD is not set: the app is open to anyone who can reach it. "
                     "Set APP_PASSWORD before putting it on the internet.")

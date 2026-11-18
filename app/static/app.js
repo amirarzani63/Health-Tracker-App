@@ -941,7 +941,7 @@ function renderPlanDay(day, compact = false) {
     ${day.est_kcal ? `<p class="burn">🔥 You'll burn about <b>${day.est_kcal} calories</b>.</p>` : ""}</div>`;
   const changes = !compact && day.changes?.length
     ? `<details class="small"><summary class="muted">${day.changes.length} adjustment${day.changes.length > 1 ? "s" : ""} for your goal</summary><ul class="tips">${day.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></details>` : "";
-  return `<div class="plan-day strength"><div class="wd">${dayName(day.weekday)}${day.garmin_source_id ? " · from your Garmin workout" : ""}</div><strong>${esc(sessionTitle(day))}</strong>
+  return `<div class="plan-day strength"><div class="wd">${dayName(day.weekday)}</div><strong>${esc(sessionTitle(day))}</strong>
     ${day.est_kcal ? `<p class="burn">🔥 About <b>${day.est_kcal} calories</b> · ${day.minutes} minutes in total. Do the exercises in order, then finish with the walk or bike ride.</p>` : ""}
     ${posterHTML("", day.exercises, { compact })}${changes}</div>`;
 }
@@ -1460,6 +1460,7 @@ async function loadStrava() {
 
 // Sync quietly when the app opens (server skips if the last sync is recent).
 async function autoSync() {
+  return;  // the user logs everything by hand; no Garmin or Strava syncing
   api("/api/strava/sync-if-stale", { method: "POST" }).then((r) => {
     if (r.synced && r.activities_added && ["dashboard", "exercise", "progress"].includes(state.view)) loaders[state.view]?.();
   }).catch(() => {});
