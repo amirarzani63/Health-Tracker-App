@@ -733,3 +733,5 @@ body.dlg-open { overflow: hidden; }
 .cl-preview { display: grid; grid-template-columns: 96px 1fr; gap: 10px; align-items: center; margin: 4px 0 8px; }
 .cl-preview:empty { display: none; }
 .cl-preview img { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; }
+
+.warn-text { color: var(--warn); }

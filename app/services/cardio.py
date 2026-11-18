@@ -17,7 +17,7 @@ ACTIVITIES = {
     "treadmill_walk": ("Treadmill walk (incline)", 5.0),
     "run": ("Jog / run outside", 7.0),
     "treadmill_run": ("Treadmill jog", 7.0),
-    "bike": ("Stationary bike", 6.8),
+    "bike": ("Upright exercise bike", 6.8),
     "recumbent": ("Recumbent bike", 5.5),
     "elliptical": ("Elliptical / cross-trainer", 5.0),
     "rower": ("Rowing machine", 6.0),

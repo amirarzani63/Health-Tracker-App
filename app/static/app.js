@@ -927,7 +927,7 @@ function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
         ${x.rest_s ? `<div><dt>Rest between rounds</dt><dd>${x.rest_s} sec</dd></div>` : ""}</dl>`}
       <div class="exmus"></div>
       <ol class="exsteps"${x.howto ? ' data-own="1"' : ""}>${(x.howto || []).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>
-      <button class="ghost small" data-ex="${esc(x.exercise)}">How to do it</button>
+      <button class="ghost small" data-ex="${esc(x.photo || x.exercise)}">How to do it</button>
     </article>`).join("")}</div>`;
 }
 async function hydratePosters(root = document) {
@@ -966,32 +966,34 @@ new MutationObserver(() => { clearTimeout(exlib.pending); exlib.pending = setTim
 const CARDIO_OPTS = {
   walk: { label: "Fast walk outside", photo: "Fast Walking (outdoors)", met: 4.3,
     how: ["Walk fast, as if you're in a hurry.", "Swing your arms and keep going without stopping."] },
-  treadmill_walk: { label: "Treadmill walk (incline)", photo: "Walking, Treadmill", met: 5.0,
+  treadmill_walk: { label: "Treadmill walk (incline)", machine: true, photo: "Walking, Treadmill", met: 5.0,
     how: ["Set speed 5–6 km/h (3–3.7 mph) and incline 5–8%.", "Don't hold the handrails; swing your arms."] },
   run: { label: "Jog / run outside", photo: "Trail Running/Walking", met: 7.0,
     how: ["Jog slowly enough that you can still talk.", "If you get out of breath, walk for a minute, then jog again."] },
-  treadmill_run: { label: "Treadmill jog", photo: "Jogging, Treadmill", met: 7.0,
+  treadmill_run: { label: "Treadmill jog", machine: true, photo: "Jogging, Treadmill", met: 7.0,
     how: ["Start at 7–8 km/h (4.5–5 mph), flat or 1% incline.", "Slow down to a fast walk if you can't talk."] },
-  bike: { label: "Stationary bike", photo: "Bicycling, Stationary", met: 6.8,
+  bike: { label: "Upright exercise bike", machine: true, photo: "Bicycling, Stationary", met: 6.8,
     how: ["Seat height: your knee is only slightly bent at the bottom.", "Medium resistance; pedal at a steady pace you can keep."] },
-  recumbent: { label: "Recumbent bike (with back rest)", photo: "Recumbent Bike", met: 5.5,
+  recumbent: { label: "Recumbent bike (with back rest)", machine: true, photo: "Recumbent Bike", met: 5.5,
     how: ["Easy on knees and back.", "Medium resistance; pedal at a steady pace you can keep."] },
-  elliptical: { label: "Elliptical / cross-trainer", photo: "Elliptical Trainer", met: 5.0,
+  elliptical: { label: "Elliptical / cross-trainer", machine: true, photo: "Elliptical Trainer", met: 5.0,
     how: ["Stand tall, push and pull the handles.", "Medium resistance; keep a smooth, steady rhythm."] },
-  rower: { label: "Rowing machine", photo: "Rowing, Stationary", met: 6.0,
-    how: ["Push with your legs first, then lean back slightly and pull the handle to your belly.", "Easy, smooth strokes: about 20–24 per minute."] },
-  stairs: { label: "Stair climber", photo: "Stairmaster", met: 8.0,
-    how: ["Start on a slow level; hold the rails only lightly for balance.", "Take short breaks if you need them; it's harder than it looks."] },
   jump_rope: { label: "Rope skipping", photo: "Rope Jumping", met: 8.8,
     how: ["Small, low hops on the balls of your feet; turn the rope with your wrists.", "Beginners: skip 30 seconds, rest 30 seconds, and repeat. Count only the time you skip."] },
 };
 const cardioState = { picks: {}, kg: 105 };
-const cardioFor = (iso) => { const v = cardioState.picks[iso]; return typeof v === "string" ? v : Array.isArray(v) ? v[0].activity : cardioState.picks.default || "walk"; };
+const cardioFor = (iso) => { const v = cardioState.picks[iso]; return typeof v === "string" ? v : Array.isArray(v) ? v[0].activity : cardioState.picks.default || "treadmill_walk"; };
 // The day's cardio as a list of {activity, minutes}; planned minutes go to one activity unless the user split them
+const MACHINE_MAX = 30;  // building gym rule: cardio machines 30 minutes at a time
 function cardioList(iso, planMin) {
   const v = cardioState.picks[iso];
   if (Array.isArray(v) && v.length) return v;
-  return [{ activity: typeof v === "string" ? v : cardioState.picks.default || "walk", minutes: planMin }];
+  const first = typeof v === "string" ? v : cardioState.picks.default || "treadmill_walk";
+  if (!CARDIO_OPTS[first]?.machine || planMin <= MACHINE_MAX) return [{ activity: first, minutes: planMin }];
+  // split long sessions across machines so none goes over 30 minutes
+  const order = [first, ...["bike", "elliptical", "treadmill_walk", "recumbent"].filter((k) => k !== first)], out = [];
+  for (let left = planMin, i = 0; left > 0; i++) { const m = Math.min(MACHINE_MAX, left); out.push({ activity: order[i % order.length], minutes: m }); left -= m; }
+  return out;
 }
 const kcalFor = (key, min) => Math.round((CARDIO_OPTS[key].met * 3.5 * cardioState.kg / 200) * min);
 const plannedCardioMin = (d) => d.type === "cardio" ? d.minutes
@@ -1004,7 +1006,7 @@ async function loadCardio() {
 }
 function cardioPicker(iso, day) {
   const list = cardioList(iso, plannedCardioMin(day)), total = list.reduce((t, x) => t + x.minutes, 0);
-  const isDefault = list.length === 1 && (cardioState.picks.default || "walk") === list[0].activity;
+  const isDefault = list.length === 1 && (cardioState.picks.default || "treadmill_walk") === list[0].activity;
   const opts = (cur) => Object.entries(CARDIO_OPTS).map(([k, o]) => `<option value="${k}"${k === cur ? " selected" : ""}>${o.label}</option>`).join("");
   return `<div class="cardio-pick" data-cardio-day="${iso}"><span class="cp-title">🏃 Your cardio for this day</span>
     ${list.map((x, i) => `<div class="cp-row" data-cr="${i}">
@@ -1012,6 +1014,7 @@ function cardioPicker(iso, day) {
       <input data-cr-min type="number" inputmode="numeric" min="1" max="300" value="${x.minutes}" aria-label="Minutes"><span class="muted small">min</span>
       ${list.length > 1 ? `<button type="button" class="icon" data-cr-del aria-label="Remove">✕</button>` : ""}</div>`).join("")}
     <button type="button" class="ghost small-btn" data-cr-add>＋ Add another activity</button>
+    ${list.some((x) => CARDIO_OPTS[x.activity]?.machine && x.minutes > MACHINE_MAX) ? `<span class="warn-text small">⚠ Your gym allows 30 minutes per cardio machine. Split it: tap "＋ Add another activity".</span>` : ""}
     <span class="small">Total: <b>${total} minutes</b> · about <b>${list.reduce((t, x) => t + kcalFor(x.activity, x.minutes), 0)} calories</b></span>
     ${iso <= isoDate(new Date()) ? `<button type="button" data-cr-log>✓ I did this: log it</button>` : `<span class="muted small">On the day, tap "I did this" to log it.</span>`}
     <div id="dayCardioLogs"></div>

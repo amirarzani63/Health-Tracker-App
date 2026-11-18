@@ -10,8 +10,9 @@ from sqlalchemy.orm import Session
 
 from app.models import Goals, Profile, StoredSecret, WeightEntry, WorkoutPlan
 
-MARKER = "preset:fatloss-95-v3"
+MARKER = "preset:fatloss-95-v4"
 PLAN_NAME = "Lose 10.5 kg in 13 weeks · home"
+PLAN_NAME_GYM = "Lose 10.5 kg in 13 weeks · building gym"
 
 
 def ex(name, sets, reps, rest=75, pattern=""):
@@ -22,43 +23,55 @@ def ex(name, sets, reps, rest=75, pattern=""):
 # session burns ~500+ kcal at ~105 kg (weights ~3.5 MET, brisk walk/bike ~4.5-6.5 MET).
 CARDIO_FINISH = ex("Fast walk or easy bike ride (no stopping)", 1, "25 minutes", 0, "cardio")
 
+
+def gx(name, photo, sets, reps, rest=75, pattern=""):
+    """An exercise done with the user's gym equipment; ``photo`` is the matching library photo."""
+    return {**ex(name, sets, reps, rest, pattern), "photo": photo}
+
+
+# Only equipment in the user's building gym (Nov 2026 photos): dumbbell rack, adjustable benches,
+# cable station (lat pulldown, seated row, leg extension / leg curl, rope), pull-up/dip/knee-raise tower,
+# back-extension bench, stability ball, treadmills, upright + recumbent bike, elliptical.
+# Gym rule: cardio machines max 30 minutes at a time.
 DAYS = [
     {"weekday": "Mon", "type": "strength", "title": "Upper body A", "minutes": 65, "est_kcal": 520, "exercises": [
-        ex("Dumbbell bench press", 3, "10-12", 75, "h_push"),
-        ex("One-arm dumbbell row", 3, "10-12", 75, "h_pull"),
-        ex("Seated dumbbell shoulder press", 3, "10-12", 75, "v_push"),
-        ex("Band lat pulldown", 3, "12-15", 60, "v_pull"),
-        ex("Hammer curl", 2, "12", 60, "biceps"),
-        ex("Dumbbell overhead triceps extension", 2, "12", 60, "triceps"),
+        gx("Dumbbell bench press (flat bench)", "Dumbbell Bench Press", 3, "10-12", 75, "h_push"),
+        gx("Seated cable row (cable station)", "Seated Cable Rows", 3, "10-12", 75, "h_pull"),
+        gx("Seated dumbbell shoulder press (bench upright)", "Dumbbell Shoulder Press", 3, "10-12", 75, "v_push"),
+        gx("Lat pulldown (cable station)", "Wide-Grip Lat Pulldown", 3, "10-12", 75, "v_pull"),
+        gx("Dumbbell hammer curl", "Hammer Curls", 2, "12", 60, "biceps"),
+        gx("Rope triceps pushdown (cable)", "Triceps Pushdown - Rope Attachment", 2, "12-15", 60, "triceps"),
         CARDIO_FINISH,
     ]},
     {"weekday": "Tue", "type": "strength", "title": "Lower body A", "minutes": 65, "est_kcal": 540, "exercises": [
-        ex("Goblet squat", 3, "10-12", 75, "squat"),
-        ex("Dumbbell Romanian deadlift", 3, "10-12", 75, "hinge"),
-        ex("Dumbbell step-ups", 3, "10 each leg", 75, "lunge"),
-        ex("Glute bridge", 3, "15", 60, "hinge"),
-        ex("Plank", 3, "hold 20-30 seconds", 45, "core"),
+        gx("Goblet squat (one dumbbell)", "Goblet Squat", 3, "10-12", 75, "squat"),
+        gx("Dumbbell Romanian deadlift", "Romanian Deadlift", 3, "10-12", 75, "hinge"),
+        gx("Leg extension (cable station)", "Leg Extensions", 3, "12-15", 60, "squat"),
+        gx("Leg curl (cable station)", "Seated Leg Curl", 3, "12-15", 60, "hinge"),
+        gx("Back extension (back-extension bench)", "Hyperextensions (Back Extensions)", 2, "10-12", 60, "hinge"),
+        gx("Plank", "Plank", 3, "hold 20-30 seconds", 45, "core"),
         CARDIO_FINISH,
     ]},
-    {"weekday": "Wed", "type": "cardio", "title": "Fast walk or bike ride", "zone": "Zone 2", "minutes": 60,
+    {"weekday": "Wed", "type": "cardio", "title": "Cardio machines", "zone": "Zone 2", "minutes": 60,
      "est_kcal": 500, "exercises": []},
     {"weekday": "Thu", "type": "strength", "title": "Upper body B", "minutes": 65, "est_kcal": 510, "exercises": [
-        ex("Incline push-ups (hands on bench)", 3, "8-12", 75, "h_push"),
-        ex("Band row", 3, "12-15", 60, "h_pull"),
-        ex("Dumbbell lateral raise", 3, "12", 60, "v_push"),
-        ex("Rear delt fly", 2, "12-15", 60, "h_pull"),
-        ex("Dumbbell curl", 2, "12", 60, "biceps"),
-        ex("Band triceps pushdown", 2, "12-15", 60, "triceps"),
+        gx("Incline dumbbell press (bench on incline)", "Incline Dumbbell Press", 3, "10-12", 75, "h_push"),
+        gx("One-arm dumbbell row (hand on bench)", "One-Arm Dumbbell Row", 3, "10-12", 75, "h_pull"),
+        gx("Dumbbell lateral raise", "Side Lateral Raise", 3, "12", 60, "v_push"),
+        gx("Face pull (cable with rope)", "Face Pull", 2, "12-15", 60, "h_pull"),
+        gx("Cable biceps curl", "Standing Biceps Cable Curl", 2, "12", 60, "biceps"),
+        gx("Knee raise (on the dip / knee-raise tower)", "Knee/Hip Raise On Parallel Bars", 2, "8-12", 60, "core"),
         CARDIO_FINISH,
     ]},
     {"weekday": "Fri", "type": "strength", "title": "Lower body B", "minutes": 65, "est_kcal": 540, "exercises": [
-        ex("Split squat (hold a chair)", 3, "8-10 each leg", 75, "lunge"),
-        ex("Sumo dumbbell squat", 3, "10-12", 75, "squat"),
-        ex("Hip thrust", 3, "12", 60, "hinge"),
-        ex("Dead bug", 3, "8 each side (left + right = 1)", 45, "core"),
+        gx("Split squat (dumbbells, hold the rack for balance if needed)", "Split Squat with Dumbbells", 3, "8-10 each leg", 75, "lunge"),
+        gx("Sumo dumbbell squat", "Plie Dumbbell Squat", 3, "10-12", 75, "squat"),
+        gx("Hip thrust (shoulders on bench, dumbbell on hips)", "Barbell Hip Thrust", 3, "12", 60, "hinge"),
+        gx("Leg curl (cable station)", "Seated Leg Curl", 2, "12-15", 60, "hinge"),
+        gx("Dead bug", "Dead Bug", 3, "8 each side (left + right = 1)", 45, "core"),
         ex("Walk: 1 minute fast, then 2 minutes slow", 1, "24 minutes", 0, "cardio"),
     ]},
-    {"weekday": "Sat", "type": "cardio", "title": "Long walk or bike ride", "zone": "Zone 2", "minutes": 70,
+    {"weekday": "Sat", "type": "cardio", "title": "Cardio machines (longer)", "zone": "Zone 2", "minutes": 70,
      "est_kcal": 580, "exercises": []},
     {"weekday": "Sun", "type": "rest", "title": "Rest day", "exercises": []},
 ]
@@ -87,19 +100,24 @@ def install(db: Session, today: date | None = None) -> bool:
         return False
     today = today or date.today()
     db.execute(update(WorkoutPlan).values(active=False))
-    old = db.scalar(select(WorkoutPlan).where(WorkoutPlan.name == PLAN_NAME))  # v1: update in place
-    plan = old or WorkoutPlan(name=PLAN_NAME, goal="fat_loss", weeks=13)
+    old = db.scalar(select(WorkoutPlan).where(WorkoutPlan.name.in_([PLAN_NAME, PLAN_NAME_GYM])))  # update in place
+    plan = old or WorkoutPlan(name=PLAN_NAME_GYM, goal="fat_loss", weeks=13)
+    plan.name = PLAN_NAME_GYM
     plan.days, plan.progression, plan.active = DAYS, PROGRESSION, True
     db.add(plan)
     first_time = not db.get(StoredSecret, "preset:fatloss-95-v1")
     if db.get(StoredSecret, "preset:fatloss-95-v2"):  # goals/profile already set; only refresh the plan
+        prof = db.scalar(select(Profile))
+        if prof:
+            prof.equipment = "gym"
+            db.add(prof)
         db.add(StoredSecret(key=MARKER, value=today.isoformat()))
         db.commit()
         return True
 
     p = db.scalar(select(Profile)) or Profile()
     p.birth_year, p.height_cm, p.weight_kg = 1984, p.height_cm or 180, 105.5
-    p.goal, p.equipment, p.training_days, p.setup_done = "lose", "home", 4, True
+    p.goal, p.equipment, p.training_days, p.setup_done = "lose", "gym", 4, True
     p.experience = "beginner"
     db.add(p)
 
