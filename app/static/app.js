@@ -266,7 +266,7 @@ function renderCluster(d) {
   const protGoal = t.protein_g || 1;
   const net = burned != null ? Math.round(eaten - burned) : null;
   const steps = g.steps.value || 0;
-  const eatState = eaten > target ? "bad" : eaten > target * 0.9 ? "warn" : "";
+  const eatState = eaten > target ? "bad" : "good";
   const lights = [
     { on: eaten > target, cls: "bad", icon: "⚠", text: "Over calories" },
     { on: eaten > 0 && c.protein_g < protGoal * 0.5 && new Date().getHours() >= 15, cls: "warn", icon: "P", text: "Protein low" },
@@ -278,11 +278,12 @@ function renderCluster(d) {
   $("#cluster").innerHTML = `
     <div class="cluster">
       <div class="g-main">${Gauge.dial({ id: "eat", value: eaten, max: Math.max(target * 1.3, eaten * 1.05), target,
-        label: "EATEN", unit: `of ${fmt(target)} kcal`, readout: fmt(eaten), scale: 100, scaleLabel: "×100 kcal", state: eatState })}</div>
+        label: "EATEN", unit: `of ${fmt(target)} kcal`, readout: fmt(eaten), ticks: 6, state: eatState })}</div>
       <div class="g-side">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
-        label: "BURNED", unit: burned == null ? "sync Garmin" : "kcal", readout: burned == null ? "–" : fmt(burned), scale: 1000, scaleLabel: "×1000" })}</div>
+        label: "BURNED", unit: burned == null ? "sync Garmin" : `goal ${fmt(t.tdee || burnGoal)} kcal`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
+        state: burned != null && t.tdee && burned >= t.tdee ? "good" : "" })}</div>
       <div class="g-side">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
-        label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), state: c.protein_g >= protGoal ? "good" : "" })}</div>
+        label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), ticks: 4, state: c.protein_g >= protGoal ? "good" : "" })}</div>
     </div>
     <div class="cluster-strip">
       <div class="strip-cell">${Gauge.fuel(Math.max(0, left) / target, "Calories left", `${fmt(Math.abs(left))} ${left >= 0 ? "left" : "over"}`)}

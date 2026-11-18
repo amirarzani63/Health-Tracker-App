@@ -671,3 +671,5 @@ body.dlg-open { overflow: hidden; }
 .glass.full { background: linear-gradient(#bfe3ff, #3fa2ff); }
 .water-btns { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.zone-good { stroke-width: 7; opacity: .8; }
+.tk-num.long { font-size: 9px; }

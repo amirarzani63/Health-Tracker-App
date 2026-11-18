@@ -13,8 +13,8 @@ const Gauge = (() => {
     const [x0, y0] = polar(cx, cy, r, a0), [x1, y1] = polar(cx, cy, r, a1);
     return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
   };
-  const niceStep = (max) => {
-    const raw = max / 8, p = 10 ** Math.floor(Math.log10(raw));
+  const niceStep = (max, n = 8) => {
+    const raw = max / n, p = 10 ** Math.floor(Math.log10(raw));
     return [1, 2, 2.5, 5, 10].map((m) => m * p).find((s) => s >= raw);
   };
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -26,7 +26,7 @@ const Gauge = (() => {
    */
   function dial(o) {
     const cx = 100, cy = 100, r = 84;
-    const max = Math.max(1, o.max), step = niceStep(max), scale = o.scale || 1;
+    const max = Math.max(1, o.max), step = niceStep(max, o.ticks || 8), scale = o.scale || 1;
     const ang = (v) => START + (clamp(v, 0, max) / max) * SWEEP;
     let ticks = "", nums = "";
     for (let v = 0; v <= max + 1e-6; v += step / 2) {
@@ -36,12 +36,17 @@ const Gauge = (() => {
       if (major) {
         const [tx, ty] = polar(cx, cy, r - 26, ang(v));
         const n = v / scale;
-        nums += `<text x="${tx.toFixed(1)}" y="${(ty + 4).toFixed(1)}" class="tk-num">${Number.isInteger(n) ? n : n.toFixed(1)}</text>`;
+        nums += `<text x="${tx.toFixed(1)}" y="${(ty + 4).toFixed(1)}" class="tk-num${n >= 1000 ? " long" : ""}">${Number.isInteger(n) ? n : n.toFixed(1)}</text>`;
       }
     }
     const zones = [];
     if (o.target != null && o.target < max) {
-      zones.push(`<path d="${arc(cx, cy, r - 5, ang(o.target), START + SWEEP)}" class="${o.zone === "good" ? "zone-good" : "zone-red"}"/>`);
+      if (o.zone === "good") {  // reach the target: green from the target onwards
+        zones.push(`<path d="${arc(cx, cy, r - 5, ang(o.target), START + SWEEP)}" class="zone-good"/>`);
+      } else {  // stay under the target: green up to it, red after it
+        zones.push(`<path d="${arc(cx, cy, r - 5, START, ang(o.target))}" class="zone-good"/>`);
+        zones.push(`<path d="${arc(cx, cy, r - 5, ang(o.target), START + SWEEP)}" class="zone-red"/>`);
+      }
     }
     const valAngle = ang(o.value || 0);
     const progress = o.value > 0 ? `<path d="${arc(cx, cy, r + 4, START, Math.max(START + 0.5, valAngle))}" class="g-progress ${o.state || ""}"/>` : "";
