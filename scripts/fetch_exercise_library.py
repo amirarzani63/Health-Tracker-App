@@ -41,8 +41,8 @@ def extract(data: bytes, dest: Path) -> int:
                 out.mkdir(exist_ok=True)
                 (out / file).write_bytes(tar.extractfile(m).read())
                 photos += 1
-            elif parts == ["LICENSE"]:
-                (tmp / "LICENSE").write_bytes(tar.extractfile(m).read())
+            elif len(parts) == 1 and parts[0] in ("LICENSE", "LICENSE.md"):
+                (tmp / "LICENSE.md").write_bytes(tar.extractfile(m).read())
     if not isinstance(exercises, list) or not exercises:
         shutil.rmtree(tmp)
         raise ValueError("exercises.json missing from the archive")

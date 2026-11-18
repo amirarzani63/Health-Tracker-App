@@ -94,8 +94,33 @@ def _score(q: set[str], item: dict) -> float:
     return score
 
 
+# Common names whose closest-word match would be wrong: pattern -> library exercise name
+ALIASES = [
+    (r"lateral raise|side raise|side lateral", "Side Lateral Raise"),
+    (r"band.*(lat )?pull.?down|(lat )?pull.?down.*band", "Wide-Grip Lat Pulldown"),
+    (r"lat pull.?down|pull.?down", "Wide-Grip Lat Pulldown"),
+    (r"chin.?up", "Chin-Up"),
+    (r"pull.?up", "Pullups"),
+    (r"band(ed)? row|row.*band", "Seated Cable Rows"),
+    (r"reverse lunge|rear lunge", "Dumbbell Rear Lunge"),
+    (r"^dumbbell pullover|^pullover", "Straight-Arm Dumbbell Pullover"),
+    (r"^glute bridge|^bridge|hip bridge", "Butt Lift (Bridge)"),
+    (r"single.?leg glute bridge|single.?leg bridge", "Single Leg Glute Bridge"),
+    (r"overhead.*(tricep|extension)|tricep.*overhead", "Standing Dumbbell Triceps Extension"),
+    (r"lying leg raise|^leg raise", "Flat Bench Lying Leg Raise"),
+    (r"hanging leg raise|hanging knee raise", "Hanging Leg Raise"),
+    (r"^burpee", "Burpee"),
+]
+
+
 @lru_cache(maxsize=4096)
 def match(name: str) -> dict | None:
+    lower = name.lower()
+    for pattern, target in ALIASES:
+        if re.search(pattern, lower):
+            it = next((i for i in library()["items"] if i["name"].lower() == target.lower()), None)
+            if it:
+                return {k: v for k, v in it.items() if k != "words"} | {"score": 1.0}
     q = set(words(name))
     best, best_score = None, 0.0
     for it in library()["items"]:
