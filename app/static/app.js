@@ -185,9 +185,10 @@ function whenLabel(n) {
   return n.in_days === 1 ? "tomorrow" : DAY_NAMES[n.weekday] || n.weekday;
 }
 function sessionSummary(x) {
-  if (x.type === "cardio") return `${x.minutes} min · ${esc(x.zone)}`;
+  const kcal = x.est_kcal ? ` · ~${x.est_kcal} kcal` : "";
+  if (x.type === "cardio") return `${x.minutes} min · ${esc(x.zone)}${kcal}`;
   const n = (x.exercises || []).length;
-  return `${n} exercise${n === 1 ? "" : "s"}`;
+  return `${n} exercises${x.minutes ? ` · ${x.minutes} min` : ""}${kcal}`;
 }
 
 function renderHero(d) {
@@ -921,10 +922,11 @@ new MutationObserver(() => { clearTimeout(exlib.pending); exlib.pending = setTim
 function renderPlanDay(day, compact = false) {
   if (day.type === "rest") return `<div class="plan-day"><div class="wd">${dayName(day.weekday)}</div><strong>Rest / mobility</strong><p class="muted small">Easy walk and stretching. Let your Garmin recovery time come down.</p></div>`;
   if (day.type === "cardio") return `<div class="plan-day cardio"><div class="wd">${dayName(day.weekday)} · cardio</div><strong>${esc(sessionTitle(day))}</strong>
-    <p class="small">${day.minutes} min in <b>${esc(day.zone)}</b>. Set your fenix data screen to show HR zone.</p></div>`;
+    <p class="small">${day.minutes} min in <b>${esc(day.zone)}</b>${day.est_kcal ? ` · 🔥 about <b>${day.est_kcal} kcal</b>` : ""}. Set your fenix data screen to show HR zone.</p></div>`;
   const changes = !compact && day.changes?.length
     ? `<details class="small"><summary class="muted">${day.changes.length} adjustment${day.changes.length > 1 ? "s" : ""} for your goal</summary><ul class="tips">${day.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></details>` : "";
   return `<div class="plan-day strength"><div class="wd">${dayName(day.weekday)}${day.garmin_source_id ? " · from your Garmin workout" : ""}</div><strong>${esc(sessionTitle(day))}</strong>
+    ${day.est_kcal ? `<p class="burn">🔥 About <b>${day.est_kcal} kcal</b> · ${day.minutes} min · strength first, then the cardio block</p>` : ""}
     ${posterHTML("", day.exercises, { compact })}${changes}</div>`;
 }
 

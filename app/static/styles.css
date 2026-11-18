@@ -615,3 +615,4 @@ body.dlg-open { overflow: hidden; }
 .ex-dialog * { max-width: 100%; }
 .ex-dialog canvas { max-width: 100% !important; }
 .dlg-bar.inline { position: static; margin: 0 0 10px; padding: 0 0 10px; background: none; }
+.burn { margin: 6px 0 0; font-size: 14px; color: var(--accent-strong); }

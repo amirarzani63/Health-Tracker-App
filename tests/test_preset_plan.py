@@ -12,6 +12,7 @@ def test_install_once(client):
     plan = db_session.scalar(select(WorkoutPlan).where(WorkoutPlan.active))
     assert plan.weeks == 13 and [d["weekday"] for d in plan.days][0] == "Mon"
     g = db_session.scalar(select(Goals))
+    assert plan.days[0]["est_kcal"] >= 500
     assert (g.calorie_target, g.protein_target_g, g.target_weight_kg) == (2100, 180, 95)
     assert db_session.scalar(select(Profile)).birth_year == 1984
 
