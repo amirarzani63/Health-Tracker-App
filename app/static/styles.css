@@ -682,3 +682,13 @@ body.dlg-open { overflow: hidden; }
 .steps-tap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 #quickDialog { width: min(360px, 92vw); } #quickBody input { font-size: 22px; width: 100%; }
 .hm { display: grid; grid-template-columns: 1fr auto 1fr auto; gap: 8px; align-items: center; } .hm b { font-weight: 600; color: var(--muted); }
+.wr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+.wr { display: flex; flex-direction: column; background: var(--inset); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+.wr span { font-size: 12px; color: var(--muted); } .wr b { font-size: 16px; }
+.mp-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 8px 0; }
+.mp-day { padding: 8px 0; border-radius: 10px; background: var(--inset); color: var(--text); border: 1px solid var(--border); font-weight: 600; font-size: 13px; }
+.mp-day.today { border-color: var(--accent); } .mp-day.on { background: var(--accent); color: var(--on-accent); }
+.mp-meals { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.mp-meals li { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: var(--inset); border: 1px solid var(--border); border-radius: 10px; }
+.mp-meal { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); font-weight: 700; }
+.mp-name { font-weight: 600; } .mp-kcal { font-size: 13px; color: var(--muted); }

@@ -83,3 +83,29 @@ def test_latest_typed_value_wins(client):
     for h in (8, 6.5):
         client.post("/api/day-log", json={"day": "2026-11-18", "sleep_h": h})
     assert client.get("/api/dashboard?day=2026-11-18").json()["goals"]["sleep_h"]["value"] == 6.5
+
+
+def test_weekly_review_lowers_calories_when_stuck(client):
+    from datetime import date, timedelta
+
+    from app.services import weekly
+    db = SessionLocal()
+    from app.models import Goals
+    g = db.query(Goals).first() or Goals()
+    g.calorie_target = 2100
+    db.add(g); db.commit()
+    today = date(2026, 11, 30)  # Monday
+    last = weekly.week_start(today) - timedelta(days=7)
+    for i in range(7):
+        d = last + timedelta(days=i)
+        client.post("/api/weights", json={"day": (d - timedelta(days=7)).isoformat(), "weight_kg": 105})
+        client.post("/api/weights", json={"day": d.isoformat(), "weight_kg": 105})
+        client.post("/api/foods", json={"day": d.isoformat(), "name": "x", "calories": 2100})
+    r = weekly.run_weekly(db, today)
+    assert r["weight_change"] == 0 and r["new_calorie_target"] == 2000
+    db.expire_all()
+    assert db.query(Goals).first().calorie_target == 2000
+    assert weekly.run_weekly(db, today)["week_start"] == r["week_start"]  # only once per week
+    plan = weekly.meal_plan(db, today)
+    assert len(plan) == 7 and all(abs(d["calories"] - 2000) < 400 for d in plan)
+    db.close()

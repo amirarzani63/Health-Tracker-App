@@ -396,7 +396,7 @@ $("#weightDialog").addEventListener("close", async () => {
 
 // ================================================================ FOOD
 loaders.diet = async () => {
-  loadWater();
+  loadWater(); loadWeekly();
   const [summary, foods, sugg] = await Promise.all([
     api(`/api/nutrition/summary?day=${state.day}`),
     api(`/api/foods?day=${state.day}`),
@@ -1129,6 +1129,7 @@ $$("#rangeSeg button").forEach((b) => b.addEventListener("click", () => {
 }));
 
 loaders.progress = async () => {
+  loadWeekly();
   api("/api/recommendations").then((r) => { $("#dashRecs").innerHTML = renderRecs(r.slice(0, 2)); }).catch(() => {});
   const days = state.progressDays;
   const weeks = Math.max(4, Math.ceil(days / 7));
@@ -1714,3 +1715,53 @@ document.addEventListener("click", (e) => {
   if (t) openQuick(t.dataset.quick);
 });
 document.addEventListener("keydown", (e) => { const t = e.key === "Enter" && e.target.closest?.("[data-quick]"); if (t) openQuick(t.dataset.quick); });
+
+
+// ---------------------------------------------------------------- weekly review (Progress) + weekly meals (Food)
+const weeklyState = { data: null, day: null };
+const shortDate = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+async function loadWeekly() {
+  try { weeklyState.data = await api("/api/weekly"); } catch { return; }
+  renderWeekly(); renderMealPlan();
+}
+function renderWeekly() {
+  const r = weeklyState.data?.review, el = $("#weeklyCard");
+  if (!el) return;
+  if (!r) { el.innerHTML = `<h3>📋 Weekly review</h3><p class="muted">Your first review appears next Monday.</p>`; return; }
+  const row = (label, v) => `<div class="wr"><span>${label}</span><b>${v ?? "–"}</b></div>`;
+  el.innerHTML = `<h3>📋 Weekly review</h3><p class="muted small">${shortDate(r.week_start)} – ${shortDate(r.week_end)} · updated every Monday</p>
+    <div class="wr-grid">
+      ${row("Weight (average)", r.weight_avg != null ? `${U.show("mass", r.weight_avg)} ${U.label("mass")}` : null)}
+      ${row("Change", r.weight_change != null ? `${r.weight_change > 0 ? "+" : ""}${U.show("mass", r.weight_change)} ${U.label("mass")}` : null)}
+      ${row("Workouts", `${r.workouts_done} of ${r.workouts_planned}`)}
+      ${row("Food logged", `${r.days_logged} of 7 days`)}
+      ${row("Calories a day", r.avg_calories != null ? fmt(r.avg_calories) : null)}
+      ${row("Protein a day", r.avg_protein != null ? `${fmt(r.avg_protein)} g` : null)}
+      ${row("Steps a day", r.avg_steps != null ? fmt(r.avg_steps) : null)}
+      ${row("Sleep a night", r.avg_sleep_h != null ? hm(r.avg_sleep_h) : null)}
+      ${row("Water a day", r.avg_water != null ? `${r.avg_water} glasses` : null)}
+    </div>
+    <h4>This week</h4><ul class="tips">${r.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>
+    <p class="small"><b>Daily calories this week: ${fmt(r.new_calorie_target)}</b></p>`;
+}
+function renderMealPlan() {
+  const plan = weeklyState.data?.meal_plan, el = $("#mealPlanCard");
+  if (!el || !plan) return;
+  const todayIso = isoDate(new Date());
+  weeklyState.day ||= plan.find((d) => d.day === todayIso)?.day || plan[0].day;
+  const d = plan.find((x) => x.day === weeklyState.day);
+  const names = { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack" };
+  el.innerHTML = `<h3>🍽 This week's meals</h3>
+    <p class="muted small">A suggested menu that adds up to your daily calories. Changes every Monday. Eat these or anything similar, and log what you actually eat.</p>
+    <div class="mp-days">${plan.map((x) => `<button type="button" class="mp-day${x.day === weeklyState.day ? " on" : ""}${x.day === todayIso ? " today" : ""}" data-mp-day="${x.day}">
+      ${new Date(x.day + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" })}</button>`).join("")}</div>
+    <ul class="mp-meals">${d.meals.map((m) => `<li><span class="mp-meal">${names[m.meal]}</span>
+      <span class="mp-name">${esc(m.name)}${Math.abs(m.portion - 1) >= 0.1 ? ` <span class="muted small">(${m.portion > 1 ? "a bigger" : "a smaller"} portion, ×${m.portion})</span>` : ""}</span>
+      <span class="mp-kcal">${fmt(m.calories)} kcal · ${fmt(m.protein_g)} g protein</span></li>`).join("")}</ul>
+    <p class="small"><b>Day total: ${fmt(d.calories)} calories · ${fmt(d.protein_g)} g protein</b></p>`;
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-mp-day]");
+  if (!b) return;
+  weeklyState.day = b.dataset.mpDay; renderMealPlan();
+});

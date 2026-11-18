@@ -187,3 +187,13 @@ def set_day_log(data: DayLogIn, db: Session = Depends(get_db)) -> dict:
     db.add(row)
     db.commit()
     return get_day_log(data.day, db)
+
+
+# ---------------------------------------------------------------- weekly review + weekly meal plan
+from app.services import weekly  # noqa: E402
+
+
+@router.get("/weekly")
+def weekly_summary(db: Session = Depends(get_db)) -> dict:
+    review = weekly.run_weekly(db)
+    return {"review": review, "meal_plan": weekly.meal_plan(db)}
