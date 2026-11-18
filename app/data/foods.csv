@@ -410,7 +410,10 @@ spirits|vodka|whiskey|gin|rum|tequila,1 shot (44 ml),44,97,0,0,0,0,
 cocktail|margarita|mojito,1 glass,225,250,0,30,0,0,
 coconut water,1 cup (240 ml),240,45,0.5,11,0,0,
 water|sparkling water,1 glass,250,0,0,0,0,0,
-# Poulet Rouge (from the user's order screen, Nov 2026; flavour/sauce from that order, 7 toppings not included)
-poulet rouge extra chicken fillet|extra chicken fillet|extra grilled chicken fillet|poulet rouge chicken fillet,1 fillet,0,103.5,12,0,6,0,
-poulet rouge rouge bowl|rouge bowl|rouge bowl 1 flavour,1 bowl (3 fillets + brown rice + bulgur + flavour + sauce),0,1115,49,118,52,9,
-poulet rouge rouge bowl with 2 extra chicken|rouge bowl with 2 extra chicken fillets|rouge bowl with extra chicken,1 bowl + 2 extra fillets,0,1322,73,118,64,9,
+# Poulet Rouge: calories from the restaurant's order screen (Nov 2026); protein 12 g per fillet from the menu; other macros estimated
+# Your usual: Hercules (Lemon), brown rice + bulgur, Cilantro Lime, tzatziki, tomatoes, cucumbers, bell peppers, corn, Monterey Jack, crispy onions
+poulet rouge extra chicken fillet|extra chicken fillet|extra grilled chicken fillet|poulet rouge chicken fillet,1 fillet,0,55,12,0,0.7,0,
+poulet rouge rouge bowl|rouge bowl|rouge bowl 1 flavour,1 bowl (your usual),0,1196,58.5,123,54,14,
+poulet rouge rouge bowl with 2 extra chicken|rouge bowl with 2 extra chicken fillets|rouge bowl with extra chicken,1 bowl + 2 extra fillets,0,1306,82.5,123,55.5,14,
+poulet rouge rouge bowl with 2 extra chicken and extra tzatziki|rouge bowl with 2 extra chicken fillets and extra tzatziki,1 bowl + 2 extra fillets + extra tzatziki,0,1368,84,125,61,14,
+poulet rouge extra tzatziki|extra tzatziki,1 extra tzatziki,0,62,1.5,2,5.5,0,
