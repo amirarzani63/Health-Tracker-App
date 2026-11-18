@@ -674,16 +674,6 @@ async function openExercise(name, part) {
     $("#exTips").innerHTML = lib.tips.map((t) => `<li>💡 ${esc(t)}</li>`).join("");
     $("#exCredit").textContent = `${lib.similar ? "Photo" : "Photos & instructions"}: ${lib.name} (free-exercise-db, public domain)`;
   }
-  const box = $("#exDemo");
-  if (Anatomy3D.supported()) {
-    box.classList.add("v3d"); $("#exMap").innerHTML = "";
-    box.innerHTML = `<div class="v3d-loading">Loading 3D model…</div>`;
-    Anatomy3D.mount(box, info).catch(() => { box.classList.remove("v3d"); Demo.mount(box, info); $("#exMap").innerHTML = BodyMap.render(info.primary, info.secondary); });
-  } else {
-    box.classList.remove("v3d");
-    Demo.mount(box, info);
-    $("#exMap").innerHTML = BodyMap.render(info.primary, info.secondary);
-  }
   $("#exMuscles").innerHTML = (info.primaryNames.length
     ? `<span class="mtag prim">Main: ${info.primaryNames.map(esc).join(", ")}</span>` : `<span class="mtag">General movement</span>`)
     + (info.secondaryNames.length ? `<span class="mtag sec">Also: ${info.secondaryNames.map(esc).join(", ")}</span>` : "");
@@ -691,7 +681,6 @@ async function openExercise(name, part) {
   $("#exDialog").showModal();
 }
 $("#exClose").onclick = () => $("#exDialog").close();
-$("#exDialog").addEventListener("close", () => { Demo.stop($("#exDemo")); Anatomy3D.stop(); });
 $("#exDialog").addEventListener("click", (e) => { if (e.target === $("#exDialog")) $("#exDialog").close(); });
 document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-ex]");
@@ -898,7 +887,7 @@ function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
         ${x.rest_s ? `<div><dt>Rest</dt><dd>${x.rest_s}s</dd></div>` : ""}</dl>
       <div class="exmus"></div>
       <ol class="exsteps"></ol>
-      <button class="ghost small" data-ex="${esc(x.exercise)}">3D view &amp; full guide</button>
+      <button class="ghost small" data-ex="${esc(x.exercise)}">How to do it</button>
     </article>`).join("")}</div>`;
 }
 async function hydratePosters(root = document) {
