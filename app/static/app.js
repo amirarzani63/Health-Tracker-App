@@ -919,13 +919,13 @@ const dayName = (wd) => DAY_LONG[wd] || wd;
 function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
   return `<div class="exlist${compact ? " compact" : ""}">
     ${title ? `<h3 class="poster-title">${esc(title)}</h3>` : ""}${sub ? `<p class="poster-sub">${sub}</p>` : ""}
-    ${exercises.map((x, i) => `<article class="excard" data-poster="${esc(x.exercise)}" data-cardio="${x.pattern === "cardio" ? 1 : ""}" data-compact="${compact ? 1 : ""}">
+    ${exercises.map((x, i) => `<article class="excard" data-poster="${esc(x.photo || x.exercise)}" data-cardio="${x.pattern === "cardio" ? 1 : ""}" data-compact="${compact ? 1 : ""}">
       <header><span class="exnum">${i + 1}</span><h4>${esc(x.exercise)}</h4></header>
       <div class="pimg"><span class="pimg-ph">${esc(x.exercise.slice(0, 1))}</span></div>
       ${x.pattern === "cardio" ? `<dl class="exstats one"><div><dt>How long</dt><dd>${esc(x.reps)}</dd></div></dl>` : `<dl class="exstats"><div><dt>Rounds</dt><dd>${x.sets}</dd></div><div><dt>Times each round</dt><dd>${esc(x.reps)}</dd></div>
         ${x.rest_s ? `<div><dt>Rest between rounds</dt><dd>${x.rest_s} sec</dd></div>` : ""}</dl>`}
       <div class="exmus"></div>
-      <ol class="exsteps"></ol>
+      <ol class="exsteps"${x.howto ? ' data-own="1"' : ""}>${(x.howto || []).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>
       <button class="ghost small" data-ex="${esc(x.exercise)}">How to do it</button>
     </article>`).join("")}</div>`;
 }
@@ -946,7 +946,7 @@ async function hydratePosters(root = document) {
       ? ["Walk fast for 1 minute, as if you're late for a bus.", "Then walk slowly for 2 minutes to catch your breath.", "Repeat this 8 times. Use your phone or watch as a timer."]
       : ["Walk fast outside or on a treadmill, or ride a bike (an exercise bike is fine).", "Keep going without stopping for the whole time.", "Go at a pace where you breathe harder but can still talk in full sentences."])
       : (own && m.instructions.length ? m.instructions : local.cues || []).slice(0, t.dataset.compact ? 2 : 3);
-    t.querySelector(".exsteps").innerHTML = steps.map((s) => `<li>${esc(s)}</li>`).join("");
+    if (!t.querySelector(".exsteps").dataset.own) t.querySelector(".exsteps").innerHTML = steps.map((s) => `<li>${esc(s)}</li>`).join("");
     if (m?.images?.length) {
       t.querySelector(".pimg").innerHTML = m.images.map((src, i) => `<img src="${src}" alt="${esc(t.dataset.poster)} ${i ? "finish" : "start"} position" loading="lazy" class="${i ? "peak" : "start"}">`).join("");
       t.querySelector(".pimg").classList.toggle("anim", m.images.length > 1);
@@ -959,17 +959,95 @@ async function hydratePosters(root = document) {
 new MutationObserver(() => { clearTimeout(exlib.pending); exlib.pending = setTimeout(() => hydratePosters(), 30); })
   .observe(document.body, { childList: true, subtree: true });
 
+
+// ---------------------------------------------------------------- choose your cardio machine/activity
+// met = effort at a steady, can-still-talk pace (Compendium of Physical Activities)
+const CARDIO_OPTS = {
+  walk: { label: "Fast walk outside", photo: "Trail Running/Walking", met: 4.3,
+    how: ["Walk fast, as if you're in a hurry.", "Swing your arms and keep going without stopping."] },
+  treadmill_walk: { label: "Treadmill walk (incline)", photo: "Walking, Treadmill", met: 5.0,
+    how: ["Set speed 5–6 km/h (3–3.7 mph) and incline 5–8%.", "Don't hold the handrails; swing your arms."] },
+  run: { label: "Jog / run outside", photo: "Running, Treadmill", met: 7.0,
+    how: ["Jog slowly enough that you can still talk.", "If you get out of breath, walk for a minute, then jog again."] },
+  treadmill_run: { label: "Treadmill jog", photo: "Jogging, Treadmill", met: 7.0,
+    how: ["Start at 7–8 km/h (4.5–5 mph), flat or 1% incline.", "Slow down to a fast walk if you can't talk."] },
+  bike: { label: "Stationary bike", photo: "Bicycling, Stationary", met: 6.8,
+    how: ["Seat height: your knee is only slightly bent at the bottom.", "Medium resistance; pedal at a steady pace you can keep."] },
+  recumbent: { label: "Recumbent bike (with back rest)", photo: "Recumbent Bike", met: 5.5,
+    how: ["Easy on knees and back.", "Medium resistance; pedal at a steady pace you can keep."] },
+  elliptical: { label: "Elliptical / cross-trainer", photo: "Elliptical Trainer", met: 5.0,
+    how: ["Stand tall, push and pull the handles.", "Medium resistance; keep a smooth, steady rhythm."] },
+  rower: { label: "Rowing machine", photo: "Rowing, Stationary", met: 6.0,
+    how: ["Push with your legs first, then lean back slightly and pull the handle to your belly.", "Easy, smooth strokes: about 20–24 per minute."] },
+  stairs: { label: "Stair climber", photo: "Stairmaster", met: 8.0,
+    how: ["Start on a slow level; hold the rails only lightly for balance.", "Take short breaks if you need them; it's harder than it looks."] },
+};
+const cardioState = { picks: {}, kg: 105 };
+const cardioFor = (iso) => cardioState.picks[iso] || cardioState.picks.default || "walk";
+const kcalFor = (key, min) => Math.round((CARDIO_OPTS[key].met * 3.5 * cardioState.kg / 200) * min);
+async function loadCardio() {
+  try {
+    const [p, prof] = await Promise.all([api("/api/plans/cardio/all"), api("/api/profile")]);
+    cardioState.picks = p; cardioState.kg = prof.weight_kg || 105;
+  } catch {}
+}
+function cardioPicker(iso) {
+  const cur = cardioFor(iso), isDefault = (cardioState.picks.default || "walk") === cur;
+  return `<div class="cardio-pick"><label>🏃 Your cardio for this day
+    <select data-cardio-date="${iso}">${Object.entries(CARDIO_OPTS).map(([k, o]) => `<option value="${k}"${k === cur ? " selected" : ""}>${o.label}</option>`).join("")}</select></label>
+    ${isDefault ? `<span class="muted small">This is your usual choice for all cardio days.</span>`
+      : `<button type="button" class="ghost small-btn" data-cardio-default="${cur}">Use ${esc(CARDIO_OPTS[cur].label)} for all cardio days</button>`}</div>`;
+}
+// Swap the plan's generic walk/bike parts for the chosen activity
+function withCardio(day, iso) {
+  if (!iso || !day) return day;
+  const key = cardioFor(iso), o = CARDIO_OPTS[key];
+  if (day.type === "cardio") return { ...day, cardioKey: key, est_kcal: kcalFor(key, day.minutes) };
+  let extra = 0;
+  const exercises = (day.exercises || []).map((x) => {
+    if (x.pattern !== "cardio") return x;
+    const min = parseInt(x.reps, 10) || 25, intervals = /1 minute fast/i.test(x.exercise);
+    const before = Math.round((4.3 * 3.5 * cardioState.kg / 200) * min);
+    extra += kcalFor(key, min) - before;
+    return { ...x, exercise: intervals ? `${o.label}: 1 minute fast, 2 minutes easy` : `${o.label} (no stopping)`, photo: o.photo,
+      howto: intervals ? ["Go faster (or add resistance) for 1 minute.", "Then go easy for 2 minutes to catch your breath.", "Repeat 8 times."] : [...o.how, "Go at a pace where you breathe harder but can still talk."] };
+  });
+  return { ...day, exercises, est_kcal: day.est_kcal ? day.est_kcal + extra : day.est_kcal };
+}
+document.addEventListener("change", async (e) => {
+  const sel = e.target.closest("[data-cardio-date]");
+  if (!sel) return;
+  try {
+    cardioState.picks = await api("/api/plans/cardio/all", { method: "POST", body: { day: sel.dataset.cardioDate, activity: sel.value } });
+    $("#activePlan").innerHTML = renderWeek(cal.plan);
+    toast(`🏃 ${CARDIO_OPTS[sel.value].label} for this day`);
+  } catch (err) { toast(err.message, true); }
+});
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-cardio-default]");
+  if (!b) return;
+  try {
+    cardioState.picks = await api("/api/plans/cardio/all", { method: "POST", body: { day: "default", activity: b.dataset.cardioDefault } });
+    $("#activePlan").innerHTML = renderWeek(cal.plan);
+    toast(`${CARDIO_OPTS[b.dataset.cardioDefault].label} is now your usual cardio`);
+  } catch (err) { toast(err.message, true); }
+});
+
 // ================================================================ PLANS
 function renderPlanDay(day, compact = false) {
   if (day.type === "rest") return `<div class="plan-day"><div class="wd">${dayName(day.weekday)}</div><strong>Rest / mobility</strong><p class="muted small">Easy walk and stretching. Let your Garmin recovery time come down.</p></div>`;
-  if (day.type === "cardio") return `<div class="plan-day cardio"><div class="wd">${dayName(day.weekday)} · cardio</div><strong>${esc(sessionTitle(day))}</strong>
-    <p>Walk fast or ride a bike for <b>${day.minutes} minutes</b> without stopping.</p>
+  if (day.type === "cardio") {
+    const o = day.cardioKey ? CARDIO_OPTS[day.cardioKey] : null;
+    return `<div class="plan-day cardio"><div class="wd">${dayName(day.weekday)} · cardio</div><strong>${esc(o ? o.label : sessionTitle(day))}</strong>
+    ${o ? posterHTML("", [{ exercise: o.label, photo: o.photo, pattern: "cardio", sets: 1, reps: `${day.minutes} minutes`, howto: [...o.how, "Keep going without stopping for the whole time."] }]) : ""}
+    <p>${o ? esc(o.label) : "Walk fast or ride a bike"} for <b>${day.minutes} minutes</b> without stopping.</p>
     <p class="small"><b>How hard:</b> ${pace(day.zone).long}. (Your watch calls this heart-rate ${esc(pace(day.zone).watch)}.)</p>
     ${day.est_kcal ? `<p class="burn">🔥 You'll burn about <b>${day.est_kcal} calories</b>.</p>` : ""}</div>`;
+  }
   const changes = !compact && day.changes?.length
     ? `<details class="small"><summary class="muted">${day.changes.length} adjustment${day.changes.length > 1 ? "s" : ""} for your goal</summary><ul class="tips">${day.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></details>` : "";
   return `<div class="plan-day strength"><div class="wd">${dayName(day.weekday)}</div><strong>${esc(sessionTitle(day))}</strong>
-    ${day.est_kcal ? `<p class="burn">🔥 About <b>${day.est_kcal} calories</b> · ${day.minutes} minutes in total. Do the exercises in order, then finish with the walk or bike ride.</p>` : ""}
+    ${day.est_kcal ? `<p class="burn">🔥 About <b>${day.est_kcal} calories</b> · ${day.minutes} minutes in total. Do the exercises in order, then finish with your cardio.</p>` : ""}
     ${posterHTML("", day.exercises, { compact })}${changes}</div>`;
 }
 
@@ -1007,7 +1085,7 @@ function renderWeek(plan) {
   const options = WD.filter((x) => x !== wd).map((x) => `<option value="${x}">${dayName(x)}</option>`).join("");
   const detail = !ss ? `<p class="muted">Outside your ${plan.weeks}-week plan.</p>`
     : ss.type === "rest" ? `<p class="muted">Rest day. An easy walk and some stretching are perfect.</p>`
-    : `${checkinHTML(cal.sel, sd)}${renderPlanDay(ss)}<label class="move">Move ${dayName(wd)}'s session to <select data-move-from="${wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options}</select></label>`;
+    : `${checkinHTML(cal.sel, sd)}${hasCardio(ss) ? cardioPicker(cal.sel) : ""}${renderPlanDay(withCardio(ss, cal.sel))}<label class="move">Move ${dayName(wd)}'s session to <select data-move-from="${wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options}</select></label>`;
   return `<div class="card cal-card">
     <div class="cal-head"><button type="button" class="icon" data-cal-nav="-1" aria-label="Previous month">‹</button>
       <h3>${m.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h3>
@@ -1017,6 +1095,7 @@ function renderWeek(plan) {
   </div>
   <div class="card cal-day"><h3>${label}</h3>${detail}</div>`;
 }
+const hasCardio = (d) => d.type === "cardio" || (d.exercises || []).some((x) => x.pattern === "cardio");
 function checkinHTML(key, d) {
   const today = new Date(); today.setHours(23, 59, 59);
   if (d > today) return "";
@@ -1069,6 +1148,7 @@ loaders.plans = async () => {
   renderWatchStatus(watch);
   _watchSending = !!(watch && watch.sending);
   cal.marks = await api("/api/plans/checkins/all").catch(() => ({}));
+  await loadCardio();
   $("#activePlan").innerHTML = active ? renderWeek(active) : `<div class="card hero"><span class="eyebrow">Your plan</span>
     <h2>No workout plan yet</h2><p class="muted">Build one from your Garmin workouts and goals.</p>
     <button class="hero-btn" data-goto="dashboard" data-show-setup>Set up my plan</button></div>`;

@@ -713,3 +713,7 @@ body.dlg-open { overflow: hidden; }
 .vs-row { display: grid; grid-template-columns: 60px 1fr auto; gap: 8px; align-items: center; font-size: 14px; }
 .ibox-row { display: flex; align-items: center; gap: 10px; } .ibox-goal { color: var(--muted); font-size: 14px; }
 .ibox > .ibar { flex: none; }
+
+.cardio-pick { display: flex; flex-direction: column; gap: 6px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--accent); border-radius: 12px; background: var(--accent-soft); }
+.cardio-pick label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
+.cardio-pick select { font-size: 16px; }

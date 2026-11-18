@@ -109,3 +109,10 @@ def test_weekly_review_lowers_calories_when_stuck(client):
     plan = weekly.meal_plan(db, today)
     assert len(plan) == 7 and all(abs(d["calories"] - 2000) < 400 for d in plan)
     db.close()
+
+
+def test_cardio_choice(client):
+    assert client.post("/api/plans/cardio/all", json={"day": "default", "activity": "bike"}).json() == {"default": "bike"}
+    client.post("/api/plans/cardio/all", json={"day": "2026-11-20", "activity": "elliptical"})
+    assert client.post("/api/plans/cardio/all", json={"day": "2026-11-20", "activity": "skiing"}).status_code == 422
+    assert client.get("/api/plans/cardio/all").json() == {"default": "bike", "2026-11-20": "elliptical"}

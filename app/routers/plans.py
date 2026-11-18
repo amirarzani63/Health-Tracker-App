@@ -144,3 +144,40 @@ def set_checkin(data: CheckIn, db: Session = Depends(get_db)) -> dict:
     db.add(row)
     db.commit()
     return marks
+
+
+# ---- which cardio activity the user picked for a day ("default" = for every cardio day) ----
+_CARDIO = "cardio_choices"
+CARDIO_KEYS = {"walk", "treadmill_walk", "run", "treadmill_run", "bike", "recumbent", "elliptical", "rower", "stairs"}
+
+
+class CardioPick(BaseModel):
+    day: str  # YYYY-MM-DD or "default"
+    activity: str | None
+
+
+@router.get("/cardio/all")
+def get_cardio(db: Session = Depends(get_db)) -> dict:
+    row = db.get(StoredSecret, _CARDIO)
+    try:
+        return _json.loads(row.value) if row and row.value else {}
+    except ValueError:
+        return {}
+
+
+@router.post("/cardio/all")
+def set_cardio(data: CardioPick, db: Session = Depends(get_db)) -> dict:
+    if data.day != "default":
+        _date.fromisoformat(data.day)
+    if data.activity is not None and data.activity not in CARDIO_KEYS:
+        raise HTTPException(422, "Unknown cardio activity")
+    picks = get_cardio(db)
+    if data.activity is None:
+        picks.pop(data.day, None)
+    else:
+        picks[data.day] = data.activity
+    row = db.get(StoredSecret, _CARDIO) or StoredSecret(key=_CARDIO)
+    row.value = _json.dumps(picks)
+    db.add(row)
+    db.commit()
+    return picks
