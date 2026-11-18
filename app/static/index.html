@@ -213,10 +213,22 @@
           <label>👟 Steps walked today (type your total; it replaces what you saved before) <span class="muted small" id="stepsSub"></span>
             <span class="daylog-in"><input name="steps" type="number" inputmode="numeric" min="0" max="200000" placeholder="e.g. 8500" required><button type="submit">Save</button></span></label>
         </form>
-        <form id="burnForm" class="daylog-row">
-          <label>🔥 Calories burned today <span class="muted small" id="burnSub"></span>
-            <span class="daylog-in"><input name="burned" type="number" inputmode="numeric" min="0" max="10000" placeholder="from your watch, e.g. 3100" required><button type="submit">Save</button></span></label>
-        </form>
+        <div class="daylog-row" id="cardioLogBox">
+          <span class="cl-title">🏃 Cardio you did today</span>
+          <form id="cardioLogForm" class="cl-add">
+            <select name="activity" id="cardioAct" aria-label="Activity"></select>
+            <input name="minutes" type="number" inputmode="numeric" min="1" max="600" placeholder="min" aria-label="Minutes" required>
+            <button type="submit">Add</button>
+          </form>
+          <ul class="cl-list" id="cardioLogList"></ul>
+          <p class="small" id="cardioBurn"></p>
+          <details class="small"><summary class="muted">Have a total from your watch? Type it instead</summary>
+            <form id="burnForm" class="daylog-in" style="margin-top:6px">
+              <input name="burned" type="number" inputmode="numeric" min="0" max="10000" placeholder="e.g. 3100" required><button type="submit">Save</button>
+            </form>
+            <span class="muted" id="burnSub"></span>
+          </details>
+        </div>
       </div>
 
       <details class="card fold" id="logWorkoutCard">

@@ -210,3 +210,15 @@ class DayLog(Base):
     day: Mapped[date] = mapped_column(Date, primary_key=True)
     sleep_h: Mapped[float | None] = mapped_column(Float, nullable=True)
     burned: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+
+class CardioLog(Base):
+    """A cardio session the user did: activity, minutes and the calories it burned (estimated)."""
+
+    __tablename__ = "cardio_log"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    day: Mapped[date] = mapped_column(Date, index=True)
+    activity: Mapped[str] = mapped_column(String(30))
+    minutes: Mapped[int] = mapped_column(Integer)
+    calories: Mapped[float] = mapped_column(Float)

@@ -721,3 +721,9 @@ body.dlg-open { overflow: hidden; }
 .cp-title { font-weight: 700; }
 .cp-row { display: grid; grid-template-columns: 1fr 64px auto auto; gap: 6px; align-items: center; }
 .cp-row select, .cp-row input { font-size: 15px; min-width: 0; }
+
+.cl-title { font-weight: 600; }
+.cl-add { display: grid; grid-template-columns: 1fr 70px auto; gap: 6px; margin: 6px 0; }
+.cl-add select, .cl-add input { font-size: 15px; min-width: 0; }
+.cl-list { list-style: none; padding: 0; margin: 4px 0; display: grid; gap: 4px; }
+.cl-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; }

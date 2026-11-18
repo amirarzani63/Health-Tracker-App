@@ -197,3 +197,50 @@ from app.services import weekly  # noqa: E402
 def weekly_summary(db: Session = Depends(get_db)) -> dict:
     review = weekly.run_weekly(db)
     return {"review": review, "meal_plan": weekly.meal_plan(db)}
+
+
+
+# ---------------------------------------------------------------- cardio done (activity + minutes -> calories)
+from app.models import CardioLog  # noqa: E402
+from app.services import cardio as cardio_svc  # noqa: E402
+
+
+class CardioIn(BaseModel):
+    day: date
+    activity: str
+    minutes: int = Field(ge=1, le=600)
+
+
+def _cardio_day(db: Session, day: date) -> dict:
+    rows = db.scalars(select(CardioLog).where(CardioLog.day == day).order_by(CardioLog.id)).all()
+    return {"day": day, "items": [{"id": r.id, "activity": r.activity, "label": cardio_svc.ACTIVITIES[r.activity][0],
+                                   "minutes": r.minutes, "calories": round(r.calories)} for r in rows],
+            "total_minutes": sum(r.minutes for r in rows), "total_calories": round(sum(r.calories for r in rows)),
+            "resting": cardio_svc.resting_burn(get_profile(db), day)}
+
+
+@router.get("/cardio-log")
+def get_cardio_log(day: date, db: Session = Depends(get_db)) -> dict:
+    return _cardio_day(db, day)
+
+
+@router.post("/cardio-log")
+def add_cardio_log(data: CardioIn, db: Session = Depends(get_db)) -> dict:
+    if data.activity not in cardio_svc.ACTIVITIES:
+        raise HTTPException(422, "Unknown cardio activity")
+    kg = get_profile(db).weight_kg or 80
+    db.add(CardioLog(day=data.day, activity=data.activity, minutes=data.minutes,
+                     calories=cardio_svc.calories(data.activity, data.minutes, kg)))
+    db.commit()
+    return _cardio_day(db, data.day)
+
+
+@router.delete("/cardio-log/{item_id}")
+def delete_cardio_log(item_id: int, db: Session = Depends(get_db)) -> dict:
+    row = db.get(CardioLog, item_id)
+    if not row:
+        raise HTTPException(404, "Not found")
+    day = row.day
+    db.delete(row)
+    db.commit()
+    return _cardio_day(db, day)

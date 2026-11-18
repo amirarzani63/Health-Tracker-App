@@ -279,7 +279,7 @@ function renderCluster(d) {
     <div class="cluster">
       <div class="g-main tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "eat", value: eaten, max: Math.max(target * 1.3, eaten * 1.05), target,
         label: "EATEN", unit: `of ${fmt(target)} kcal`, readout: fmt(eaten), ticks: 6, state: eatState })}</div>
-      <div class="g-side tap" role="button" tabindex="0" data-quick="burned" title="Log calories burned">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
+      <div class="g-side tap" role="button" tabindex="0" data-goto="exercise" data-focus="#cardioAct" title="Log cardio">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
         label: "BURNED", unit: burned == null ? "tap to log" : `goal ${fmt(t.tdee || burnGoal)} kcal`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
         state: burned != null && t.tdee && burned >= t.tdee ? "good" : "" })}</div>
       <div class="g-side tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
@@ -293,12 +293,13 @@ function renderCluster(d) {
         <span class="ibox-sum">Your daily limit <b>${fmt(target)}</b> − eaten so far <b>${fmt(eaten)}</b> = <b>${left >= 0 ? `${fmt(left)} left` : `${fmt(-left)} over`}</b></span>
         <span class="ibox-hint">${left >= 0 ? "This is how much more you can eat today and still lose weight." : "You've eaten more than your limit today, so you'll lose less than planned. Try a walk and a lighter dinner."}</span>
       </div>
-      <div class="ibox tap" role="button" tabindex="0" data-quick="burned">
+      <div class="ibox tap" role="button" tabindex="0" data-goto="exercise" data-focus="#cardioAct">
         <span class="ibox-title">⚖️ Eaten vs. burned today</span>
         ${burned == null ? `<span class="ibox-big">–</span><span class="ibox-hint">Tap to log the calories your watch says you burned today. Then you'll see if you ate less than you burned.</span>` : `
         <div class="vs-row"><span>Eaten</span><div class="ibar"><div class="ibar-fill eat" style="width:${Math.min(100, (eaten / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(eaten)}</b></div>
         <div class="vs-row"><span>Burned</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (burned / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(burned)}</b></div>
         <span class="ibox-big ${net <= 0 ? "good" : "bad"}">${net <= 0 ? `You burned ${fmt(-net)} more than you ate` : `You ate ${fmt(net)} more than you burned`}</span>
+        <span class="ibox-hint">${d.burn_source === "typed" ? "Burned = the total you typed from your watch." : `Burned = about ${fmt(burned - (d.cardio_kcal || 0))} your body uses at rest + ${fmt(d.cardio_kcal || 0)} from cardio you logged. Tap to log cardio.`}</span>
         <span class="ibox-hint">${net <= 0 ? "Good: burning more than you eat is what makes you lose weight." : "To lose weight, you need to burn more than you eat."}</span>`}
       </div>
       <div class="ibox tap" role="button" tabindex="0" data-quick="steps">
@@ -828,7 +829,7 @@ async function loadTodaysPlan() {
 $("#loadPlan").onclick = () => loadTodaysPlan().catch((e) => toast(e.message, true));
 
 loaders.exercise = async () => {
-  loadSteps();
+  loadSteps(); loadCardioLog();
   loaders.plans().catch((e) => toast(e.message, true));
   loadPicker().catch(() => {});
   const f = $("#activityForm").elements.start_time;
@@ -1010,6 +1011,8 @@ function cardioPicker(iso, day) {
       ${list.length > 1 ? `<button type="button" class="icon" data-cr-del aria-label="Remove">✕</button>` : ""}</div>`).join("")}
     <button type="button" class="ghost small-btn" data-cr-add>＋ Add another activity</button>
     <span class="small">Total: <b>${total} minutes</b> · about <b>${list.reduce((t, x) => t + kcalFor(x.activity, x.minutes), 0)} calories</b></span>
+    ${iso <= isoDate(new Date()) ? `<button type="button" data-cr-log>✓ I did this: log it</button>` : `<span class="muted small">On the day, tap "I did this" to log it.</span>`}
+    <div id="dayCardioLogs"></div>
     ${isDefault ? `<span class="muted small">${esc(CARDIO_OPTS[list[0].activity].label)} is your usual choice for all cardio days.</span>`
       : list.length === 1 ? `<button type="button" class="ghost small-btn" data-cardio-default="${list[0].activity}">Use ${esc(CARDIO_OPTS[list[0].activity].label)} for all cardio days</button>` : ""}</div>`;
 }
@@ -1035,6 +1038,7 @@ function withCardio(day, iso) {
     est_kcal: day.est_kcal ? day.est_kcal - walkKcal + cardioKcal : day.est_kcal };
 }
 async function saveCardio(box) {
+  setTimeout(loadDayLogs, 50);
   const items = [...box.querySelectorAll("[data-cr]")].map((r) => ({
     activity: r.querySelector("[data-cr-act]").value, minutes: Math.max(1, Math.min(300, Number(r.querySelector("[data-cr-min]").value) || 1)) }));
   cardioState.picks = await api("/api/plans/cardio/all", { method: "POST", body: { day: box.dataset.cardioDay, activity: items } });
@@ -1154,6 +1158,7 @@ document.addEventListener("click", (e) => {
   if (d) cal.sel = d.dataset.calDay;
   if (n) cal.month = new Date(cal.month.getFullYear(), cal.month.getMonth() + Number(n.dataset.calNav), 1);
   $("#activePlan").innerHTML = renderWeek(cal.plan);
+  loadDayLogs();
   if (d) $(".cal-day")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 let _watchSending = false;
@@ -1185,6 +1190,7 @@ loaders.plans = async () => {
   $("#activePlan").innerHTML = active ? renderWeek(active) : `<div class="card hero"><span class="eyebrow">Your plan</span>
     <h2>No workout plan yet</h2><p class="muted">Build one from your Garmin workouts and goals.</p>
     <button class="hero-btn" data-goto="dashboard" data-show-setup>Set up my plan</button></div>`;
+  loadDayLogs();
   $("#planList").innerHTML = plans.map((p) => `<li><span>${esc(p.name)} <span class="muted small">${p.weeks} wk · ${new Date(p.created_at).toLocaleDateString()}</span>
     ${p.active ? '<span class="tag garmin">active</span>' : ""}</span>
     <span>${p.active ? "" : `<button class="ghost small-btn" data-activate-plan="${p.id}">Activate</button>`}
@@ -1904,4 +1910,59 @@ document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-mp-day]");
   if (!b) return;
   weeklyState.day = b.dataset.mpDay; renderMealPlan();
+});
+
+
+// ---------------------------------------------------------------- cardio done: activity + minutes -> calories
+function renderCardioLog(r, listEl, burnEl) {
+  listEl.innerHTML = r.items.map((x) => `<li><span>${esc(x.label)} · ${x.minutes} min</span>
+    <span><b>${fmt(x.calories)} kcal</b> <button type="button" class="icon" data-cl-del="${x.id}" aria-label="Delete">✕</button></span></li>`).join("")
+    || `<li class="muted small">Nothing logged yet.</li>`;
+  if (burnEl) burnEl.innerHTML = `Calories burned today ≈ <b>${fmt(r.resting)}</b> (your body at rest) + <b>${fmt(r.total_calories)}</b> (cardio) = <b>${fmt(r.resting + r.total_calories)}</b>`;
+}
+async function loadCardioLog() {
+  if (!$("#cardioAct").options.length) $("#cardioAct").innerHTML = Object.entries(CARDIO_OPTS).map(([k, o]) => `<option value="${k}">${o.label}</option>`).join("");
+  try { renderCardioLog(await api(`/api/cardio-log?day=${today()}`), $("#cardioLogList"), $("#cardioBurn")); } catch {}
+}
+$("#cardioLogForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  try {
+    const r = await api("/api/cardio-log", { method: "POST", body: { day: today(), activity: f.activity.value, minutes: Number(f.minutes.value) } });
+    renderCardioLog(r, $("#cardioLogList"), $("#cardioBurn"));
+    toast(`🏃 ${CARDIO_OPTS[f.activity.value].label}: ${f.minutes.value} min · ${fmt(r.items.at(-1).calories)} kcal`);
+    f.minutes.value = "";
+  } catch (err) { toast(err.message, true); }
+});
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-cl-del]");
+  if (!b) return;
+  try {
+    const r = await api(`/api/cardio-log/${b.dataset.clDel}`, { method: "DELETE" });
+    renderCardioLog(r, $("#cardioLogList"), $("#cardioBurn"));
+    if (cal.plan && $(".cal-day")) { cal.logs = null; $("#activePlan").innerHTML = renderWeek(cal.plan); loadDayLogs(); }
+  } catch (err) { toast(err.message, true); }
+});
+// calendar: log the planned cardio for that date as done
+async function loadDayLogs() {
+  const el = $("#dayCardioLogs");
+  if (!el) return;
+  try {
+    const r = await api(`/api/cardio-log?day=${cal.sel}`);
+    el.innerHTML = r.items.length ? `<span class="small"><b>Logged for this day:</b></span><ul class="cl-list">${r.items.map((x) => `<li><span>${esc(x.label)} · ${x.minutes} min</span>
+      <span><b>${fmt(x.calories)} kcal</b> <button type="button" class="icon" data-cl-del="${x.id}" aria-label="Delete">✕</button></span></li>`).join("")}</ul>
+      <span class="small">Cardio total: <b>${r.total_minutes} min · ${fmt(r.total_calories)} kcal</b></span>` : "";
+  } catch {}
+}
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-cr-log]");
+  if (!b) return;
+  const box = b.closest("[data-cardio-day]");
+  const rows = [...box.querySelectorAll("[data-cr]")].map((r) => ({ activity: r.querySelector("[data-cr-act]").value, minutes: Number(r.querySelector("[data-cr-min]").value) || 0 })).filter((x) => x.minutes > 0);
+  b.disabled = true;
+  try {
+    for (const x of rows) await api("/api/cardio-log", { method: "POST", body: { day: box.dataset.cardioDay, ...x } });
+    toast(`🏃 Logged ${rows.length} cardio ${rows.length > 1 ? "activities" : "activity"}`);
+    loadDayLogs();
+  } catch (err) { toast(err.message, true); } finally { b.disabled = false; }
 });

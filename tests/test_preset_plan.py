@@ -123,3 +123,16 @@ def test_several_cardio_activities(client):
     r = client.post("/api/plans/cardio/all", json=body).json()
     assert r["2026-11-21"] == body["activity"]
     assert client.post("/api/plans/cardio/all", json={"day": "2026-11-21", "activity": [{"activity": "ski", "minutes": 5}]}).status_code == 422
+
+
+
+def test_cardio_log_adds_to_burned(client):
+    base = client.get("/api/dashboard?day=2026-11-18").json()["burned"]
+    r = client.post("/api/cardio-log", json={"day": "2026-11-18", "activity": "bike", "minutes": 30}).json()
+    r = client.post("/api/cardio-log", json={"day": "2026-11-18", "activity": "walk", "minutes": 20}).json()
+    assert len(r["items"]) == 2 and r["total_minutes"] == 50 and r["total_calories"] > 0
+    assert client.get("/api/dashboard?day=2026-11-18").json()["burned"] == base + r["total_calories"]
+    r = client.delete(f"/api/cardio-log/{r['items'][0]['id']}").json()
+    assert len(r["items"]) == 1
+    client.post("/api/day-log", json={"day": "2026-11-18", "burned": 3000})  # a watch total wins
+    assert client.get("/api/dashboard?day=2026-11-18").json()["burned"] == 3000

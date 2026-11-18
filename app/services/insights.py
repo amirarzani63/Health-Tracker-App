@@ -122,6 +122,9 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
     typed = {r.day: r.steps for r in db.scalars(select(StepLog).where(StepLog.day >= start, StepLog.day <= end))}
     logs = {r.day: r for r in db.scalars(select(DayLog).where(DayLog.day >= start, DayLog.day <= end))}
     checked = checkins(db)
+    from app.services import cardio as _cardio
+    cardio_kcal = _cardio.logged(db, start, end)
+    _profile = get_profile(db)
 
     out = []
     d = start
@@ -130,7 +133,8 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
         s = stats.get(d)
         t = targets_for(db, d)
         lg = logs.get(d)
-        burned = (lg.burned if lg and lg.burned else None) or (s.total_calories if s and s.total_calories else None)
+        burned = ((lg.burned if lg and lg.burned else None) or (s.total_calories if s and s.total_calories else None)
+                  or (_cardio.resting_burn(_profile, d) + cardio_kcal.get(d, 0)))
         day_acts = acts.get(d, [])
         out.append({
             "day": d.isoformat(),
@@ -139,6 +143,8 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
             "target_calories": round(t.calories),
             "target_protein_g": round(t.protein_g),
             "burned": round(burned) if burned else None,
+            "cardio_kcal": round(cardio_kcal.get(d, 0)),
+            "burn_source": "typed" if lg and lg.burned else "estimate",
             "net": round(i["calories"] - burned) if i and burned else None,
             "steps": typed[d] if d in typed else (s.steps if s else None),  # what the user typed last wins
             "resting_hr": s.resting_hr if s else None,
