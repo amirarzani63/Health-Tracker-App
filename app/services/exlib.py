@@ -100,7 +100,7 @@ ALIASES = [
     (r"rear delt fly|reverse fly", "Seated Bent-Over Rear Delt Raise"),
     (r"single.?leg (romanian )?deadlift|single.?leg rdl|one.?leg(ged)? (romanian )?deadlift", "Kettlebell One-Legged Deadlift"),
     (r"incline push.?ups?", "Incline Push-Up"),
-    (r"split squat", "Split Squat with Dumbbells"),
+    (r"split squat", "~Split Squat with Dumbbells"),
     (r"sumo (dumbbell |db )?squat|plie squat", "Plie Dumbbell Squat"),
     (r"brisk walk|walking|zone 2 walk", "Trail Running/Walking"),
     (r"interval|sprint", "Wind Sprints"),
@@ -193,9 +193,10 @@ def _match_exact(name: str) -> dict | None:
     lower = name.lower()
     for pattern, target in ALIASES:
         if re.search(pattern, lower):
-            it = next((i for i in library()["items"] if i["name"].lower() == target.lower()), None)
+            loose = target.startswith("~")  # photo only: its instructions describe a harder variation
+            it = next((i for i in library()["items"] if i["name"].lower() == target.lstrip("~").lower()), None)
             if it:
-                return {k: v for k, v in it.items() if k != "words"} | {"score": 1.0}
+                return {k: v for k, v in it.items() if k != "words"} | {"score": 1.0} | ({"similar": True} if loose else {})
     q = set(words(name))
     best, best_score = None, 0.0
     for it in library()["items"]:
