@@ -246,8 +246,8 @@ loaders.dashboard = async () => {
   $("#dayChips").innerHTML = [
     chip("Sleep", g.sleep_h.value == null ? "–" : `${g.sleep_h.value} h`, `goal ${g.sleep_h.goal} h`),
     chip("Workouts", `${g.workouts_week.value}/${g.workouts_week.goal}`, "this week"),
-    chip("Weight", g.weight.value == null ? "+ Log" : `${U.show("mass", g.weight.value)}`, g.weight.value == null ? "tap to add" : `${U.label("mass")} · tap to log`,
-      'role="button" tabindex="0" data-log-weight'),
+    chip("Weight", g.weight.value == null ? "–" : `${U.show("mass", g.weight.value)}`, g.weight.value == null ? "not logged" : U.label("mass")),
+    chip("Workout", d.today_session && d.today_session.type !== "rest" ? esc(sessionTitle(d.today_session)) : "Rest", d.today_done ? "✓ done" : "today"),
   ].join("");
 
   const tip = (d.recommendations || []).find((r) => r.level !== "good") || (d.recommendations || [])[0];
@@ -268,7 +268,6 @@ function renderCluster(d) {
   const lights = [
     { on: eaten > target, cls: "bad", icon: "⚠", text: "Over calories" },
     { on: eaten > 0 && c.protein_g < protGoal * 0.5 && new Date().getHours() >= 15, cls: "warn", icon: "P", text: "Protein low" },
-    { on: !!d.today_session && !d.today_done, cls: "info", icon: "🏋", text: "Workout due" },
     { on: d.today_done, cls: "good", icon: "✓", text: "Workout done" },
     { on: g.steps.goal && steps >= g.steps.goal, cls: "good", icon: "👟", text: "Steps goal hit" },
     { on: eaten === 0, cls: "muted", icon: "⛽", text: "Nothing logged yet" },

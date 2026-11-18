@@ -29,7 +29,7 @@
 <header class="topbar">
   <div class="brand"><img src="/static/logo-mark.png" alt="" class="brand-logo"><span class="brand-name">Health Tracker</span></div>
   <nav id="tabs" aria-label="Sections">
-    <button data-view="dashboard" class="active">Today</button>
+    <button data-view="dashboard" class="active">Dashboard</button>
     <button data-view="diet">Food</button>
     <button data-view="exercise">Workouts</button>
     <button data-view="progress">Progress</button>
@@ -50,7 +50,7 @@
 
   <!-- TODAY -->
   <section id="view-dashboard" class="view active">
-    <div class="card setup hidden" id="setupCard">
+    <div class="card setup hidden trim" id="setupCard">
       <div class="row-between">
         <h3>Let's set everything up for you</h3>
         <button class="icon" id="setupDismiss" title="Hide" aria-label="Hide">✕</button>
@@ -58,21 +58,19 @@
       <div class="auto-setup" data-auto-setup></div>
     </div>
 
-    <div class="card hero" id="workoutHero"></div>
+    <div class="card hero trim" id="workoutHero"></div>
 
     <div class="card cluster-card" id="foodToday">
       <div class="row-between">
-        <h3>Today's dashboard</h3>
-        <button class="small-btn" data-goto="diet" data-focus="#foodPick">＋ Log food</button>
+        <h3>Today</h3>
       </div>
       <div id="cluster"></div>
     </div>
 
     <div class="chips" id="dayChips"></div>
 
-    <div class="card tip hidden" id="topTip"></div>
+    <div class="card tip hidden trim" id="topTip"></div>
 
-    <p class="center"><button class="ghost" data-goto="progress">See your trends</button></p>
   </section>
 
   <!-- FOOD -->
