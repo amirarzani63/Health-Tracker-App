@@ -660,8 +660,16 @@ function openExercise(name, part) {
   part = part || picker.lookup?.[(name || "").toLowerCase()];
   const info = ExerciseInfo.lookup(name, part);
   $("#exTitle").textContent = name;
-  Demo.mount($("#exDemo"), info);
-  $("#exMap").innerHTML = BodyMap.render(info.primary, info.secondary);
+  const box = $("#exDemo");
+  if (Anatomy3D.supported()) {
+    box.classList.add("v3d"); $("#exMap").innerHTML = "";
+    box.innerHTML = `<div class="v3d-loading">Loading 3D model…</div>`;
+    Anatomy3D.mount(box, info).catch(() => { box.classList.remove("v3d"); Demo.mount(box, info); $("#exMap").innerHTML = BodyMap.render(info.primary, info.secondary); });
+  } else {
+    box.classList.remove("v3d");
+    Demo.mount(box, info);
+    $("#exMap").innerHTML = BodyMap.render(info.primary, info.secondary);
+  }
   $("#exMuscles").innerHTML = (info.primaryNames.length
     ? `<span class="mtag prim">Main: ${info.primaryNames.map(esc).join(", ")}</span>` : `<span class="mtag">General movement</span>`)
     + (info.secondaryNames.length ? `<span class="mtag sec">Also: ${info.secondaryNames.map(esc).join(", ")}</span>` : "");
@@ -669,7 +677,7 @@ function openExercise(name, part) {
   $("#exDialog").showModal();
 }
 $("#exClose").onclick = () => $("#exDialog").close();
-$("#exDialog").addEventListener("close", () => Demo.stop($("#exDemo")));
+$("#exDialog").addEventListener("close", () => { Demo.stop($("#exDemo")); Anatomy3D.stop(); });
 $("#exDialog").addEventListener("click", (e) => { if (e.target === $("#exDialog")) $("#exDialog").close(); });
 document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-ex]");

@@ -510,3 +510,14 @@ details.fold[open] > summary { margin-bottom: 12px; }
 .ex-row { width: 100%; display: flex; justify-content: space-between; gap: 10px; background: none; border: 0; color: var(--text); text-align: left; padding: 8px 2px; font: inherit; min-height: 0; }
 .ex-row .small { text-align: right; }
 .guide-list { max-height: 420px; overflow: auto; }
+/* 3D anatomy viewer */
+.ex-demo.v3d { position: relative; height: min(58dvh, 520px); grid-column: 1 / -1;
+  background: radial-gradient(80% 70% at 50% 35%, #1d2a38 0%, #0a0f15 70%); }
+.ex-demo.v3d canvas { width: 100% !important; height: 100% !important; display: block; border-radius: 14px; cursor: grab; }
+.v3d-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 13px; }
+.v3d-hint { position: absolute; left: 10px; bottom: 10px; font-size: 11px; color: #9ba8b6; background: #0008; padding: 3px 8px; border-radius: 99px; pointer-events: none; }
+.v3d-views { position: absolute; right: 8px; top: 8px; display: flex; gap: 4px; }
+.v3d-views button { min-height: 0; padding: 4px 9px; font-size: 11px; background: #0b1016cc; color: #dfe6ee; border: 1px solid #2f3b4a; border-radius: 99px; }
+.ex-legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+.ex-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-left: 6px; }
+.ex-legend .dot.prim { background: #ff3a24; box-shadow: 0 0 6px #ff3a24; } .ex-legend .dot.sec { background: #ffad2a; }
