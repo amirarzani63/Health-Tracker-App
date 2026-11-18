@@ -151,7 +151,7 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
             "sleep_h": (lg.sleep_h if lg and lg.sleep_h is not None else None)
                        or (round(s.sleep_s / 3600, 1) if s and s.sleep_s else None),
             "intensity_minutes": s.intensity_minutes if s else None,
-            "workouts": max(len(day_acts), 1 if checked.get(d.isoformat()) is True else 0),
+            "workouts": max(len(day_acts), 1 if checked.get(d.isoformat()) is True or d in cardio_kcal else 0),
             "workout_minutes": round(sum(a.duration_s for a in day_acts) / 60),
             "weight_kg": weights.get(d),
         })
@@ -482,3 +482,32 @@ def checkins(db: Session) -> dict:
         return json.loads(row.value) if row and row.value else {}
     except ValueError:
         return {}
+
+
+
+def workout_status(db: Session, today: date | None = None) -> dict:
+    """Done / missed for every planned workout day, worked out from what the user logged.
+
+    - The user's own Yes/No answer always wins.
+    - Anything logged that day (a workout or cardio) = done.
+    - A planned workout day that has passed with nothing logged = missed.
+    """
+    from app.models import CardioLog
+    today = today or date.today()
+    marks = {k: v for k, v in checkins(db).items()}
+    plan = db.scalar(select(WorkoutPlan).where(WorkoutPlan.active).order_by(WorkoutPlan.created_at.desc()))
+    start = plan.created_at.date() if plan else today - timedelta(days=60)
+    start = min(start, today - timedelta(days=1))
+    logged = {a.start_time.date() for a in activities_between(db, start - timedelta(days=60), today)}
+    logged |= {r.day for r in db.scalars(select(CardioLog).where(CardioLog.day <= today))}
+    out = {d.isoformat(): True for d in logged}
+    if plan:
+        d = plan.created_at.date()
+        while d < today:
+            wd = WEEKDAYS[d.weekday()]
+            planned = any(x.get("weekday") == wd and x.get("type") in ("strength", "cardio") for x in plan.days)
+            if planned and d.isoformat() not in out:
+                out[d.isoformat()] = False
+            d += timedelta(days=1)
+    out.update(marks)  # the user's own answers win
+    return out

@@ -129,7 +129,9 @@ class CheckIn(BaseModel):
 
 @router.get("/checkins/all")
 def get_checkins(db: Session = Depends(get_db)) -> dict:
-    return _load_checkins(db)
+    """Done/missed per date: the user's answers plus what the app works out from their logs."""
+    from app.services.insights import workout_status
+    return workout_status(db)
 
 
 @router.post("/checkins/all")

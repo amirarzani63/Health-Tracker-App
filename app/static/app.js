@@ -1939,6 +1939,7 @@ $("#cardioLogForm").addEventListener("submit", async (e) => {
   try {
     const r = await api("/api/cardio-log", { method: "POST", body: { day: today(), activity: f.activity.value, minutes: Number(f.minutes.value) } });
     renderCardioLog(r, $("#cardioLogList"), $("#cardioBurn"));
+    if (cal.plan) { cal.marks = await api("/api/plans/checkins/all"); $("#activePlan").innerHTML = renderWeek(cal.plan); loadDayLogs(); }
     toast(`🏃 ${CARDIO_OPTS[f.activity.value].label}: ${f.minutes.value} min · ${fmt(r.items.at(-1).calories)} kcal`);
     f.minutes.value = "";
   } catch (err) { toast(err.message, true); }
@@ -1949,7 +1950,7 @@ document.addEventListener("click", async (e) => {
   try {
     const r = await api(`/api/cardio-log/${b.dataset.clDel}`, { method: "DELETE" });
     renderCardioLog(r, $("#cardioLogList"), $("#cardioBurn"));
-    if (cal.plan && $(".cal-day")) { cal.logs = null; $("#activePlan").innerHTML = renderWeek(cal.plan); loadDayLogs(); }
+    if (cal.plan && $(".cal-day")) { cal.marks = await api("/api/plans/checkins/all"); $("#activePlan").innerHTML = renderWeek(cal.plan); loadDayLogs(); }
   } catch (err) { toast(err.message, true); }
 });
 // calendar: log the planned cardio for that date as done
@@ -1971,8 +1972,9 @@ document.addEventListener("click", async (e) => {
   b.disabled = true;
   try {
     for (const x of rows) await api("/api/cardio-log", { method: "POST", body: { day: box.dataset.cardioDay, ...x } });
-    toast(`🏃 Logged ${rows.length} cardio ${rows.length > 1 ? "activities" : "activity"}`);
-    loadDayLogs();
+    toast(`🏃 Logged ${rows.length} cardio ${rows.length > 1 ? "activities" : "activity"} · marked as done ✓`);
+    cal.marks = await api("/api/plans/checkins/all");
+    $("#activePlan").innerHTML = renderWeek(cal.plan); loadDayLogs();
   } catch (err) { toast(err.message, true); } finally { b.disabled = false; }
 });
 

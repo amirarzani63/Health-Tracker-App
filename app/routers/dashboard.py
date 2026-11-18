@@ -55,7 +55,7 @@ def dashboard(day: date | None = None, db: Session = Depends(get_db)):
         ],
         "trend": trend,
         "today_session": session,
-        "today_done": any(a.start_time.date() == day for a in acts) or insights.checkins(db).get(day.isoformat()) is True,
+        "today_done": any(a.start_time.date() == day for a in acts) or insights.workout_status(db, max(day, date.today())).get(day.isoformat()) is True,
         "next_session": insights.upcoming_session(db, day),
         "plan_name": plan.name if plan else None,
         "plan_id": plan.id if plan else None,

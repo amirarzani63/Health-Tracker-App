@@ -136,3 +136,19 @@ def test_cardio_log_adds_to_burned(client):
     assert len(r["items"]) == 1
     client.post("/api/day-log", json={"day": "2026-11-18", "burned": 3000})  # a watch total wins
     assert client.get("/api/dashboard?day=2026-11-18").json()["burned"] == 3000
+
+
+
+def test_calendar_marks_itself_from_logs(client):
+    from datetime import date, timedelta
+
+    from app.services.insights import workout_status
+    client.post("/api/plans/checkins/all", json={"day": "2026-11-18", "done": None})
+    today = date.today().isoformat()
+    client.post("/api/cardio-log", json={"day": today, "activity": "bike", "minutes": 20})
+    assert client.get("/api/plans/checkins/all").json()[today] is True
+    client.post("/api/plans/checkins/all", json={"day": today, "done": False})  # the user's answer wins
+    assert client.get("/api/plans/checkins/all").json()[today] is False
+    db = SessionLocal()
+    assert workout_status(db, date.today() + timedelta(days=1)).get(today) is False
+    db.close()
