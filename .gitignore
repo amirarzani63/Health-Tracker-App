@@ -6,3 +6,4 @@ data/*
 !data/.gitkeep
 .env
 /*.png
+app/static/exlib/

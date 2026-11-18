@@ -521,3 +521,34 @@ details.fold[open] > summary { margin-bottom: 12px; }
 .ex-legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin: 8px 0 0; }
 .ex-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-left: 6px; }
 .ex-legend .dot.prim { background: #ff3a24; box-shadow: 0 0 6px #ff3a24; } .ex-legend .dot.sec { background: #ffad2a; }
+
+/* ---------------------------------------------------------------- illustrated workout posters */
+.poster { background: linear-gradient(#dcEEFb, #c8e2f6); border-radius: 14px; padding: 12px 10px 10px; margin-top: 10px; color: #13243a; }
+.poster-title { margin: 0 0 8px; text-align: center; font: 900 22px/1.1 ui-sans-serif, system-ui, sans-serif; letter-spacing: .02em; text-transform: uppercase; color: #a3221b; }
+.poster-sub { text-align: center; margin: -4px 0 8px; font-size: 12px; color: #33506e; }
+.poster-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+@media (min-width: 620px) { .poster-grid { grid-template-columns: repeat(3, 1fr); } }
+.ptile { display: flex; flex-direction: column; align-items: center; gap: 2px; background: #eef7fe; border: 1px solid #b7d4ec; border-radius: 12px;
+  padding: 6px 6px 8px; color: inherit; font: inherit; min-height: 0; cursor: pointer; text-align: center; box-shadow: 0 2px 6px #0d2a4a1a; }
+.ptile:active { transform: scale(.98); }
+.pimg { position: relative; width: 100%; aspect-ratio: 1; border-radius: 9px; overflow: hidden; background: #d5e9f8; }
+.pimg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pimg.anim img.peak { animation: peakfade 3.2s ease-in-out infinite; }
+@keyframes peakfade { 0%, 35% { opacity: 0; } 50%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pimg.anim img.peak { animation: none; opacity: 0; } }
+.pimg-ph { position: absolute; inset: 0; display: grid; place-items: center; font: 800 34px/1 ui-sans-serif, system-ui; color: #8fb3d3; }
+.pimg-map { position: absolute; inset: 4px; } .pimg-map .bodymap { height: 100%; } .pimg-map svg { max-height: 100%; }
+.pimg-map .bodyview figcaption { display: none; }
+.pname { font: 800 12px/1.2 ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; color: #a3221b; margin-top: 4px; letter-spacing: .02em; }
+.psets { font: 800 15px/1.1 ui-sans-serif, system-ui, sans-serif; color: #13243a; }
+.pmus { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; max-width: 100%; overflow: hidden; max-height: 18px; }
+.pmus i { font-style: normal; font-size: 10px; white-space: nowrap; background: #ffd9d4; color: #8f1d16; border-radius: 99px; padding: 1px 7px; }
+.poster-foot { margin: 10px 0 0; text-align: center; font: 800 12px/1.2 ui-sans-serif, system-ui, sans-serif; text-transform: uppercase; color: #13243a; letter-spacing: .04em; }
+.poster.compact .poster-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.poster.compact .pname { font-size: 10px; } .poster.compact .psets { font-size: 13px; } .poster.compact .pmus { display: none; }
+.ex-pic { margin-bottom: 6px; }
+.ex-pic .pimg.big { max-width: 420px; margin: 0 auto; border-radius: 14px; }
+.pic-steps { display: flex; justify-content: center; gap: 18px; font-size: 11px; color: var(--muted); margin-top: 4px; }
+.ex-h { margin: 10px 0 6px; }
+.ex-tips { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; font-size: 14px; }
+.credit a { color: var(--accent); }

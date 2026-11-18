@@ -1,11 +1,13 @@
 from functools import lru_cache
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import WorkoutPlan
+from app.services import exlib
 
 router = APIRouter(prefix="/api", tags=["exercises"])
 
@@ -58,3 +60,19 @@ def exercise_picker(db: Session = Depends(get_db)):
                 if name not in mine.setdefault(part, []):
                     mine[part].append(name)
     return {"body_parts": list(groups), "groups": groups, "plan_exercises": mine, "plan_sessions": sessions}
+
+
+# ---------------------------------------------------------------- illustrated exercise library (RepDB)
+class _Names(BaseModel):
+    names: list[str]
+
+
+@router.post("/exlib/match")
+def exlib_match(data: _Names):
+    """Illustration, muscles and instructions for each exercise name (null when not found)."""
+    return {"available": exlib.available(), "items": {n: exlib.match(n) for n in data.names[:200]}}
+
+
+@router.get("/exlib/search")
+def exlib_search(q: str = ""):
+    return exlib.search(q)

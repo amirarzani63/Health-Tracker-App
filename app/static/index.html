@@ -461,11 +461,14 @@
         <div class="row-between"><h3>Account</h3><button type="button" class="ghost small-btn" id="signOut">Sign out</button></div>
         <p class="muted small" style="margin:0">You stay signed in on this device for 90 days. Change the password with the <code>APP_PASSWORD</code> setting on your host; that signs out every device.</p>
       </div>
+    <p class="small muted center credit">Exercise illustrations &amp; instructions: <a href="https://repdb.co" target="_blank" rel="noopener">Exercise data by RepDB (repdb.co)</a> · 3D viewer: three.js</p>
   </section>
 </main>
 
 <dialog id="exDialog" class="ex-dialog">
   <div class="row-between"><h3 id="exTitle"></h3><button class="icon" id="exClose" aria-label="Close">✕</button></div>
+  <div class="ex-pic hidden" id="exPic"></div>
+  <h4 class="ex-h">Muscles worked</h4>
   <div class="ex-body">
     <div class="ex-demo" id="exDemo"></div>
     <div id="exMap"></div>
@@ -474,6 +477,8 @@
   <div class="ex-muscles" id="exMuscles"></div>
   <h4>How to do it</h4>
   <ol class="ex-cues" id="exCues"></ol>
+  <ul class="ex-tips" id="exTips"></ul>
+  <p class="credit small muted" id="exCredit"></p>
 </dialog>
 
 <dialog id="weightDialog">

@@ -208,8 +208,7 @@ function renderHero(d) {
       return;
     }
     const list = ts.type === "strength"
-      ? `<ul class="hero-list">${ts.exercises.slice(0, 5).map((x) => `<li><button class="ex-link" data-ex="${esc(x.exercise)}">${esc(x.exercise)}</button><span class="muted">${x.sets}×${esc(x.reps)}</span></li>`).join("")}
-         ${ts.exercises.length > 5 ? `<li class="muted">+ ${ts.exercises.length - 5} more</li>` : ""}</ul>`
+      ? posterHTML("", ts.exercises, { compact: true })
       : `<p class="hero-big">${ts.minutes} min <span class="muted">in ${esc(ts.zone)}</span></p>
          <p class="muted small">Brisk walk, bike or cross-trainer. You should be able to talk in full sentences.</p>`;
     const ready = d.readiness && d.readiness.level !== "unknown" && d.readiness.level !== "good"
@@ -656,10 +655,24 @@ $("#aiDiscard").addEventListener("click", resetAi);
 
 // ================================================================ WORKOUTS
 // ---------------------------------------------------------------- exercise demo pop-up + guide
-function openExercise(name, part) {
+async function openExercise(name, part) {
   part = part || picker.lookup?.[(name || "").toLowerCase()];
   const info = ExerciseInfo.lookup(name, part);
   $("#exTitle").textContent = name;
+  $("#exPic").classList.add("hidden"); $("#exTips").innerHTML = ""; $("#exCredit").innerHTML = "";
+  const lib = (await exlibLookup([name]))[name];
+  if (lib) {
+    if (lib.primary.length) { info.primary = lib.primary; info.secondary = lib.secondary; }
+    info.primaryNames = info.primary.map((m) => MUSCLE_NAMES[m]); info.secondaryNames = info.secondary.map((m) => MUSCLE_NAMES[m]);
+    if (lib.instructions.length) info.cues = lib.instructions;
+    if (lib.images.length) {
+      $("#exPic").innerHTML = `<div class="pimg big${lib.images.length > 1 ? " anim" : ""}">${lib.images.map((src, i) => `<img src="${src}" alt="${esc(lib.name)}${i ? " (end position)" : " (start position)"}" class="${i ? "peak" : "start"}">`).join("")}</div>
+        ${lib.images.length > 1 ? `<div class="pic-steps"><span>Start</span><span>Finish</span></div>` : ""}`;
+      $("#exPic").classList.remove("hidden");
+    }
+    $("#exTips").innerHTML = lib.tips.map((t) => `<li>💡 ${esc(t)}</li>`).join("");
+    $("#exCredit").innerHTML = `Illustration &amp; instructions: ${esc(lib.name)} · <a href="https://repdb.co" target="_blank" rel="noopener">Exercise data by RepDB (repdb.co)</a>`;
+  }
   const box = $("#exDemo");
   if (Anatomy3D.supported()) {
     box.classList.add("v3d"); $("#exMap").innerHTML = "";
@@ -838,16 +851,61 @@ $("#activityForm").addEventListener("submit", async (e) => {
   } catch (err) { toast(err.message, true); }
 });
 
+// ================================================================ workout posters (illustrated, like a gym poster)
+const exlib = { cache: new Map(), pending: null };
+async function exlibLookup(names) {
+  const need = [...new Set(names)].filter((n) => !exlib.cache.has(n));
+  if (need.length) {
+    try {
+      const r = await api("/api/exlib/match", { method: "POST", body: { names: need } });
+      for (const n of need) exlib.cache.set(n, r.items[n] || null);
+    } catch { for (const n of need) exlib.cache.set(n, null); }
+  }
+  return Object.fromEntries(names.map((n) => [n, exlib.cache.get(n)]));
+}
+const MUSCLE_NAMES = ExerciseInfo.MUSCLES;
+function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
+  const rests = exercises.map((x) => x.rest_s).filter(Boolean);
+  const rest = rests.length ? rests.sort((a, b) => rests.filter((v) => v === a).length - rests.filter((v) => v === b).length).pop() : 0;
+  return `<div class="poster${compact ? " compact" : ""}">
+    ${title ? `<h3 class="poster-title">${esc(title)}</h3>` : ""}${sub ? `<p class="poster-sub">${sub}</p>` : ""}
+    <div class="poster-grid">${exercises.map((x) => `<button class="ptile" data-ex="${esc(x.exercise)}" data-poster="${esc(x.exercise)}">
+      <div class="pimg"><span class="pimg-ph">${esc(x.exercise.slice(0, 1))}</span></div>
+      <span class="pname">${esc(x.exercise)}</span>
+      <span class="psets">${x.sets}×${esc(x.reps)}</span>
+      <span class="pmus"></span></button>`).join("")}</div>
+    ${rest ? `<p class="poster-foot">★ ${rest} seconds rest between sets ★</p>` : ""}</div>`;
+}
+async function hydratePosters(root = document) {
+  const tiles = [...root.querySelectorAll("[data-poster]")].filter((t) => !t.dataset.done);
+  if (!tiles.length) return;
+  const info = await exlibLookup(tiles.map((t) => t.dataset.poster));
+  for (const t of tiles) {
+    t.dataset.done = "1";
+    const m = info[t.dataset.poster];
+    const local = ExerciseInfo.lookup(t.dataset.poster);
+    const prim = m?.primary?.length ? m.primary : local.primary;
+    t.querySelector(".pmus").innerHTML = prim.slice(0, 2).map((k) => `<i>${esc(MUSCLE_NAMES[k] || k)}</i>`).join("");
+    if (m?.images?.length) {
+      t.querySelector(".pimg").innerHTML = m.images.map((src, i) => `<img src="${src}" alt="" loading="lazy" class="${i ? "peak" : "start"}">`).join("");
+      t.querySelector(".pimg").classList.toggle("anim", m.images.length > 1);
+    } else {
+      t.querySelector(".pimg").innerHTML = `<div class="pimg-map">${BodyMap.render(local.primary, local.secondary)}</div>`;
+    }
+  }
+}
+new MutationObserver(() => { clearTimeout(exlib.pending); exlib.pending = setTimeout(() => hydratePosters(), 30); })
+  .observe(document.body, { childList: true, subtree: true });
+
 // ================================================================ PLANS
 function renderPlanDay(day, compact = false) {
   if (day.type === "rest") return `<div class="plan-day"><div class="wd">${day.weekday}</div><strong>Rest / mobility</strong><p class="muted small">Easy walk and stretching. Let your Garmin recovery time come down.</p></div>`;
   if (day.type === "cardio") return `<div class="plan-day cardio"><div class="wd">${day.weekday} · cardio</div><strong>${esc(day.title)}</strong>
     <p class="small">${day.minutes} min in <b>${esc(day.zone)}</b>. Set your fenix data screen to show HR zone.</p></div>`;
-  const rest = (x) => (x.rest_s ? ` · ${x.rest_s}s rest` : "");
   const changes = !compact && day.changes?.length
     ? `<details class="small"><summary class="muted">${day.changes.length} adjustment${day.changes.length > 1 ? "s" : ""} for your goal</summary><ul class="tips">${day.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></details>` : "";
   return `<div class="plan-day strength"><div class="wd">${day.weekday} · strength${day.garmin_source_id ? " · from Garmin" : ""}</div><strong>${esc(day.title)}</strong>
-    <table>${day.exercises.map((x) => `<tr><td><button class="ex-link" data-ex="${esc(x.exercise)}">${esc(x.exercise)}</button></td><td>${x.sets}×${esc(x.reps)}${compact ? "" : rest(x)}</td></tr>`).join("")}</table>${changes}</div>`;
+    ${posterHTML("", day.exercises, { compact })}${changes}</div>`;
 }
 
 const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
