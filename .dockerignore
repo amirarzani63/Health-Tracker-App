@@ -6,3 +6,4 @@ tests
 .pytest_cache
 *.png
 !app/static/*.png
+app/static/exlib/

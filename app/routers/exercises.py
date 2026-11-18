@@ -62,7 +62,7 @@ def exercise_picker(db: Session = Depends(get_db)):
     return {"body_parts": list(groups), "groups": groups, "plan_exercises": mine, "plan_sessions": sessions}
 
 
-# ---------------------------------------------------------------- illustrated exercise library (RepDB)
+# ---------------------------------------------------------------- exercise photo library (free-exercise-db, public domain)
 class _Names(BaseModel):
     names: list[str]
 

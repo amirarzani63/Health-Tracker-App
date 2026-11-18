@@ -7,10 +7,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /srv
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY app ./app
-# exercise illustrations (RepDB free tier, used in-app with attribution; not stored in git)
+# exercise photos (free-exercise-db, public domain), downloaded at build time (cached between deploys); not stored in git
 COPY scripts ./scripts
 RUN python scripts/fetch_exercise_library.py
+COPY app ./app
 
 RUN useradd --create-home appuser && mkdir -p /data
 COPY docker-entrypoint.sh /usr/local/bin/

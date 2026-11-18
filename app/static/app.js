@@ -671,7 +671,7 @@ async function openExercise(name, part) {
       $("#exPic").classList.remove("hidden");
     }
     $("#exTips").innerHTML = lib.tips.map((t) => `<li>💡 ${esc(t)}</li>`).join("");
-    $("#exCredit").innerHTML = `Illustration &amp; instructions: ${esc(lib.name)} · <a href="https://repdb.co" target="_blank" rel="noopener">Exercise data by RepDB (repdb.co)</a>`;
+    $("#exCredit").textContent = `Photos & instructions: ${lib.name} (free-exercise-db, public domain)`;
   }
   const box = $("#exDemo");
   if (Anatomy3D.supported()) {

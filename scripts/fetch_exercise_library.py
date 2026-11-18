@@ -1,12 +1,11 @@
-"""Download the RepDB free exercise library (illustrations + exercise data) into app/static/exlib.
+"""Download the free-exercise-db photo library into app/static/exlib.
 
-Run during the Docker build (and once locally for development). The files are not committed
-to the repository: the RepDB license allows in-app use with attribution but not
-redistributing the dataset. If the download fails the app still works without pictures.
+free-exercise-db (github.com/yuhonas/free-exercise-db) is released into the public domain
+(Unlicense): ~800 exercises, each with real photos of the start and finish position,
+muscles worked and instructions. It is downloaded once when the app is built (the running
+app never contacts it). If the download fails the app still works, without photos.
 """
 
-import base64
-import hashlib
 import io
 import json
 import shutil
@@ -15,39 +14,60 @@ import tarfile
 import urllib.request
 from pathlib import Path
 
-VERSION = "2026.11.1"
-URL = f"https://registry.npmjs.org/@repdb/exercises/-/exercises-{VERSION}.tgz"
-SHA512 = "uxELzbJS8G0Jyv6wNLpiUz5AIchFbc0mh4CS0eFOKUA1sl7+842MbsZOmhc+5ojSy5nYTS1GEEv3K79T1cPyyw=="
+URL = "https://codeload.github.com/yuhonas/free-exercise-db/tar.gz/refs/heads/main"
 DEST = Path(__file__).resolve().parent.parent / "app" / "static" / "exlib"
+MAX_BYTES = 400 * 1024 * 1024
+
+
+def extract(data: bytes, dest: Path) -> int:
+    """Copy exercises.json and the exercise photos out of the repository archive."""
+    tmp = dest.with_name(dest.name + ".tmp")
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    (tmp / "img").mkdir(parents=True)
+    exercises, photos = None, 0
+    with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as tar:
+        for m in tar.getmembers():
+            if not m.isfile():
+                continue
+            parts = m.name.split("/")[1:]  # drop the "free-exercise-db-main/" prefix
+            if parts == ["dist", "exercises.json"]:
+                exercises = json.loads(tar.extractfile(m).read())
+            elif len(parts) == 3 and parts[0] == "exercises" and parts[2].lower().endswith((".jpg", ".jpeg", ".png")):
+                folder, file = parts[1], parts[2]
+                if "/" in folder or ".." in folder or ".." in file:
+                    continue
+                out = tmp / "img" / folder
+                out.mkdir(exist_ok=True)
+                (out / file).write_bytes(tar.extractfile(m).read())
+                photos += 1
+            elif parts == ["LICENSE"]:
+                (tmp / "LICENSE").write_bytes(tar.extractfile(m).read())
+    if not isinstance(exercises, list) or not exercises:
+        shutil.rmtree(tmp)
+        raise ValueError("exercises.json missing from the archive")
+    (tmp / "exercises.json").write_text(json.dumps(exercises))
+    (tmp / "SOURCE").write_text("free-exercise-db\n")
+    if dest.exists():
+        shutil.rmtree(dest)
+    tmp.rename(dest)
+    return photos
 
 
 def main() -> int:
-    if (DEST / "exercises.json").exists() and (DEST / "VERSION").read_text().strip() == VERSION:
-        print("exercise library already present")
+    if (DEST / "SOURCE").exists() and (DEST / "SOURCE").read_text().strip() == "free-exercise-db":
+        print("exercise photo library already present")
         return 0
     try:
-        data = urllib.request.urlopen(URL, timeout=120).read()
-    except Exception as e:  # noqa: BLE001 - optional asset
-        print(f"warning: couldn't download the exercise library ({e}); continuing without pictures")
+        with urllib.request.urlopen(URL, timeout=300) as r:
+            data = r.read(MAX_BYTES + 1)
+        if len(data) > MAX_BYTES:
+            raise ValueError("archive unexpectedly large")
+        photos = extract(data, DEST)
+    except Exception as e:  # noqa: BLE001 - optional asset; the app works without photos
+        print(f"warning: couldn't fetch the exercise photo library ({e}); continuing without photos")
         return 0
-    if base64.b64encode(hashlib.sha512(data).digest()).decode() != SHA512:
-        print("error: exercise library checksum mismatch", file=sys.stderr)
-        return 1
-    if DEST.exists():
-        shutil.rmtree(DEST)
-    (DEST / "img").mkdir(parents=True)
-    with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as tar:
-        for m in tar.getmembers():
-            name = m.name.removeprefix("package/")
-            if not m.isfile():
-                continue
-            if name in ("exercises.json", "LICENSE.md", "ATTRIBUTION.md"):
-                (DEST / name).write_bytes(tar.extractfile(m).read())
-            elif name.startswith("images/flat/") and name.endswith(".webp") and "/" not in name[len("images/flat/"):]:
-                (DEST / "img" / Path(name).name).write_bytes(tar.extractfile(m).read())
-    json.loads((DEST / "exercises.json").read_text())  # sanity check
-    (DEST / "VERSION").write_text(VERSION)
-    print(f"exercise library {VERSION}: {len(list((DEST / 'img').iterdir()))} images")
+    print(f"exercise photo library: {photos} photos")
     return 0
 
 

@@ -1,7 +1,7 @@
-"""Exercise illustrations and details from the RepDB library (see scripts/fetch_exercise_library.py).
+"""Exercise photos and details from free-exercise-db (public domain; see scripts/fetch_exercise_library.py).
 
 Matches exercise names used in plans and Garmin workouts ("Bent-over Row with Dumbbell")
-to library entries ("Bent-Over DB Row") by comparing normalised words.
+to library entries ("Bent Over Two-Dumbbell Row") by comparing normalised words.
 """
 
 import json
@@ -13,15 +13,11 @@ DIR = Path(__file__).resolve().parent.parent / "static" / "exlib"
 
 # library muscle names -> the app's muscle groups (shared with the 3D model)
 MUSCLE = {
-    "gluteus_maximus": "glutes", "gluteus_medius": "glutes", "abductors": "glutes", "quadriceps": "quads",
-    "pectoralis_major": "chest", "latissimus_dorsi": "lats", "anterior_deltoid": "front_delts",
-    "lateral_deltoid": "side_delts", "posterior_deltoid": "rear_delts", "rectus_abdominis": "abs",
-    "transverse_abdominis": "abs", "hamstrings": "hamstrings", "triceps_brachii": "triceps",
-    "erector_spinae": "lower_back", "quadratus_lumborum": "lower_back", "biceps_brachii": "biceps",
-    "brachialis": "biceps", "obliques": "obliques", "hip_flexors": "hip_flexors", "trapezius": "traps",
-    "rhomboids": "upper_back", "infraspinatus_teres_minor": "upper_back", "gastrocnemius": "calves",
-    "soleus": "calves", "tibialis_anterior": "calves", "adductors": "adductors",
-    "forearm_flexors": "forearms", "forearm_extensors": "forearms", "brachioradialis": "forearms",
+    "abdominals": ["abs"], "abductors": ["glutes"], "adductors": ["adductors"], "biceps": ["biceps"],
+    "calves": ["calves"], "chest": ["chest"], "forearms": ["forearms"], "glutes": ["glutes"],
+    "hamstrings": ["hamstrings"], "lats": ["lats"], "lower back": ["lower_back"], "middle back": ["upper_back"],
+    "neck": ["traps"], "quadriceps": ["quads"], "shoulders": ["front_delts", "side_delts"], "traps": ["traps"],
+    "triceps": ["triceps"],
 }
 SYN = {
     "db": "dumbbell", "dumbbells": "dumbbell", "bb": "barbell", "kb": "kettlebell", "kettlebells": "kettlebell",
@@ -54,17 +50,17 @@ def library() -> dict:
     if not f.exists():
         return {"items": [], "by_id": {}}
     items = []
-    for e in json.loads(f.read_text())["exercises"]:
-        imgs = e.get("images", {}).get("flat", {})
-        frames = [imgs[k] for k in ("start", "peak") if k in imgs] or ([imgs["main"]] if "main" in imgs else [])
+    for e in json.loads(f.read_text()):
+        if not isinstance(e, dict) or not e.get("name"):
+            continue
         items.append({
-            "id": e["id"], "name": e["name_en"], "words": set(words(e["name_en"])),
-            "category": e.get("category"), "equipment": e.get("equipment"), "body_part": e.get("body_part"),
-            "primary": sorted({MUSCLE[m] for m in e.get("primary_muscles", []) if m in MUSCLE}),
-            "secondary": sorted({MUSCLE[m] for m in e.get("secondary_muscles", []) if m in MUSCLE}),
-            "instructions": e.get("instructions_en", []), "tips": e.get("tips_en", []),
-            "description": e.get("description_en", ""),
-            "images": ["/static/exlib/img/" + Path(p).name for p in frames],
+            "id": e.get("id", e["name"]), "name": e["name"], "words": set(words(e["name"])),
+            "category": e.get("category"), "equipment": e.get("equipment"), "level": e.get("level"),
+            "primary": sorted({g for m in e.get("primaryMuscles", []) for g in MUSCLE.get(m, [])}),
+            "secondary": sorted({g for m in e.get("secondaryMuscles", []) for g in MUSCLE.get(m, [])}),
+            "instructions": e.get("instructions", []), "tips": [],
+            "images": ["/static/exlib/img/" + p for p in e.get("images", [])
+                       if isinstance(p, str) and ".." not in p and (DIR / "img" / p).exists()],
         })
     import math
     df: dict[str, int] = {}
