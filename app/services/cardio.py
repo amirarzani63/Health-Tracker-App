@@ -22,6 +22,7 @@ ACTIVITIES = {
     "elliptical": ("Elliptical / cross-trainer", 5.0),
     "rower": ("Rowing machine", 6.0),
     "stairs": ("Stair climber", 8.0),
+    "jump_rope": ("Rope skipping", 8.8),
 }
 
 

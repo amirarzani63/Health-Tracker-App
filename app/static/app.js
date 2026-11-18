@@ -964,11 +964,11 @@ new MutationObserver(() => { clearTimeout(exlib.pending); exlib.pending = setTim
 // ---------------------------------------------------------------- choose your cardio machine/activity
 // met = effort at a steady, can-still-talk pace (Compendium of Physical Activities)
 const CARDIO_OPTS = {
-  walk: { label: "Fast walk outside", photo: "Trail Running/Walking", met: 4.3,
+  walk: { label: "Fast walk outside", photo: "Walking, Treadmill", met: 4.3,
     how: ["Walk fast, as if you're in a hurry.", "Swing your arms and keep going without stopping."] },
   treadmill_walk: { label: "Treadmill walk (incline)", photo: "Walking, Treadmill", met: 5.0,
     how: ["Set speed 5–6 km/h (3–3.7 mph) and incline 5–8%.", "Don't hold the handrails; swing your arms."] },
-  run: { label: "Jog / run outside", photo: "Running, Treadmill", met: 7.0,
+  run: { label: "Jog / run outside", photo: "Trail Running/Walking", met: 7.0,
     how: ["Jog slowly enough that you can still talk.", "If you get out of breath, walk for a minute, then jog again."] },
   treadmill_run: { label: "Treadmill jog", photo: "Jogging, Treadmill", met: 7.0,
     how: ["Start at 7–8 km/h (4.5–5 mph), flat or 1% incline.", "Slow down to a fast walk if you can't talk."] },
@@ -982,6 +982,8 @@ const CARDIO_OPTS = {
     how: ["Push with your legs first, then lean back slightly and pull the handle to your belly.", "Easy, smooth strokes: about 20–24 per minute."] },
   stairs: { label: "Stair climber", photo: "Stairmaster", met: 8.0,
     how: ["Start on a slow level; hold the rails only lightly for balance.", "Take short breaks if you need them; it's harder than it looks."] },
+  jump_rope: { label: "Rope skipping", photo: "Rope Jumping", met: 8.8,
+    how: ["Small, low hops on the balls of your feet; turn the rope with your wrists.", "Beginners: skip 30 seconds, rest 30 seconds, and repeat. Count only the time you skip."] },
 };
 const cardioState = { picks: {}, kg: 105 };
 const cardioFor = (iso) => { const v = cardioState.picks[iso]; return typeof v === "string" ? v : Array.isArray(v) ? v[0].activity : cardioState.picks.default || "walk"; };
@@ -1915,13 +1917,14 @@ document.addEventListener("click", (e) => {
 
 // ---------------------------------------------------------------- cardio done: activity + minutes -> calories
 function renderCardioLog(r, listEl, burnEl) {
-  listEl.innerHTML = r.items.map((x) => `<li><span>${esc(x.label)} · ${x.minutes} min</span>
+  listEl.innerHTML = r.items.map((x) => `<li><span class="cl-act"><img class="cl-thumb" data-cl-photo="${esc(CARDIO_OPTS[x.activity]?.photo || "")}" alt="">${esc(x.label)} · ${x.minutes} min</span>
     <span><b>${fmt(x.calories)} kcal</b> <button type="button" class="icon" data-cl-del="${x.id}" aria-label="Delete">✕</button></span></li>`).join("")
     || `<li class="muted small">Nothing logged yet.</li>`;
   if (burnEl) burnEl.innerHTML = `Calories burned today ≈ <b>${fmt(r.resting)}</b> (your body at rest) + <b>${fmt(r.total_calories)}</b> (cardio) = <b>${fmt(r.resting + r.total_calories)}</b>`;
 }
 async function loadCardioLog() {
   if (!$("#cardioAct").options.length) $("#cardioAct").innerHTML = Object.entries(CARDIO_OPTS).map(([k, o]) => `<option value="${k}">${o.label}</option>`).join("");
+  cardioPreview();
   try { renderCardioLog(await api(`/api/cardio-log?day=${today()}`), $("#cardioLogList"), $("#cardioBurn")); } catch {}
 }
 $("#cardioLogForm").addEventListener("submit", async (e) => {
@@ -1949,7 +1952,7 @@ async function loadDayLogs() {
   if (!el) return;
   try {
     const r = await api(`/api/cardio-log?day=${cal.sel}`);
-    el.innerHTML = r.items.length ? `<span class="small"><b>Logged for this day:</b></span><ul class="cl-list">${r.items.map((x) => `<li><span>${esc(x.label)} · ${x.minutes} min</span>
+    el.innerHTML = r.items.length ? `<span class="small"><b>Logged for this day:</b></span><ul class="cl-list">${r.items.map((x) => `<li><span class="cl-act"><img class="cl-thumb" data-cl-photo="${esc(CARDIO_OPTS[x.activity]?.photo || "")}" alt="">${esc(x.label)} · ${x.minutes} min</span>
       <span><b>${fmt(x.calories)} kcal</b> <button type="button" class="icon" data-cl-del="${x.id}" aria-label="Delete">✕</button></span></li>`).join("")}</ul>
       <span class="small">Cardio total: <b>${r.total_minutes} min · ${fmt(r.total_calories)} kcal</b></span>` : "";
   } catch {}
@@ -1966,3 +1969,20 @@ document.addEventListener("click", async (e) => {
     loadDayLogs();
   } catch (err) { toast(err.message, true); } finally { b.disabled = false; }
 });
+
+// fill cardio thumbnails and the preview photo next to the activity picker
+async function fillCardioPhotos(root = document) {
+  const imgs = [...root.querySelectorAll("img[data-cl-photo]:not([src])")];
+  const names = [...new Set(imgs.map((i) => i.dataset.clPhoto).filter(Boolean))];
+  if (!names.length) return;
+  const info = await exlibLookup(names);
+  imgs.forEach((i) => { const m = info[i.dataset.clPhoto]; if (m?.images?.length) i.src = m.images[0]; else i.remove(); });
+}
+async function cardioPreview() {
+  const o = CARDIO_OPTS[$("#cardioAct").value], el = $("#cardioPreview");
+  if (!o || !el) return;
+  const m = (await exlibLookup([o.photo]))[o.photo];
+  el.innerHTML = m?.images?.length ? `<img src="${m.images[0]}" alt="${esc(o.label)}"><span class="small">${esc(o.how[0])}</span>` : "";
+}
+new MutationObserver(() => fillCardioPhotos()).observe(document.body, { childList: true, subtree: true });
+document.addEventListener("change", (e) => { if (e.target.id === "cardioAct") cardioPreview(); });

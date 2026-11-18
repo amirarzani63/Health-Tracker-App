@@ -179,6 +179,9 @@ def _by_name(target: str) -> dict | None:
 
 @lru_cache(maxsize=4096)
 def match(name: str) -> dict | None:
+    same = next((i for i in library()["items"] if i["name"].lower() == name.lower().strip() and i["images"]), None)
+    if same:  # the library's own name: no guessing needed
+        return {k: v for k, v in same.items() if k != "words"} | {"score": 1.0}
     exact = _match_exact(name)
     if exact and exact.get("images"):
         return exact

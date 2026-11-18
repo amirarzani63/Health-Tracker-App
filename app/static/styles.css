@@ -727,3 +727,9 @@ body.dlg-open { overflow: hidden; }
 .cl-add select, .cl-add input { font-size: 15px; min-width: 0; }
 .cl-list { list-style: none; padding: 0; margin: 4px 0; display: grid; gap: 4px; }
 .cl-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; }
+
+.cl-act { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cl-thumb { width: 44px; height: 33px; object-fit: cover; border-radius: 6px; flex: none; background: var(--inset); }
+.cl-preview { display: grid; grid-template-columns: 96px 1fr; gap: 10px; align-items: center; margin: 4px 0 8px; }
+.cl-preview:empty { display: none; }
+.cl-preview img { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; }
