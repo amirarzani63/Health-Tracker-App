@@ -983,45 +983,78 @@ const CARDIO_OPTS = {
     how: ["Start on a slow level; hold the rails only lightly for balance.", "Take short breaks if you need them; it's harder than it looks."] },
 };
 const cardioState = { picks: {}, kg: 105 };
-const cardioFor = (iso) => cardioState.picks[iso] || cardioState.picks.default || "walk";
+const cardioFor = (iso) => { const v = cardioState.picks[iso]; return typeof v === "string" ? v : Array.isArray(v) ? v[0].activity : cardioState.picks.default || "walk"; };
+// The day's cardio as a list of {activity, minutes}; planned minutes go to one activity unless the user split them
+function cardioList(iso, planMin) {
+  const v = cardioState.picks[iso];
+  if (Array.isArray(v) && v.length) return v;
+  return [{ activity: typeof v === "string" ? v : cardioState.picks.default || "walk", minutes: planMin }];
+}
 const kcalFor = (key, min) => Math.round((CARDIO_OPTS[key].met * 3.5 * cardioState.kg / 200) * min);
+const plannedCardioMin = (d) => d.type === "cardio" ? d.minutes
+  : (d.exercises || []).filter((x) => x.pattern === "cardio").reduce((t, x) => t + (parseInt(x.reps, 10) || 0), 0);
 async function loadCardio() {
   try {
     const [p, prof] = await Promise.all([api("/api/plans/cardio/all"), api("/api/profile")]);
     cardioState.picks = p; cardioState.kg = prof.weight_kg || 105;
   } catch {}
 }
-function cardioPicker(iso) {
-  const cur = cardioFor(iso), isDefault = (cardioState.picks.default || "walk") === cur;
-  return `<div class="cardio-pick"><label>🏃 Your cardio for this day
-    <select data-cardio-date="${iso}">${Object.entries(CARDIO_OPTS).map(([k, o]) => `<option value="${k}"${k === cur ? " selected" : ""}>${o.label}</option>`).join("")}</select></label>
-    ${isDefault ? `<span class="muted small">This is your usual choice for all cardio days.</span>`
-      : `<button type="button" class="ghost small-btn" data-cardio-default="${cur}">Use ${esc(CARDIO_OPTS[cur].label)} for all cardio days</button>`}</div>`;
+function cardioPicker(iso, day) {
+  const list = cardioList(iso, plannedCardioMin(day)), total = list.reduce((t, x) => t + x.minutes, 0);
+  const isDefault = list.length === 1 && (cardioState.picks.default || "walk") === list[0].activity;
+  const opts = (cur) => Object.entries(CARDIO_OPTS).map(([k, o]) => `<option value="${k}"${k === cur ? " selected" : ""}>${o.label}</option>`).join("");
+  return `<div class="cardio-pick" data-cardio-day="${iso}"><span class="cp-title">🏃 Your cardio for this day</span>
+    ${list.map((x, i) => `<div class="cp-row" data-cr="${i}">
+      <select data-cr-act aria-label="Activity">${opts(x.activity)}</select>
+      <input data-cr-min type="number" inputmode="numeric" min="1" max="300" value="${x.minutes}" aria-label="Minutes"><span class="muted small">min</span>
+      ${list.length > 1 ? `<button type="button" class="icon" data-cr-del aria-label="Remove">✕</button>` : ""}</div>`).join("")}
+    <button type="button" class="ghost small-btn" data-cr-add>＋ Add another activity</button>
+    <span class="small">Total: <b>${total} minutes</b> · about <b>${list.reduce((t, x) => t + kcalFor(x.activity, x.minutes), 0)} calories</b></span>
+    ${isDefault ? `<span class="muted small">${esc(CARDIO_OPTS[list[0].activity].label)} is your usual choice for all cardio days.</span>`
+      : list.length === 1 ? `<button type="button" class="ghost small-btn" data-cardio-default="${list[0].activity}">Use ${esc(CARDIO_OPTS[list[0].activity].label)} for all cardio days</button>` : ""}</div>`;
 }
 // Swap the plan's generic walk/bike parts for the chosen activity
 function withCardio(day, iso) {
-  if (!iso || !day) return day;
-  const key = cardioFor(iso), o = CARDIO_OPTS[key];
-  if (day.type === "cardio") return { ...day, cardioKey: key, est_kcal: kcalFor(key, day.minutes) };
-  let extra = 0;
-  const exercises = (day.exercises || []).map((x) => {
-    if (x.pattern !== "cardio") return x;
-    const min = parseInt(x.reps, 10) || 25, intervals = /1 minute fast/i.test(x.exercise);
-    const before = Math.round((4.3 * 3.5 * cardioState.kg / 200) * min);
-    extra += kcalFor(key, min) - before;
-    return { ...x, exercise: intervals ? `${o.label}: 1 minute fast, 2 minutes easy` : `${o.label} (no stopping)`, photo: o.photo,
-      howto: intervals ? ["Go faster (or add resistance) for 1 minute.", "Then go easy for 2 minutes to catch your breath.", "Repeat 8 times."] : [...o.how, "Go at a pace where you breathe harder but can still talk."] };
-  });
-  return { ...day, exercises, est_kcal: day.est_kcal ? day.est_kcal + extra : day.est_kcal };
+  if (!iso || !day || !hasCardio(day)) return day;
+  const planMin = plannedCardioMin(day), list = cardioList(iso, planMin);
+  const card = (x, intervals) => {
+    const o = CARDIO_OPTS[x.activity];
+    return { exercise: intervals ? `${o.label}: 1 minute fast, 2 minutes easy` : `${o.label} (no stopping)`, photo: o.photo,
+      pattern: "cardio", sets: 1, reps: `${x.minutes} minutes`,
+      howto: intervals ? ["Go faster (or add resistance) for 1 minute.", "Then go easy for 2 minutes to catch your breath.", "Repeat until the time is up."]
+        : [...o.how, "Go at a pace where you breathe harder but can still talk."] };
+  };
+  const intervals = (day.exercises || []).some((x) => x.pattern === "cardio" && /1 minute fast/i.test(x.exercise));
+  const cards = list.map((x, i) => card(x, intervals && i === 0));
+  const cardioKcal = list.reduce((t, x) => t + kcalFor(x.activity, x.minutes), 0);
+  const total = list.reduce((t, x) => t + x.minutes, 0);
+  if (day.type === "cardio") return { ...day, cardioKey: list[0].activity, cardioCards: cards, minutes: total, est_kcal: cardioKcal };
+  const walkKcal = Math.round((4.3 * 3.5 * cardioState.kg / 200) * planMin);
+  return { ...day, exercises: [...day.exercises.filter((x) => x.pattern !== "cardio"), ...cards],
+    minutes: day.minutes ? day.minutes - planMin + total : day.minutes,
+    est_kcal: day.est_kcal ? day.est_kcal - walkKcal + cardioKcal : day.est_kcal };
 }
-document.addEventListener("change", async (e) => {
-  const sel = e.target.closest("[data-cardio-date]");
-  if (!sel) return;
-  try {
-    cardioState.picks = await api("/api/plans/cardio/all", { method: "POST", body: { day: sel.dataset.cardioDate, activity: sel.value } });
-    $("#activePlan").innerHTML = renderWeek(cal.plan);
-    toast(`🏃 ${CARDIO_OPTS[sel.value].label} for this day`);
-  } catch (err) { toast(err.message, true); }
+async function saveCardio(box) {
+  const items = [...box.querySelectorAll("[data-cr]")].map((r) => ({
+    activity: r.querySelector("[data-cr-act]").value, minutes: Math.max(1, Math.min(300, Number(r.querySelector("[data-cr-min]").value) || 1)) }));
+  cardioState.picks = await api("/api/plans/cardio/all", { method: "POST", body: { day: box.dataset.cardioDay, activity: items } });
+  $("#activePlan").innerHTML = renderWeek(cal.plan);
+}
+document.addEventListener("change", (e) => {
+  const box = e.target.closest("[data-cardio-day]");
+  if (box && e.target.matches("[data-cr-act],[data-cr-min]")) saveCardio(box).catch((err) => toast(err.message, true));
+});
+document.addEventListener("click", async (e) => {
+  const box = e.target.closest("[data-cardio-day]");
+  if (!box) return;
+  if (e.target.closest("[data-cr-del]")) e.target.closest("[data-cr]").remove();
+  else if (e.target.closest("[data-cr-add]")) {
+    const first = box.querySelector("[data-cr]"), clone = first.cloneNode(true);
+    clone.querySelector("[data-cr-act]").value = first.querySelector("[data-cr-act]").value === "bike" ? "elliptical" : "bike";
+    clone.querySelector("[data-cr-min]").value = 15;
+    first.parentNode.insertBefore(clone, box.querySelector("[data-cr-add]"));
+  } else return;
+  try { await saveCardio(box); } catch (err) { toast(err.message, true); }
 });
 document.addEventListener("click", async (e) => {
   const b = e.target.closest("[data-cardio-default]");
@@ -1038,9 +1071,9 @@ function renderPlanDay(day, compact = false) {
   if (day.type === "rest") return `<div class="plan-day"><div class="wd">${dayName(day.weekday)}</div><strong>Rest / mobility</strong><p class="muted small">Easy walk and stretching. Let your Garmin recovery time come down.</p></div>`;
   if (day.type === "cardio") {
     const o = day.cardioKey ? CARDIO_OPTS[day.cardioKey] : null;
-    return `<div class="plan-day cardio"><div class="wd">${dayName(day.weekday)} · cardio</div><strong>${esc(o ? o.label : sessionTitle(day))}</strong>
-    ${o ? posterHTML("", [{ exercise: o.label, photo: o.photo, pattern: "cardio", sets: 1, reps: `${day.minutes} minutes`, howto: [...o.how, "Keep going without stopping for the whole time."] }]) : ""}
-    <p>${o ? esc(o.label) : "Walk fast or ride a bike"} for <b>${day.minutes} minutes</b> without stopping.</p>
+    return `<div class="plan-day cardio"><div class="wd">${dayName(day.weekday)} · cardio</div><strong>${esc(day.cardioCards && day.cardioCards.length > 1 ? "Cardio mix" : o ? o.label : sessionTitle(day))}</strong>
+    ${day.cardioCards ? posterHTML("", day.cardioCards) : ""}
+    <p>${day.cardioCards ? (day.cardioCards.length > 1 ? "Do these one after the other" : esc(o.label)) : "Walk fast or ride a bike"} for <b>${day.minutes} minutes</b> in total.</p>
     <p class="small"><b>How hard:</b> ${pace(day.zone).long}. (Your watch calls this heart-rate ${esc(pace(day.zone).watch)}.)</p>
     ${day.est_kcal ? `<p class="burn">🔥 You'll burn about <b>${day.est_kcal} calories</b>.</p>` : ""}</div>`;
   }
@@ -1085,7 +1118,7 @@ function renderWeek(plan) {
   const options = WD.filter((x) => x !== wd).map((x) => `<option value="${x}">${dayName(x)}</option>`).join("");
   const detail = !ss ? `<p class="muted">Outside your ${plan.weeks}-week plan.</p>`
     : ss.type === "rest" ? `<p class="muted">Rest day. An easy walk and some stretching are perfect.</p>`
-    : `${checkinHTML(cal.sel, sd)}${hasCardio(ss) ? cardioPicker(cal.sel) : ""}${renderPlanDay(withCardio(ss, cal.sel))}<label class="move">Move ${dayName(wd)}'s session to <select data-move-from="${wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options}</select></label>`;
+    : `${checkinHTML(cal.sel, sd)}${hasCardio(ss) ? cardioPicker(cal.sel, ss) : ""}${renderPlanDay(withCardio(ss, cal.sel))}<label class="move">Move ${dayName(wd)}'s session to <select data-move-from="${wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options}</select></label>`;
   return `<div class="card cal-card">
     <div class="cal-head"><button type="button" class="icon" data-cal-nav="-1" aria-label="Previous month">‹</button>
       <h3>${m.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h3>

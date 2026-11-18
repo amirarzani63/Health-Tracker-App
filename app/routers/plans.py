@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.routers.garmin import service as garmin_service_dep
 from sqlalchemy.orm.attributes import flag_modified
@@ -151,9 +151,14 @@ _CARDIO = "cardio_choices"
 CARDIO_KEYS = {"walk", "treadmill_walk", "run", "treadmill_run", "bike", "recumbent", "elliptical", "rower", "stairs"}
 
 
+class CardioItem(BaseModel):
+    activity: str
+    minutes: int = Field(ge=1, le=300)
+
+
 class CardioPick(BaseModel):
     day: str  # YYYY-MM-DD or "default"
-    activity: str | None
+    activity: str | list[CardioItem] | None  # one activity, or several with minutes each
 
 
 @router.get("/cardio/all")
@@ -169,13 +174,16 @@ def get_cardio(db: Session = Depends(get_db)) -> dict:
 def set_cardio(data: CardioPick, db: Session = Depends(get_db)) -> dict:
     if data.day != "default":
         _date.fromisoformat(data.day)
-    if data.activity is not None and data.activity not in CARDIO_KEYS:
+    items = data.activity if isinstance(data.activity, list) else []
+    if isinstance(data.activity, str) and data.activity not in CARDIO_KEYS or any(i.activity not in CARDIO_KEYS for i in items):
         raise HTTPException(422, "Unknown cardio activity")
+    if isinstance(data.activity, list) and not items:
+        data.activity = None
     picks = get_cardio(db)
     if data.activity is None:
         picks.pop(data.day, None)
     else:
-        picks[data.day] = data.activity
+        picks[data.day] = [i.model_dump() for i in items] if items else data.activity
     row = db.get(StoredSecret, _CARDIO) or StoredSecret(key=_CARDIO)
     row.value = _json.dumps(picks)
     db.add(row)

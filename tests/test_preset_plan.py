@@ -116,3 +116,10 @@ def test_cardio_choice(client):
     client.post("/api/plans/cardio/all", json={"day": "2026-11-20", "activity": "elliptical"})
     assert client.post("/api/plans/cardio/all", json={"day": "2026-11-20", "activity": "skiing"}).status_code == 422
     assert client.get("/api/plans/cardio/all").json() == {"default": "bike", "2026-11-20": "elliptical"}
+
+
+def test_several_cardio_activities(client):
+    body = {"day": "2026-11-21", "activity": [{"activity": "bike", "minutes": 30}, {"activity": "elliptical", "minutes": 25}]}
+    r = client.post("/api/plans/cardio/all", json=body).json()
+    assert r["2026-11-21"] == body["activity"]
+    assert client.post("/api/plans/cardio/all", json={"day": "2026-11-21", "activity": [{"activity": "ski", "minutes": 5}]}).status_code == 422

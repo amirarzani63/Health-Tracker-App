@@ -717,3 +717,7 @@ body.dlg-open { overflow: hidden; }
 .cardio-pick { display: flex; flex-direction: column; gap: 6px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--accent); border-radius: 12px; background: var(--accent-soft); }
 .cardio-pick label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
 .cardio-pick select { font-size: 16px; }
+
+.cp-title { font-weight: 700; }
+.cp-row { display: grid; grid-template-columns: 1fr 64px auto auto; gap: 6px; align-items: center; }
+.cp-row select, .cp-row input { font-size: 15px; min-width: 0; }
