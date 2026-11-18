@@ -203,8 +203,8 @@ function renderHero(d) {
   }
   if (ts && ts.type !== "rest") {
     if (d.today_done) {
-      el.innerHTML = `<span class="eyebrow">Today's workout</span><h2>✓ Done: ${esc(ts.title)}</h2>
-        <p class="muted">Nice work.${next ? ` Next up: <b>${esc(next.title)}</b> ${whenLabel(next)}.` : ""}</p>`;
+      el.innerHTML = `<span class="eyebrow">Today's workout</span><h2>✓ Done: ${esc(sessionTitle(ts))}</h2>
+        <p class="muted">Nice work.${next ? ` Next up: <b>${esc(sessionTitle(next))}</b> ${whenLabel(next)}.` : ""}</p>`;
       return;
     }
     const list = ts.type === "strength"
@@ -214,7 +214,7 @@ function renderHero(d) {
     const ready = d.readiness && d.readiness.level !== "unknown" && d.readiness.level !== "good"
       ? `<p class="pill ${d.readiness.level}">${esc(d.readiness.message)}</p>` : "";
     el.innerHTML = `<span class="eyebrow">${isToday ? "Today's workout" : "Planned"} · ${ts.type}</span>
-      <h2>${esc(ts.title)}</h2>${ready}${list}
+      <h2>${esc(sessionTitle(ts))}</h2>${ready}${list}
       ${isToday ? `<button class="hero-btn" data-start-session>${ts.type === "cardio" ? "Log it when done" : "Start workout"}</button>` : ""}`;
     return;
   }
@@ -222,8 +222,8 @@ function renderHero(d) {
     <h2>Rest day</h2>
     <p class="muted">Recovery is part of the plan: an easy walk and some stretching are perfect.</p>
     ${next ? `<div class="next-up"><span class="muted small">Next up · ${whenLabel(next)}</span>
-      <b>${esc(next.title)}</b><span class="muted small">${sessionSummary(next)}</span></div>
-      ${isToday ? `<button class="ghost" data-do-today="${WD[new Date().getDay()]}" data-from="${next.weekday}" data-plan="${d.plan_id}">Do ${esc(next.title)} today instead</button>` : ""}` : ""}`;
+      <b>${esc(sessionTitle(next))}</b><span class="muted small">${sessionSummary(next)}</span></div>
+      ${isToday ? `<button class="ghost" data-do-today="${WD[new Date().getDay()]}" data-from="${next.weekday}" data-plan="${d.plan_id}">Do ${esc(sessionTitle(next))} today instead</button>` : ""}` : ""}`;
 }
 
 loaders.dashboard = async () => {
@@ -781,7 +781,7 @@ async function loadTodaysPlan() {
   if (!session) return toast(plan ? "Today is a rest day in your plan" : "No active plan. Build one in Plans", true);
   const f = $("#activityForm").elements;
   if (!picker.parts.length) await loadPicker();
-  setWorkoutName(session.title);
+  setWorkoutName(`${dayName(session.weekday)} · ${sessionTitle(session)}`);
   f.start_time.value = nowLocalInput();
   $("#setRows").innerHTML = "";
   if (session.type === "cardio") {
@@ -864,17 +864,41 @@ async function exlibLookup(names) {
   return Object.fromEntries(names.map((n) => [n, exlib.cache.get(n)]));
 }
 const MUSCLE_NAMES = ExerciseInfo.MUSCLES;
+const DAY_LONG = { Sun: "Sunday", Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday" };
+const FOCUS = { chest: "Chest", front_delts: "Shoulders", side_delts: "Shoulders", rear_delts: "Shoulders", traps: "Back",
+  lats: "Back", upper_back: "Back", lower_back: "Back", biceps: "Arms", triceps: "Arms", forearms: "Arms",
+  abs: "Core", obliques: "Core", hip_flexors: "Core", glutes: "Legs", quads: "Legs", hamstrings: "Legs", adductors: "Legs", calves: "Legs" };
+// Session name from the weekday and the muscles it trains, never "Day 1".
+function sessionTitle(s) {
+  if (!s) return "";
+  const raw = (s.title || "").trim();
+  if (s.type !== "strength") return raw.replace(/^day\s*\d+\s*[-:·]?\s*/i, "") || "Cardio";
+  const count = {};
+  for (const x of s.exercises || []) for (const m of ExerciseInfo.lookup(x.exercise).primary) {
+    const g = FOCUS[m]; if (g) count[g] = (count[g] || 0) + 1;
+  }
+  const groups = Object.entries(count).sort((a, b) => b[1] - a[1]).map(([g]) => g);
+  const legs = groups.includes("Legs"), upper = groups.filter((g) => ["Chest", "Back", "Shoulders", "Arms"].includes(g));
+  let focus = groups.length >= 4 && legs && upper.length >= 2 ? "Full body"
+    : !legs && upper.length >= 3 ? "Upper body" : groups.slice(0, 2).join(" & ");
+  const custom = raw && !/^(day|workout|session)\s*\d+/i.test(raw) ? raw.replace(/\s+[A-D]$/, "") : "";
+  const nice = { upper: "Upper body", lower: "Lower body", full: "Full body", "full body": "Full body" }[custom.toLowerCase()];
+  return nice || custom || focus || "Strength";
+}
+const dayName = (wd) => DAY_LONG[wd] || wd;
+
 function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
-  const rests = exercises.map((x) => x.rest_s).filter(Boolean);
-  const rest = rests.length ? rests.sort((a, b) => rests.filter((v) => v === a).length - rests.filter((v) => v === b).length).pop() : 0;
-  return `<div class="poster${compact ? " compact" : ""}">
+  return `<div class="exlist${compact ? " compact" : ""}">
     ${title ? `<h3 class="poster-title">${esc(title)}</h3>` : ""}${sub ? `<p class="poster-sub">${sub}</p>` : ""}
-    <div class="poster-grid">${exercises.map((x) => `<button class="ptile" data-ex="${esc(x.exercise)}" data-poster="${esc(x.exercise)}">
+    ${exercises.map((x, i) => `<article class="excard" data-poster="${esc(x.exercise)}" data-compact="${compact ? 1 : ""}">
+      <header><span class="exnum">${i + 1}</span><h4>${esc(x.exercise)}</h4></header>
       <div class="pimg"><span class="pimg-ph">${esc(x.exercise.slice(0, 1))}</span></div>
-      <span class="pname">${esc(x.exercise)}</span>
-      <span class="psets">${x.sets}×${esc(x.reps)}</span>
-      <span class="pmus"></span></button>`).join("")}</div>
-    ${rest ? `<p class="poster-foot">★ ${rest} seconds rest between sets ★</p>` : ""}</div>`;
+      <dl class="exstats"><div><dt>Sets</dt><dd>${x.sets}</dd></div><div><dt>Reps</dt><dd>${esc(x.reps)}</dd></div>
+        ${x.rest_s ? `<div><dt>Rest</dt><dd>${x.rest_s}s</dd></div>` : ""}</dl>
+      <div class="exmus"></div>
+      <ol class="exsteps"></ol>
+      <button class="ghost small" data-ex="${esc(x.exercise)}">3D view &amp; full guide</button>
+    </article>`).join("")}</div>`;
 }
 async function hydratePosters(root = document) {
   const tiles = [...root.querySelectorAll("[data-poster]")].filter((t) => !t.dataset.done);
@@ -885,9 +909,13 @@ async function hydratePosters(root = document) {
     const m = info[t.dataset.poster];
     const local = ExerciseInfo.lookup(t.dataset.poster);
     const prim = m?.primary?.length ? m.primary : local.primary;
-    t.querySelector(".pmus").innerHTML = prim.slice(0, 2).map((k) => `<i>${esc(MUSCLE_NAMES[k] || k)}</i>`).join("");
+    const sec = (m?.secondary?.length ? m.secondary : local.secondary).filter((k) => !prim.includes(k));
+    t.querySelector(".exmus").innerHTML = `<span class="lbl">Works</span>${prim.map((k) => `<i class="p">${esc(MUSCLE_NAMES[k] || k)}</i>`).join("")}`
+      + (sec.length ? `<span class="lbl">Helps</span>${sec.slice(0, 3).map((k) => `<i>${esc(MUSCLE_NAMES[k] || k)}</i>`).join("")}` : "");
+    const steps = (m?.instructions?.length ? m.instructions : local.cues || []).slice(0, t.dataset.compact ? 2 : 3);
+    t.querySelector(".exsteps").innerHTML = steps.map((s) => `<li>${esc(s)}</li>`).join("");
     if (m?.images?.length) {
-      t.querySelector(".pimg").innerHTML = m.images.map((src, i) => `<img src="${src}" alt="" loading="lazy" class="${i ? "peak" : "start"}">`).join("");
+      t.querySelector(".pimg").innerHTML = m.images.map((src, i) => `<img src="${src}" alt="${esc(t.dataset.poster)} ${i ? "finish" : "start"} position" loading="lazy" class="${i ? "peak" : "start"}">`).join("");
       t.querySelector(".pimg").classList.toggle("anim", m.images.length > 1);
     } else {
       t.querySelector(".pimg").innerHTML = `<div class="pimg-map">${BodyMap.render(local.primary, local.secondary)}</div>`;
@@ -899,12 +927,12 @@ new MutationObserver(() => { clearTimeout(exlib.pending); exlib.pending = setTim
 
 // ================================================================ PLANS
 function renderPlanDay(day, compact = false) {
-  if (day.type === "rest") return `<div class="plan-day"><div class="wd">${day.weekday}</div><strong>Rest / mobility</strong><p class="muted small">Easy walk and stretching. Let your Garmin recovery time come down.</p></div>`;
-  if (day.type === "cardio") return `<div class="plan-day cardio"><div class="wd">${day.weekday} · cardio</div><strong>${esc(day.title)}</strong>
+  if (day.type === "rest") return `<div class="plan-day"><div class="wd">${dayName(day.weekday)}</div><strong>Rest / mobility</strong><p class="muted small">Easy walk and stretching. Let your Garmin recovery time come down.</p></div>`;
+  if (day.type === "cardio") return `<div class="plan-day cardio"><div class="wd">${dayName(day.weekday)} · cardio</div><strong>${esc(sessionTitle(day))}</strong>
     <p class="small">${day.minutes} min in <b>${esc(day.zone)}</b>. Set your fenix data screen to show HR zone.</p></div>`;
   const changes = !compact && day.changes?.length
     ? `<details class="small"><summary class="muted">${day.changes.length} adjustment${day.changes.length > 1 ? "s" : ""} for your goal</summary><ul class="tips">${day.changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></details>` : "";
-  return `<div class="plan-day strength"><div class="wd">${day.weekday} · strength${day.garmin_source_id ? " · from Garmin" : ""}</div><strong>${esc(day.title)}</strong>
+  return `<div class="plan-day strength"><div class="wd">${dayName(day.weekday)}${day.garmin_source_id ? " · from your Garmin workout" : ""}</div><strong>${esc(sessionTitle(day))}</strong>
     ${posterHTML("", day.exercises, { compact })}${changes}</div>`;
 }
 
@@ -917,7 +945,7 @@ function renderWeek(plan) {
     const d = new Date(today); d.setDate(today.getDate() + i);
     const wd = WD[d.getDay()];
     const session = plan.days.find((x) => x.weekday === wd && x.type !== "rest");
-    const label = i === 0 ? "Today" : i === 1 ? "Tomorrow" : d.toLocaleDateString(undefined, { weekday: "long" });
+    const label = dayName(wd) + (i === 0 ? " · today" : i === 1 ? " · tomorrow" : "");
     const date = d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
     rows.push({ wd, label, date, session, i });
   }
@@ -927,7 +955,7 @@ function renderWeek(plan) {
     <ol class="week">${rows.map((r) => `<li class="${r.i === 0 ? "is-today" : ""} ${r.session ? "" : "is-rest"}">
       <div class="when"><b>${r.label}</b><span class="muted small">${r.date}</span></div>
       ${r.session ? `<div class="what">
-          <details><summary><b>${esc(r.session.title)}</b> <span class="muted small">${sessionSummary(r.session)}</span></summary>
+          <details${r.i === 0 ? " open" : ""}><summary><b>${esc(sessionTitle(r.session))}</b> <span class="muted small">${sessionSummary(r.session)}</span></summary>
             ${renderPlanDay(r.session)}</details>
           <label class="move">Move to <select data-move-from="${r.wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options(r.wd)}</select></label>
         </div>` : `<div class="what muted">Rest</div>`}

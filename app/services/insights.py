@@ -279,7 +279,7 @@ def recommendations(db: Session, today: date | None = None) -> list[dict]:
             nxt = _next_planned_session(db, today)
             detail = f"{w} of {wg} done this week."
             if nxt:
-                detail += f" Next up: {nxt['title']} ({nxt['weekday']})."
+                detail += f" Next up on {_DAY_LONG.get(nxt['weekday'], nxt['weekday'])}: {_clean_title(nxt['title'])}."
             add("info", f"{remaining} workout{'s' if remaining > 1 else ''} to go this week", detail)
 
     steps = [d["steps"] for d in last7[:-1] if d["steps"] is not None]
@@ -447,3 +447,14 @@ def exercise_progress(db: Session, name: str) -> list[dict]:
             "volume_kg": round(sum((s.get("weight_kg") or 0) * (s.get("reps") or 0) for s in sets)),
         })
     return out
+
+
+_DAY_LONG = {"Mon": "Monday", "Tue": "Tuesday", "Wed": "Wednesday", "Thu": "Thursday",
+             "Fri": "Friday", "Sat": "Saturday", "Sun": "Sunday"}
+
+
+def _clean_title(title: str) -> str:
+    """Drop "Day 1"-style numbering; sessions are named by weekday instead."""
+    import re
+    t = re.sub(r"^\s*(day|workout|session)\s*\d+\s*[-:·]?\s*", "", title or "", flags=re.I)
+    return t or "your workout"

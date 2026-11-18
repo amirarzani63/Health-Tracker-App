@@ -552,3 +552,31 @@ details.fold[open] > summary { margin-bottom: 12px; }
 .ex-h { margin: 10px 0 6px; }
 .ex-tips { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; font-size: 14px; }
 .credit a { color: var(--accent); }
+
+/* One card per exercise: demonstration photo, then its details directly underneath */
+.exlist { display: grid; gap: 12px; margin-top: 10px; }
+@media (min-width: 760px) { .exlist { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.excard { background: var(--card, #fff); border: 1px solid var(--line, #d7dee8); border-radius: 14px; padding: 12px; display: grid; gap: 8px; min-width: 0; }
+.excard header { display: flex; align-items: center; gap: 10px; }
+.excard h4 { margin: 0; font-size: 17px; line-height: 1.2; overflow-wrap: anywhere; }
+.exnum { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #a3221b; color: #fff; font-weight: 800; font-size: 14px; }
+.excard .pimg { aspect-ratio: 4 / 3; border-radius: 10px; }
+.exstats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 0; }
+.exstats div { background: var(--chip, rgba(127,127,127,.12)); border-radius: 10px; padding: 6px; text-align: center; }
+.exstats dt { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; opacity: .7; }
+.exstats dd { margin: 0; font-weight: 800; font-size: 18px; }
+.exmus { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; font-size: 13px; }
+.exmus .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; opacity: .7; margin-right: 2px; }
+.exmus i { font-style: normal; border-radius: 99px; padding: 2px 9px; background: #ffe7c2; color: #7a4a00; }
+.exmus i.p { background: #ffd9d4; color: #8f1d16; font-weight: 700; }
+.exsteps { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.45; display: grid; gap: 4px; }
+.exsteps:empty { display: none; }
+.excard > button { justify-self: start; }
+.plan-day .wd { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; opacity: .75; }
+.week li { grid-template-columns: 1fr; gap: 6px; }
+.week .when { flex-direction: row; align-items: baseline; gap: 8px; }
+.week .when b { font-size: 18px; }
+.excard { background: var(--card-2, rgba(127,127,127,.07)); border-color: var(--border, #2a3442); }
+.week .plan-day > .wd, .week .plan-day > strong { display: none; }
+.week .plan-day { border-left: none; padding-left: 0; padding-right: 0; background: none; border: none; }
+.exsteps { font-size: 13px; } .exsteps li { border: none; padding: 0; }
