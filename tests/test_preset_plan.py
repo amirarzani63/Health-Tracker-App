@@ -24,3 +24,11 @@ def test_every_exercise_has_a_photo():
         for x in d["exercises"]:
             m = exlib.match(x["exercise"])
             assert m and m["images"], x["exercise"]
+
+
+def test_checkins(client):
+    r = client.post("/api/plans/checkins/all", json={"day": "2026-11-18", "done": True})
+    assert r.json() == {"2026-11-18": True}
+    client.post("/api/plans/checkins/all", json={"day": "2026-11-19", "done": False})
+    client.post("/api/plans/checkins/all", json={"day": "2026-11-18", "done": None})
+    assert client.get("/api/plans/checkins/all").json() == {"2026-11-19": False}

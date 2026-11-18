@@ -103,3 +103,44 @@ def move_session(plan_id: int, data: MoveIn, db: Session = Depends(get_db), garm
             result = {"errors": [str(e)]}
     plan.__dict__["garmin"] = result
     return plan
+
+
+# ---- "Did you complete today's workout?" answers, per calendar date ----
+import json as _json
+from datetime import date as _date
+
+from app.models import StoredSecret
+
+_CHECKINS = "workout_checkins"
+
+
+def _load_checkins(db: Session) -> dict:
+    row = db.get(StoredSecret, _CHECKINS)
+    try:
+        return _json.loads(row.value) if row and row.value else {}
+    except ValueError:
+        return {}
+
+
+class CheckIn(BaseModel):
+    day: _date
+    done: bool | None  # None clears the answer
+
+
+@router.get("/checkins/all")
+def get_checkins(db: Session = Depends(get_db)) -> dict:
+    return _load_checkins(db)
+
+
+@router.post("/checkins/all")
+def set_checkin(data: CheckIn, db: Session = Depends(get_db)) -> dict:
+    marks = _load_checkins(db)
+    if data.done is None:
+        marks.pop(data.day.isoformat(), None)
+    else:
+        marks[data.day.isoformat()] = data.done
+    row = db.get(StoredSecret, _CHECKINS) or StoredSecret(key=_CHECKINS)
+    row.value = _json.dumps(marks)
+    db.add(row)
+    db.commit()
+    return marks

@@ -932,7 +932,7 @@ function renderPlanDay(day, compact = false) {
 
 const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 // Month calendar: tap a day to see that day's workout underneath.
-const cal = { plan: null, month: null, sel: null };
+const cal = { plan: null, month: null, sel: null, marks: {} };
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 function sessionOn(plan, d) {
   const start = new Date(plan.created_at); start.setHours(0, 0, 0, 0);
@@ -953,8 +953,10 @@ function renderWeek(plan) {
     const d = new Date(m.getFullYear(), m.getMonth(), n), s = sessionOn(plan, d), key = iso(d);
     const kind = s ? s.type : "none";
     const icon = kind === "strength" ? "💪" : kind === "cardio" ? "🏃" : "";
+    const mark = cal.marks[key] === true ? `<span class="cal-mark yes" aria-label="done">✓</span>`
+      : cal.marks[key] === false ? `<span class="cal-mark no" aria-label="missed">✕</span>` : "";
     cells.push(`<button type="button" class="cal-cell ${kind}${key === iso(today) ? " today" : ""}${key === cal.sel ? " sel" : ""}${d < today ? " past" : ""}" data-cal-day="${key}">
-      <span class="cal-n">${n}</span><span class="cal-i">${icon}</span></button>`);
+      <span class="cal-n">${n}</span><span class="cal-i">${icon}</span>${mark}</button>`);
   }
   const sd = new Date(cal.sel + "T12:00:00"), ss = sessionOn(plan, sd);
   const wd = WD[sd.getDay()];
@@ -962,7 +964,7 @@ function renderWeek(plan) {
   const options = WD.filter((x) => x !== wd).map((x) => `<option value="${x}">${dayName(x)}</option>`).join("");
   const detail = !ss ? `<p class="muted">Outside your ${plan.weeks}-week plan.</p>`
     : ss.type === "rest" ? `<p class="muted">Rest day. An easy walk and some stretching are perfect.</p>`
-    : `${renderPlanDay(ss)}<label class="move">Move ${dayName(wd)}'s session to <select data-move-from="${wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options}</select></label>`;
+    : `${checkinHTML(cal.sel, sd)}${renderPlanDay(ss)}<label class="move">Move ${dayName(wd)}'s session to <select data-move-from="${wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options}</select></label>`;
   return `<div class="card cal-card">
     <div class="cal-head"><button type="button" class="icon" data-cal-nav="-1" aria-label="Previous month">‹</button>
       <h3>${m.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h3>
@@ -972,6 +974,25 @@ function renderWeek(plan) {
   </div>
   <div class="card cal-day"><h3>${label}</h3>${detail}</div>`;
 }
+function checkinHTML(key, d) {
+  const today = new Date(); today.setHours(23, 59, 59);
+  if (d > today) return "";
+  const v = cal.marks[key];
+  return `<div class="checkin"><span>Did you complete this workout?</span>
+    <div class="checkin-btns"><button type="button" class="ck yes${v === true ? " on" : ""}" data-checkin="1">✓ Yes</button>
+    <button type="button" class="ck no${v === false ? " on" : ""}" data-checkin="0">✕ No</button></div></div>`;
+}
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-checkin]");
+  if (!b) return;
+  const want = b.dataset.checkin === "1";
+  const done = cal.marks[cal.sel] === want ? null : want;  // tap again to clear
+  try {
+    cal.marks = await api("/api/plans/checkins/all", { method: "POST", body: { day: cal.sel, done } });
+    $("#activePlan").innerHTML = renderWeek(cal.plan);
+    if (done !== null) toast(done ? "Marked as done ✓" : "Marked as missed");
+  } catch (err) { toast(err.message, true); }
+});
 document.addEventListener("click", (e) => {
   const d = e.target.closest("[data-cal-day]"), n = e.target.closest("[data-cal-nav]");
   if (!d && !n) return;
@@ -1004,6 +1025,7 @@ loaders.plans = async () => {
   const [plans, active, watch] = await Promise.all([api("/api/plans"), api("/api/plans/active"), api("/api/garmin/watch-plan").catch(() => null)]);
   renderWatchStatus(watch);
   _watchSending = !!(watch && watch.sending);
+  cal.marks = await api("/api/plans/checkins/all").catch(() => ({}));
   $("#activePlan").innerHTML = active ? renderWeek(active) : `<div class="card hero"><span class="eyebrow">Your plan</span>
     <h2>No workout plan yet</h2><p class="muted">Build one from your Garmin workouts and goals.</p>
     <button class="hero-btn" data-goto="dashboard" data-show-setup>Set up my plan</button></div>`;

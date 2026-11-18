@@ -641,3 +641,15 @@ body.dlg-open { overflow: hidden; }
 .cal-day h3 { margin-top: 0; }
 .cal-day .move { display: flex; margin-top: 10px; }
 .cal-day .plan-day > .wd { display: none; }
+.cal-cell { position: relative; }
+.cal-mark { position: absolute; inset: 0; margin: auto; width: 82%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
+  font-size: 22px; font-weight: 900; line-height: 1; border: 3px solid; background: rgba(11, 20, 38, .55); }
+.cal-mark.yes { color: #4ade80; border-color: #4ade80; }
+.cal-mark.no { color: #f87171; border-color: #f87171; }
+.cal-cell.sel .cal-mark { background: rgba(11, 20, 38, .8); }
+.checkin { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 12px;
+  margin-bottom: 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--inset); font-weight: 600; }
+.checkin-btns { display: flex; gap: 8px; }
+.ck { padding: 8px 16px; border-radius: 99px; font-weight: 700; background: transparent; }
+.ck.yes { color: #4ade80; border: 2px solid #4ade80; } .ck.yes.on { background: #4ade80; color: #062a12; }
+.ck.no { color: #f87171; border: 2px solid #f87171; } .ck.no.on { background: #f87171; color: #3a0b0b; }
