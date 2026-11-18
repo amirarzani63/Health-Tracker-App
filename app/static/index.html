@@ -75,28 +75,12 @@
 
   <!-- FOOD -->
   <section id="view-diet" class="view">
-    <div class="card" id="pickCard">
+    <div class="card trim" id="pickCard">
       <h3>Log food</h3>
       <label class="search-label">Find a food <span class="muted small" id="foodDbCount2"></span>
         <input id="foodPick" type="search" placeholder="Search: chicken, rice, latte, kebab…" autocomplete="off">
       </label>
       <ul class="list suggestions" id="pickResults"></ul>
-      <div id="pickPanel" class="pick-panel hidden">
-        <div class="dlg-bar inline"><button type="button" class="back-btn" id="pickClose" aria-label="Back">‹ Back</button><strong id="pickName"></strong></div>
-        <p class="muted small" id="pickBase"></p>
-        <div class="amount-row">
-          <button type="button" class="step" data-step="-1" aria-label="Less">−</button>
-          <input id="pickAmount" type="number" inputmode="decimal" min="0" step="any" value="1" aria-label="Amount">
-          <button type="button" class="step" data-step="1" aria-label="More">＋</button>
-          <select id="pickUnit" aria-label="Unit"></select>
-        </div>
-        <div class="quick-amounts" id="pickQuick"></div>
-        <div class="pick-result" id="pickResult"></div>
-        <div class="row">
-          <label>Meal <select id="pickMeal"><option>breakfast</option><option>lunch</option><option>dinner</option><option>snack</option></select></label>
-          <button type="button" id="pickAdd">Add to log</button>
-        </div>
-      </div>
     </div>
 
     <div class="card" id="waterCard">
@@ -148,12 +132,29 @@
     </div>
 
     <div class="grid two">
-      <details class="card fold">
-        <summary><h3>Add food manually</h3></summary>
-        <label>Search the food database <span class="muted small" id="foodDbCount"></span>
+      <details class="card fold" id="logFoodCard" open>
+        <summary><h3>🔎 Log food</h3></summary>
+        <label>Search for a food <span class="muted small">(tap one to pick how much)</span> <span class="muted small" id="foodDbCount"></span>
           <input id="foodSearch" placeholder="e.g. chicken, oats, kebab, latte" autocomplete="off">
         </label>
         <ul class="list suggestions" id="foodResults"></ul>
+        <div id="pickPanel" class="pick-panel hidden">
+        <div class="dlg-bar inline"><button type="button" class="back-btn" id="pickClose" aria-label="Back">‹ Back</button><strong id="pickName"></strong></div>
+        <p class="muted small" id="pickBase"></p>
+        <div class="amount-row">
+          <button type="button" class="step" data-step="-1" aria-label="Less">−</button>
+          <input id="pickAmount" type="number" inputmode="decimal" min="0" step="any" value="1" aria-label="Amount">
+          <button type="button" class="step" data-step="1" aria-label="More">＋</button>
+          <select id="pickUnit" aria-label="Unit"></select>
+        </div>
+        <div class="quick-amounts" id="pickQuick"></div>
+        <div class="pick-result" id="pickResult"></div>
+        <div class="row">
+          <label>Meal <select id="pickMeal"><option>breakfast</option><option>lunch</option><option>dinner</option><option>snack</option></select></label>
+          <button type="button" id="pickAdd">Add to log</button>
+        </div>
+      </div>
+        <h4 class="manual-h">Not in the list? Enter it yourself</h4>
         <form id="foodForm" class="form">
           <div class="row">
             <label>Meal

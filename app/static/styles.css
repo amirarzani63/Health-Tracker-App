@@ -695,3 +695,4 @@ body.dlg-open { overflow: hidden; }
 .per-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 6px; margin: 6px 0; }
 .per-grid > span { display: flex; flex-direction: column; background: var(--inset); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; color: var(--text); }
 .per-grid b { font-size: 16px; } .per-grid small { color: var(--muted); font-size: 11px; }
+.manual-h { margin: 16px 0 6px; padding-top: 12px; border-top: 1px solid var(--border); }

@@ -535,7 +535,7 @@ $("#pickAdd").addEventListener("click", (e) => withBusy(e.target, async () => {
     calories: Math.round(t.calories), protein_g: +t.protein_g.toFixed(1), carbs_g: +t.carbs_g.toFixed(1),
     fat_g: +t.fat_g.toFixed(1), fiber_g: +t.fiber_g.toFixed(1) } });
   toast(`Logged ${f.food || f.name} · ${fmt(t.calories)} kcal`);
-  $("#pickPanel").classList.add("hidden"); $("#foodPick").value = ""; pick.food = null; pick.lastGrams = null;
+  $("#pickPanel").classList.add("hidden"); $("#foodPick").value = ""; $("#foodSearch").value = ""; pick.food = null; pick.lastGrams = null;
   loaders.diet();
 }));
 let pickTimer;
@@ -560,8 +560,8 @@ $("#foodSearch").addEventListener("input", (e) => {
   searchTimer = setTimeout(async () => {
     const items = await api(`/api/food-library?q=${encodeURIComponent(q)}`);
     $("#foodResults").innerHTML = items.slice(0, 8).map((f, i) =>
-      `<li data-food-idx="${i}" tabindex="0"><span>${f.custom ? "★ " : ""}${esc(U.food(f.name))}</span><span class="muted small">${f.calories} kcal · P${f.protein_g}</span></li>`).join("")
-      || `<li class="muted small">No matches. Enter it manually below, or use the calorie counter above.</li>`;
+      `<li data-food-idx="${i}" tabindex="0"><span>${f.custom ? "★ " : ""}${esc(U.food(f.name))}</span><span class="muted small">${fmt(f.calories)} kcal per serving</span></li>`).join("")
+      || `<li class="muted small">Not found. Enter it yourself below and the app will remember it.</li>`;
     $("#foodResults")._items = items;
   }, 200);
 });
@@ -569,11 +569,8 @@ $("#foodResults").addEventListener("click", (e) => {
   const li = e.target.closest("[data-food-idx]");
   if (!li) return;
   const f = $("#foodResults")._items[li.dataset.foodIdx];
-  const form = $("#foodForm");
-  ["name", "calories", "protein_g", "carbs_g", "fat_g", "fiber_g"].forEach((k) => (form.elements[k].value = f[k] ?? 0));
-  form._fromDb = true;
   $("#foodResults").innerHTML = "";
-  $("#foodSearch").value = "";
+  openPick(f); pick.lastGrams = pickTotals().grams;
 });
 $("#foodForm").elements.name.addEventListener("input", () => ($("#foodForm")._fromDb = false));
 api("/api/food-db/stats").then((s) => { for (const id of ["#foodDbCount", "#foodDbCount2"]) $(id).textContent = `${s.builtin} foods${s.mine ? ` + ${s.mine} of yours` : ""}`; }).catch(() => {});
