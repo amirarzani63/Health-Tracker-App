@@ -954,7 +954,7 @@ function renderWeek(plan) {
           <label class="move">Move to <select data-move-from="${r.wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options(r.wd)}</select></label>
         </div>` : `<div class="what muted">Rest</div>`}
     </li>`).join("")}</ol>
-    <p class="muted small">Moving a session changes it every week${watchNote()}.</p>
+    <p class="trim muted small">Moving a session changes it every week${watchNote()}.</p>
     <details class="small"><summary class="muted">How the plan progresses</summary><ul class="tips">${plan.progression.map((p) => `<li><b>Week ${p.week}:</b> ${esc(p.note)}</li>`).join("")}</ul></details>
   </div>`;
 }
@@ -1069,7 +1069,7 @@ $$("#rangeSeg button").forEach((b) => b.addEventListener("click", () => {
 }));
 
 loaders.progress = async () => {
-  api("/api/recommendations").then((r) => { $("#dashRecs").innerHTML = renderRecs(r); }).catch(() => {});
+  api("/api/recommendations").then((r) => { $("#dashRecs").innerHTML = renderRecs(r.slice(0, 2)); }).catch(() => {});
   const days = state.progressDays;
   const weeks = Math.max(4, Math.ceil(days / 7));
   const [series, weekly, goals, exercises] = await Promise.all([

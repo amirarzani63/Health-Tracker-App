@@ -103,7 +103,7 @@
 
     <div class="card" id="aiCard">
       <h3>Or type a whole meal</h3>
-      <p class="muted small">Type what you ate with amounts, e.g. "2 eggs, 150g chicken and a banana". You'll check the numbers before anything is logged.</p>
+      <p class="trim muted small">Type what you ate with amounts, e.g. "2 eggs, 150g chicken and a banana". You'll check the numbers before anything is logged.</p>
       <form id="aiForm" class="form">
         <label>What did you eat?
           <textarea name="description" rows="2" placeholder="e.g. 2 scrambled eggs, a slice of sourdough with butter, and a latte with oat milk"></textarea>
@@ -131,7 +131,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="trim card">
       <h3>Today vs. targets</h3>
       <div id="macroBars"></div>
       <p class="muted small" id="targetSource"></p>
@@ -159,7 +159,7 @@
             <label>Fat g <input name="fat_g" type="number" step="0.1" min="0" value="0"></label>
             <label>Fibre g <input name="fiber_g" type="number" step="0.1" min="0" value="0"></label>
           </div>
-          <p class="muted small">Values are per serving; they're multiplied by servings when saved.</p>
+          <p class="trim muted small">Values are per serving; they're multiplied by servings when saved.</p>
           <label class="check"><input type="checkbox" name="remember" checked> Save to my foods, so search and the calorie counter know it next time</label>
           <button type="submit">Add food</button>
         </form>
@@ -170,7 +170,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="trim card">
       <h3>Meal ideas for what's left today</h3>
       <ul id="dietTips" class="tips"></ul>
       <div id="mealSuggestions" class="grid three"></div>
@@ -180,7 +180,7 @@
   <!-- WORKOUTS (plan + log + history) -->
   <section id="view-exercise" class="view">
     <div id="activePlan"></div>
-      <details class="card fold" id="exGuide">
+      <details class="trim card fold" id="exGuide">
         <summary><h3>Exercise guide</h3></summary>
         <p class="muted small">Every exercise with a moving demonstration and the muscles it works. Tap one to see it.</p>
         <div class="row">
@@ -223,7 +223,7 @@
           <label>Notes <textarea name="notes" rows="2"></textarea></label>
           <button type="submit">Save workout</button>
         </form>
-        <p class="muted small">Workouts recorded on your fenix appear here automatically after a Garmin sync.</p>
+        <p class="trim muted small">Workouts recorded on your fenix appear here automatically after a Garmin sync.</p>
       </details>
       <div class="card">
         <h3>Activity history</h3>
@@ -290,11 +290,11 @@
       <div class="chart"><canvas id="calChart" role="img" aria-label="Daily calories eaten compared with target"></canvas></div>
       <p class="muted small" id="calSummary"></p>
     </div>
-    <div class="card">
+    <div class="trim card">
       <h3>Macros per day (grams)</h3>
       <div class="chart"><canvas id="macroChart" role="img" aria-label="Daily protein, carbs and fat in grams"></canvas></div>
     </div>
-    <div class="card">
+    <div class="trim card">
       <h3>Weekly summary</h3>
       <div class="table-wrap"><table id="weeklyTable"><thead><tr>
         <th>Week of</th><th>Days logged</th><th>Avg kcal</th><th>Target</th><th>On target</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Fibre</th><th>Workouts</th><th>Active min</th><th>Avg steps</th><th>Sleep</th><th>Weight</th>
@@ -318,7 +318,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="trim card">
       <div class="row-between">
         <h3>Strength progress</h3>
         <label class="inline">Exercise <select id="exercisePick"></select></label>
@@ -329,8 +329,8 @@
 
     <div class="grid three">
       <div class="card"><h3>Steps</h3><div class="chart small"><canvas id="stepsChart" role="img" aria-label="Daily steps"></canvas></div></div>
-      <div class="card"><h3>Resting heart rate</h3><div class="chart small"><canvas id="rhrChart" role="img" aria-label="Resting heart rate"></canvas></div></div>
-      <div class="card"><h3>Sleep (h)</h3><div class="chart small"><canvas id="sleepChart" role="img" aria-label="Hours of sleep"></canvas></div></div>
+      <div class="trim card"><h3>Resting heart rate</h3><div class="chart small"><canvas id="rhrChart" role="img" aria-label="Resting heart rate"></canvas></div></div>
+      <div class="trim card"><h3>Sleep (h)</h3><div class="chart small"><canvas id="sleepChart" role="img" aria-label="Hours of sleep"></canvas></div></div>
     </div>
   </section>
 
@@ -344,7 +344,7 @@
         </details>
         <h3>Goals</h3>
         <form id="goalsForm" class="form">
-          <p class="muted small">Leave nutrition targets blank to have them calculated from your profile (and your Garmin burn on synced days).</p>
+          <p class="trim muted small">Leave nutrition targets blank to have them calculated from your profile (and your Garmin burn on synced days).</p>
           <div class="row">
             <label>Calories / day <input name="calorie_target" type="number" min="800" max="8000" placeholder="Auto"></label>
             <label>Protein g <input name="protein_target_g" type="number" min="0" placeholder="Auto"></label>
@@ -409,7 +409,7 @@
     <div class="grid two">
       <div class="card" id="remindersCard">
         <h3>Reminders</h3>
-        <p class="muted small">Reminders only appear when they're still relevant: no "log lunch" if lunch is already logged, no workout nudge on rest days.</p>
+        <p class="trim muted small">Reminders only appear when they're still relevant: no "log lunch" if lunch is already logged, no workout nudge on rest days.</p>
         <div id="notifyState" class="small"></div>
         <form id="remindersForm" class="form">
           <div id="reminderRows"></div>
@@ -441,10 +441,10 @@
           </div>
           <pre id="syncResult" class="small"></pre>
         </div>
-        <p class="small muted">Synced: workouts (with heart rate, Training Effect, load), steps, calories burned, resting/min/max heart rate, stress, Body Battery, sleep and Index-scale weigh-ins. The app syncs automatically when you open it (if the last sync is over an hour old) and every 6 hours in the background.</p>
+        <p class="trim small muted">Synced: workouts (with heart rate, Training Effect, load), steps, calories burned, resting/min/max heart rate, stress, Body Battery, sleep and Index-scale weigh-ins. The app syncs automatically when you open it (if the last sync is over an hour old) and every 6 hours in the background.</p>
       </div>
     </div>
-    <div class="card" id="stravaCard">
+    <div class="trim card" id="stravaCard">
       <h3>Strava</h3>
       <div id="stravaBody"><p class="muted">Checking…</p></div>
     </div>
@@ -456,7 +456,7 @@
         <button type="button" class="ghost" data-theme-choice="auto">Match my phone</button>
       </div>
     </div>
-    <p class="muted small app-version">App version {{APP_VERSION}}</p>
+    <p class="trim muted small app-version">App version {{APP_VERSION}}</p>
     <div class="card hidden" id="accountCard">
         <div class="row-between"><h3>Account</h3><button type="button" class="ghost small-btn" id="signOut">Sign out</button></div>
         <p class="muted small" style="margin:0">You stay signed in on this device for 90 days. Change the password with the <code>APP_PASSWORD</code> setting on your host; that signs out every device.</p>
