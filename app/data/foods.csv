@@ -417,3 +417,10 @@ poulet rouge rouge bowl|rouge bowl|rouge bowl 1 flavour,1 bowl (your usual),0,11
 poulet rouge rouge bowl with 2 extra chicken|rouge bowl with 2 extra chicken fillets|rouge bowl with extra chicken,1 bowl + 2 extra fillets,0,1306,82.5,123,55.5,14,
 poulet rouge rouge bowl with 2 extra chicken and extra tzatziki|rouge bowl with 2 extra chicken fillets and extra tzatziki,1 bowl + 2 extra fillets + extra tzatziki,0,1368,84,125,61,14,
 poulet rouge extra tzatziki|extra tzatziki,1 extra tzatziki,0,62,1.5,2,5.5,0,
+# Sushi lunch (Nov 2026): estimates from the user's breakdown
+dynamite roll|dynamite maki,1 roll,0,500,18,75,14,0,fish
+sushi sauces and fried onions|spicy mayo and crispy onions,1 serving,0,150,0,10,12,0,
+california roll 6 pieces|california roll (6),6 pieces,0,230,7,38,6,0,fish
+salmon nigiri 3 pieces|salmon nigiri (3),3 pieces,0,180,12,22,5,0,fish
+salmon sashimi 100 g|salmon sashimi,about 100 g,100,200,20,0,13,0,fish
+sushi lunch combo|my sushi lunch|dynamite california nigiri sashimi lunch,1 meal,0,1260,57,145,50,0,fish
