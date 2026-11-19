@@ -527,12 +527,13 @@
     <h3>Who's tracking?</h3>
     <p class="small muted">Each person has their own dashboard, food log, workouts and plan.</p>
     <div id="whoList" class="who-list"></div>
+    <button type="button" id="whoEditBtn">✎ View / edit my profile</button>
     <button type="button" class="ghost" id="whoAddBtn">＋ Add a person</button>
     <button type="button" class="ghost" id="whoClose">Back</button>
   </div>
   <form id="whoAddForm" class="form hidden">
-    <h3>Add a person</h3>
-    <p class="small muted">Their calories, protein, water and workout plan are worked out from these answers.</p>
+    <h3 id="whoFormTitle">Add a person</h3>
+    <p class="small muted" id="whoFormNote">Their calories, protein, water and workout plan are worked out from these answers.</p>
     <label>Name <input name="name" maxlength="60" required></label>
     <div class="row">
       <label>Sex <select name="sex"><option value="male">Male</option><option value="female">Female</option></select></label>
@@ -553,7 +554,7 @@
     </div>
     <label>How they eat <select name="diet_type"><option value="omnivore">No restrictions</option><option value="vegetarian">Vegetarian</option><option value="vegan">Vegan</option><option value="pescatarian">Pescatarian</option></select></label>
     <div class="row actions">
-      <button type="submit">Create profile</button>
+      <button type="submit" id="whoSubmit">Create profile</button>
       <button type="button" class="ghost" id="whoAddBack">Back</button>
     </div>
   </form>

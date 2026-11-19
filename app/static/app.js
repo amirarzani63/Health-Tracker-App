@@ -1779,7 +1779,30 @@ async function loadWho(openIfUnchosen = true) {
 }
 $("#whoBtn").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); $("#whoDialog").showModal(); });
 $("#whoClose").addEventListener("click", () => $("#whoDialog").close());
-$("#whoAddBtn").addEventListener("click", () => { $(".who-pick").classList.add("hidden"); $("#whoAddForm").classList.remove("hidden"); $("#whoAddForm").elements.name.focus(); });
+const FOCUS_OF = { lose: "lose_weight", gain: "build_muscle", maintain: "stay_healthy" };
+const GOAL_OF = { lose_weight: "lose", build_muscle: "gain" };
+function openWhoForm(mode) {
+  const f = $("#whoAddForm");
+  f.dataset.mode = mode; f.reset();
+  $("#whoFormTitle").textContent = mode === "edit" ? "My profile" : "Add a person";
+  $("#whoFormNote").textContent = mode === "edit"
+    ? "Fix anything that's wrong. Your calories, protein and water targets update automatically when you save."
+    : "Their calories, protein, water and workout plan are worked out from these answers.";
+  $("#whoSubmit").textContent = mode === "edit" ? "Save changes" : "Create profile";
+  $(".who-pick").classList.add("hidden"); f.classList.remove("hidden");
+}
+$("#whoAddBtn").addEventListener("click", () => { openWhoForm("add"); $("#whoAddForm").elements.name.focus(); });
+$("#whoEditBtn").addEventListener("click", async () => {
+  openWhoForm("edit");
+  const f = $("#whoAddForm").elements;
+  try {
+    const [p, g] = await Promise.all([api("/api/profile"), api("/api/goals")]);
+    f.name.value = p.name || ""; f.sex.value = p.sex; f.birth_year.value = p.birth_year;
+    f.height_cm.value = Math.round(p.height_cm * 10) / 10; f.weight_kg.value = Math.round(p.weight_kg * 10) / 10;
+    f.focus.value = FOCUS_OF[p.goal] || "stay_healthy"; f.target_weight_kg.value = g.target_weight_kg ?? "";
+    f.experience.value = p.experience; f.equipment.value = p.equipment; f.diet_type.value = p.diet_type;
+  } catch (err) { toast(err.message, true); }
+});
 $("#whoAddBack").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); });
 $("#whoList").addEventListener("click", async (e) => {
   const b = e.target.closest("[data-who]");
@@ -1795,6 +1818,20 @@ $("#whoAddForm").addEventListener("submit", async (e) => {
   const f = e.target, btn = $("button[type=submit]", f), body = formData(f);
   for (const k of ["birth_year", "height_cm", "weight_kg"]) body[k] = Number(body[k]);
   body.target_weight_kg = body.target_weight_kg ? Number(body.target_weight_kg) : null;
+  if (f.dataset.mode === "edit") {
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      const [p, g] = await Promise.all([api("/api/profile"), api("/api/goals")]);
+      await api("/api/profile", { method: "PUT", body: { ...p, name: body.name, sex: body.sex, birth_year: body.birth_year,
+        height_cm: body.height_cm, weight_kg: body.weight_kg, goal: GOAL_OF[body.focus] || "maintain",
+        experience: body.experience, equipment: body.equipment, diet_type: body.diet_type } });
+      const { saved, ...goals } = g;
+      await api("/api/goals", { method: "PUT", body: { ...goals, target_weight_kg: body.target_weight_kg } });
+      toast("Profile saved ✓");
+      location.reload();
+    } catch (err) { toast(err.message, true); btn.disabled = false; btn.textContent = "Save changes"; }
+    return;
+  }
   btn.disabled = true; btn.textContent = "Setting up their plan…";
   try {
     const r = await api("/api/users", { method: "POST", body });
