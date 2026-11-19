@@ -67,8 +67,10 @@ def add_user(data: NewUser, request: Request, response: Response):
 
     with SessionLocal() as db:
         _ensure_first(db)
-        n = len(db.scalars(select(AppUser)).all())
-        u = AppUser(name=data.name.strip(), color=COLORS[n % len(COLORS)])
+        ids = db.scalars(select(AppUser.id)).all()
+        n = len(ids)
+        # explicit id: profile 1 was inserted with a fixed id, so Postgres' counter can't be trusted
+        u = AppUser(id=max(ids) + 1, name=data.name.strip(), color=COLORS[n % len(COLORS)])
         db.add(u)
         db.commit()
         uid = u.id
