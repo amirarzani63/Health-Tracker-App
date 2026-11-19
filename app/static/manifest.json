@@ -3,8 +3,8 @@
   "short_name": "Health",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0b1426",
-  "theme_color": "#0b1426",
+  "background_color": "#050816",
+  "theme_color": "#050816",
   "icons": [
     {
       "src": "/static/icon-192.png?v=2",

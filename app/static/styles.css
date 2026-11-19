@@ -735,3 +735,61 @@ body.dlg-open { overflow: hidden; }
 .cl-preview img { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; }
 
 .warn-text { color: var(--warn); }
+
+/* ================= Neon theme (dark mode): bright glowing accents on deep navy ================= */
+:root, :root[data-theme="dark"] {
+  --bg: #050816; --card: #0b1230; --inset: #070c22; --raised: #111a40;
+  --text: #f2f6ff; --muted: #8fa6d6; --border: #1f2f66;
+  --accent: #ff7a1a; --accent-strong: #ffa04d; --accent-soft: #2a1405; --on-accent: #1a0800;
+  --neon-cyan: #00e5ff; --neon-green: #39ff88; --neon-pink: #ff3df0; --neon-yellow: #ffe53d;
+  --series-1: #00e5ff; --series-2: #ffe53d; --series-3: #39ff88; --fiber: #b98cff;
+  --warn: #ffe53d; --bad: #ff3b5c;
+  --g-face-1: #0f1a45; --g-face-2: #03050f; --g-bezel: #1f2f66; --g-needle: #ff7a1a; --g-glow: #00e5ff;
+  --shadow: 0 0 0 1px rgba(0, 229, 255, .08), 0 0 18px rgba(0, 229, 255, .07), 0 10px 28px rgba(0, 0, 0, .55);
+}
+:root:not([data-theme="light"]) body { background: radial-gradient(1200px 600px at 50% -10%, #0d1a4d 0%, #050816 60%) fixed, #050816; }
+:root:not([data-theme="light"]) .card, :root:not([data-theme="light"]) .chip, :root:not([data-theme="light"]) .excard,
+:root:not([data-theme="light"]) .ibox { border-color: rgba(0, 229, 255, .22); box-shadow: var(--shadow); }
+:root:not([data-theme="light"]) button:not(.ghost):not(.icon):not(.step):not(.ck):not(.mp-day):not(.cal-cell):not([data-seg]):not([data-view]):not(.back-btn):not(.chip-btn) {
+  box-shadow: 0 0 10px rgba(255, 122, 26, .65), 0 0 24px rgba(255, 122, 26, .35); text-shadow: none; }
+:root:not([data-theme="light"]) button.ghost, :root:not([data-theme="light"]) .back-btn {
+  border-color: var(--accent); color: var(--accent-strong); box-shadow: 0 0 8px rgba(255, 122, 26, .45), inset 0 0 8px rgba(255, 122, 26, .15); text-shadow: 0 0 6px rgba(255, 122, 26, .7); }
+:root:not([data-theme="light"]) nav button.active { background: rgba(255, 122, 26, .14); color: #ffb070;
+  text-shadow: 0 0 8px rgba(255, 122, 26, .9); box-shadow: 0 0 12px rgba(255, 122, 26, .45), inset 0 0 10px rgba(255, 122, 26, .2); }
+:root:not([data-theme="light"]) h3, :root:not([data-theme="light"]) .ibox-title { text-shadow: 0 0 10px rgba(0, 229, 255, .35); }
+:root:not([data-theme="light"]) .ibox-big.good, :root:not([data-theme="light"]) .cal-mark.yes { color: var(--neon-green); text-shadow: 0 0 10px rgba(57, 255, 136, .8); }
+:root:not([data-theme="light"]) .ibox-big.bad, :root:not([data-theme="light"]) .cal-mark.no { color: #ff3b5c; text-shadow: 0 0 10px rgba(255, 59, 92, .8); }
+:root:not([data-theme="light"]) .cal-mark.yes { border-color: var(--neon-green); box-shadow: 0 0 12px rgba(57, 255, 136, .7); }
+:root:not([data-theme="light"]) .cal-mark.no { border-color: #ff3b5c; box-shadow: 0 0 12px rgba(255, 59, 92, .7); }
+:root:not([data-theme="light"]) .ibar-fill.good { background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
+:root:not([data-theme="light"]) .ibar-fill.bad { background: #ff3b5c; box-shadow: 0 0 10px #ff3b5c; }
+:root:not([data-theme="light"]) .ibar-fill.eat { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+:root:not([data-theme="light"]) .ibar-fill.burn { background: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
+:root:not([data-theme="light"]) .mfill { box-shadow: 0 0 8px currentColor; }
+:root:not([data-theme="light"]) .glass.full { background: linear-gradient(#b8f7ff, #00c8ff); box-shadow: 0 0 10px rgba(0, 229, 255, .8); border-color: var(--neon-cyan); }
+:root:not([data-theme="light"]) .glass { border-color: var(--neon-cyan); }
+:root:not([data-theme="light"]) .exnum { background: var(--accent); box-shadow: 0 0 10px rgba(255, 122, 26, .9); }
+:root:not([data-theme="light"]) .cal-cell.today { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 229, 255, .7); }
+:root:not([data-theme="light"]) .cal-cell.sel { background: var(--accent); box-shadow: 0 0 14px rgba(255, 122, 26, .9); }
+:root:not([data-theme="light"]) .cal-cell.strength { background: rgba(255, 122, 26, .12); }
+:root:not([data-theme="light"]) .cal-cell.cardio { background: rgba(0, 229, 255, .12); }
+:root:not([data-theme="light"]) .exmus i.p { background: rgba(255, 61, 240, .16); color: #ff8af6; box-shadow: 0 0 8px rgba(255, 61, 240, .45); }
+:root:not([data-theme="light"]) .exmus i { background: rgba(255, 229, 61, .12); color: var(--neon-yellow); }
+:root:not([data-theme="light"]) .g-progress { filter: drop-shadow(0 0 6px var(--g-glow)) drop-shadow(0 0 2px var(--g-glow)); }
+:root:not([data-theme="light"]) .g-progress.good { stroke: var(--neon-green); filter: drop-shadow(0 0 7px var(--neon-green)); }
+:root:not([data-theme="light"]) .g-progress.bad { stroke: #ff3b5c; filter: drop-shadow(0 0 7px #ff3b5c); }
+:root:not([data-theme="light"]) .zone-good { stroke: var(--neon-green); filter: drop-shadow(0 0 4px var(--neon-green)); }
+:root:not([data-theme="light"]) .zone-red { stroke: #ff3b5c; filter: drop-shadow(0 0 4px #ff3b5c); }
+:root:not([data-theme="light"]) .g-needle { filter: drop-shadow(0 0 5px #ff7a1a); }
+:root:not([data-theme="light"]) .g-readout { filter: drop-shadow(0 0 6px currentColor); }
+:root:not([data-theme="light"]) .burn, :root:not([data-theme="light"]) .mp-meal { text-shadow: 0 0 8px rgba(255, 122, 26, .6); }
+:root:not([data-theme="light"]) input:focus, :root:not([data-theme="light"]) select:focus, :root:not([data-theme="light"]) textarea:focus {
+  border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 229, 255, .6); outline: none; }
+:root:not([data-theme="light"]) .unit-seg button.on, :root:not([data-theme="light"]) .mp-day.on { box-shadow: 0 0 12px rgba(255, 122, 26, .8); }
+:root:not([data-theme="light"]) .ck.yes.on { box-shadow: 0 0 12px rgba(57, 255, 136, .8); background: var(--neon-green); }
+:root:not([data-theme="light"]) .ck.no.on { box-shadow: 0 0 12px rgba(255, 59, 92, .8); background: #ff3b5c; }
+:root:not([data-theme="light"]) .topbar { background: rgba(5, 8, 22, .85); border-bottom: 1px solid rgba(0, 229, 255, .25); box-shadow: 0 0 18px rgba(0, 229, 255, .12); }
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-theme="light"]) .cal-cell.today { animation: neonpulse 2.4s ease-in-out infinite; }
+  @keyframes neonpulse { 50% { box-shadow: 0 0 18px rgba(0, 229, 255, 1); } }
+}
