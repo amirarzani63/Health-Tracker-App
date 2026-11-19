@@ -428,13 +428,23 @@ loaders.diet = async () => {
     estimate: `Estimated from your profile: ~${fmt(t.tdee)} kcal/day burned. Connect Garmin for measured burn, or set your own target in Settings.`,
   }[t.source];
 
-  const byMeal = { breakfast: [], lunch: [], dinner: [], snack: [] };
-  foods.forEach((f) => byMeal[f.meal].push(f));
+  const byMeal = { breakfast: [], lunch: [], snack: [], dinner: [] };
+  foods.forEach((f) => (byMeal[f.meal] || byMeal.snack).push(f));
+  const icons = { breakfast: "🌅", lunch: "🥗", snack: "🍎", dinner: "🍽" };
+  const sum = (items, k) => items.reduce((a, f) => a + (f[k] || 0), 0);
   $("#foodLog").innerHTML = Object.entries(byMeal).map(([meal, items]) => `
-    <h4><span style="text-transform:capitalize">${meal}</span> <span class="muted small">${fmt(items.reduce((a, f) => a + f.calories, 0))} kcal</span></h4>
-    <ul class="list">${items.map((f) => `<li><span>${esc(U.food(f.name))}${f.servings !== 1 ? ` ×${f.servings}` : ""}</span>
-      <span class="muted small">${fmt(f.calories)} kcal · P${fmt(f.protein_g)} C${fmt(f.carbs_g)} F${fmt(f.fat_g)}
-      <button class="icon" data-del-food="${f.id}" title="Delete" aria-label="Delete ${esc(f.name)}">✕</button></span></li>`).join("") || `<li class="muted small">Nothing logged</li>`}</ul>`).join("");
+    <section class="meal-box">
+      <h4 class="meal-title">${icons[meal]} <span style="text-transform:capitalize">${meal}</span></h4>
+      ${items.length ? `<ul class="meal-items">${items.map((f) => `<li>
+        <div class="mi-top"><span class="mi-name">${esc(U.food(f.name))}${f.servings !== 1 ? ` <span class="muted">×${f.servings}</span>` : ""}</span>
+          <button class="icon" data-del-food="${f.id}" title="Delete" aria-label="Delete ${esc(f.name)}">✕</button></div>
+        <div class="mi-nums"><b>${fmt(f.calories)} kcal</b><span>Protein ${fmt(f.protein_g)} g</span><span>Carbs ${fmt(f.carbs_g)} g</span><span>Fat ${fmt(f.fat_g)} g</span></div>
+      </li>`).join("")}</ul>` : `<p class="muted small meal-empty">Nothing logged yet</p>`}
+      <div class="meal-total"><span>Total</span><b>${fmt(sum(items, "calories"))} kcal</b>
+        <small>P ${fmt(sum(items, "protein_g"))} g · C ${fmt(sum(items, "carbs_g"))} g · F ${fmt(sum(items, "fat_g"))} g</small></div>
+    </section>`).join("")
+    + `<div class="meal-total day"><span>Today's total</span><b>${fmt(sum(foods, "calories"))} kcal</b>
+        <small>P ${fmt(sum(foods, "protein_g"))} g · C ${fmt(sum(foods, "carbs_g"))} g · F ${fmt(sum(foods, "fat_g"))} g</small></div>`;
 
   $("#dietTips").innerHTML = sugg.tips.map((x) => `<li>${esc(x)}</li>`).join("");
   const r = sugg.remaining;
