@@ -1479,6 +1479,7 @@ $("#profileForm").addEventListener("submit", async (e) => {
       allergies: d.allergies.split(",").map((s) => s.trim()).filter(Boolean),
     } });
     toast("Profile saved");
+    applySex(d.sex); loadWho(false);
   } catch (err) { toast(err.message, true); }
 });
 
@@ -1754,6 +1755,14 @@ api("/api/profile").then((p) => {
   if ((p.units === "imperial") !== U.imperial) { U.set(p.units === "imperial"); show(state.view || "dashboard"); }
 }).catch(() => {});
 // ---------------------------------------------------------------- people: who's tracking?
+// colour theme follows the person: men share one look (navy + orange), women share another (plum + pink)
+function applySex(sex) {
+  const f = sex === "female";
+  document.documentElement.toggleAttribute("data-sex", f);
+  if (f) document.documentElement.setAttribute("data-sex", "female");
+  try { localStorage.setItem("sex", f ? "female" : "male"); } catch {}
+  if (document.documentElement.getAttribute("data-theme") !== "light") $('meta[name="theme-color"]')?.setAttribute("content", f ? "#0e0618" : "#050816");
+}
 async function loadWho(openIfUnchosen = true) {
   let r;
   try { r = await api("/api/users"); } catch { return; }
@@ -1761,6 +1770,7 @@ async function loadWho(openIfUnchosen = true) {
   try { localStorage.setItem("who", String(r.current)); } catch {}
   if (String(r.current) !== WHO) { location.reload(); return; }
   $("#whoBtn .who-name").textContent = me.name;
+  applySex(me.sex);
   $("#whoBtn .who-dot").style.background = me.color;
   $("#whoBtn .who-dot").textContent = me.name.slice(0, 1).toUpperCase();
   $("#whoList").innerHTML = r.users.map((u) => `<button type="button" class="who-item${u.current ? " on" : ""}" data-who="${u.id}">

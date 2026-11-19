@@ -24,8 +24,13 @@ def _ensure_first(db) -> None:
         db.commit()
 
 
+def _sex(uid: int) -> str:
+    with session_for(uid) as udb:
+        return insights.get_profile(udb).sex or "male"
+
+
 def _out(u: AppUser, current: int) -> dict:
-    return {"id": u.id, "name": u.name, "color": u.color, "current": u.id == current}
+    return {"id": u.id, "name": u.name, "color": u.color, "current": u.id == current, "sex": _sex(u.id)}
 
 
 @router.get("")
