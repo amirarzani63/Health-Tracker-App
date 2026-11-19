@@ -443,8 +443,20 @@ loaders.diet = async () => {
       <div class="meal-total"><span>Total</span><b>${fmt(sum(items, "calories"))} kcal</b>
         <small>P ${fmt(sum(items, "protein_g"))} g · C ${fmt(sum(items, "carbs_g"))} g · F ${fmt(sum(items, "fat_g"))} g</small></div>
     </section>`).join("")
-    + `<div class="meal-total day"><span>Today's total</span><b>${fmt(sum(foods, "calories"))} kcal</b>
-        <small>P ${fmt(sum(foods, "protein_g"))} g · C ${fmt(sum(foods, "carbs_g"))} g · F ${fmt(sum(foods, "fat_g"))} g</small></div>`;
+    + (() => {
+      const eaten = sum(foods, "calories"), limit = t.calories, over = eaten > limit, left = Math.round(limit - eaten);
+      const msg = !foods.length ? "Log your first meal to start the day."
+        : over ? `⚠️ You're ${fmt(eaten - limit)} calories over your ${fmt(limit)} limit. Don't give up: take an extra walk and keep the next meal light. Tomorrow is a fresh start! 💪`
+        : left <= limit * 0.1 ? `👏 Good job! Only ${fmt(left)} calories left. You're right on target, so keep it light for the rest of the day.`
+        : `✅ Good job, you're within your limit! ${fmt(left)} calories left for today. Keep it up! 🔥`;
+      // alert once when a new entry pushes the day over the limit
+      const key = `over-${state.day}`;
+      if (over && foods.length && !sessionStorage.getItem(key)) { try { sessionStorage.setItem(key, "1"); } catch {} toast(`⚠️ Over your daily limit by ${fmt(eaten - limit)} calories. You've got this: a walk helps!`, true); }
+      if (!over) try { sessionStorage.removeItem(key); } catch {}
+      return `<div class="meal-total day ${over ? "over" : "ok"}"><span>Today's total</span><b>${fmt(eaten)} <small class="of">/ ${fmt(limit)} kcal</small></b>
+        <small>P ${fmt(sum(foods, "protein_g"))} g · C ${fmt(sum(foods, "carbs_g"))} g · F ${fmt(sum(foods, "fat_g"))} g</small>
+        <p class="day-msg">${msg}</p></div>`;
+    })();
 
   $("#dietTips").innerHTML = sugg.tips.map((x) => `<li>${esc(x)}</li>`).join("");
   const r = sugg.remaining;
