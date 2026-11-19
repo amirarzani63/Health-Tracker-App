@@ -267,6 +267,7 @@ function renderCluster(d) {
   const burnGoal = Math.max(t.tdee || 0, burned || 0, 2000);
   const protGoal = t.protein_g || 1;
   const net = burned != null ? Math.round(eaten - burned) : null;
+  const typedBurn = d.burn_source === "typed", exKcal = Math.round(d.cardio_kcal || 0), restKcal = burned != null ? Math.round(burned - exKcal) : 0;
   const steps = g.steps.value || 0;
   const eatState = eaten > target ? "bad" : "good";
   const lights = [
@@ -282,7 +283,7 @@ function renderCluster(d) {
       <div class="g-main tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "eat", value: eaten, max: Math.max(target * 1.3, eaten * 1.05), target,
         label: "EATEN", unit: `of ${fmt(target)} kcal`, readout: fmt(eaten), ticks: 6, state: eatState })}</div>
       <div class="g-side tap" role="button" tabindex="0" data-goto="exercise" data-focus="#cardioAct" title="Log cardio">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
-        label: "BURNED", unit: burned == null ? "tap to log" : `goal ${fmt(t.tdee || burnGoal)} kcal`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
+        label: "BURNED", unit: burned == null ? "tap to log" : typedBurn ? "from your watch" : `rest ${fmt(restKcal)} + exercise ${fmt(exKcal)}`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
         state: burned != null && t.tdee && burned >= t.tdee ? "good" : "" })}</div>
       <div class="g-side tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
         label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), ticks: 4, state: c.protein_g >= protGoal ? "good" : "" })}</div>
@@ -299,9 +300,11 @@ function renderCluster(d) {
         <span class="ibox-title">⚖️ Eaten vs. burned today</span>
         ${burned == null ? `<span class="ibox-big">–</span><span class="ibox-hint">Tap to log the calories your watch says you burned today. Then you'll see if you ate less than you burned.</span>` : `
         <div class="vs-row"><span>Eaten</span><div class="ibar"><div class="ibar-fill eat" style="width:${Math.min(100, (eaten / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(eaten)}</b></div>
-        <div class="vs-row"><span>Burned</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (burned / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(burned)}</b></div>
-        <span class="ibox-big ${net <= 0 ? "good" : "bad"}">${net <= 0 ? `You burned ${fmt(-net)} more than you ate` : `You ate ${fmt(net)} more than you burned`}</span>
-        <span class="ibox-hint">${d.burn_source === "typed" ? "Burned = the total you typed from your watch." : `Burned = about ${fmt(burned - (d.cardio_kcal || 0))} your body uses at rest + ${fmt(d.cardio_kcal || 0)} from cardio you logged. Tap to log cardio.`}</span>
+        ${typedBurn ? `<div class="vs-row"><span>Burned</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (burned / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(burned)}</b></div>` : `
+        <div class="vs-row"><span>Resting</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (restKcal / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(restKcal)}</b></div>
+        <div class="vs-row"><span>Exercise</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (exKcal / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(exKcal)}</b></div>`}
+        ${eaten > 0 ? `<span class="ibox-big ${net <= 0 ? "good" : "bad"}">${net <= 0 ? `You burned ${fmt(-net)} more than you ate` : `You ate ${fmt(net)} more than you burned`}</span>` : `<span class="ibox-big">Nothing eaten logged yet</span>`}
+        <span class="ibox-hint">${d.burn_source === "typed" ? "Burned = the total you typed from your watch." : `Resting = what your body uses just to stay alive (breathing, heartbeat, keeping warm), worked out from your age, height and weight. Exercise = cardio you logged${exKcal ? "" : " (nothing yet: tap to log cardio)"}.`}</span>
         <span class="ibox-hint">${net <= 0 ? "Good: burning more than you eat is what makes you lose weight." : "To lose weight, you need to burn more than you eat."}</span>`}
       </div>
       <div class="ibox tap" role="button" tabindex="0" data-quick="steps">
