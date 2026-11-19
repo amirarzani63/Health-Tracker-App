@@ -10,7 +10,7 @@ from app import auth
 from app.db import SessionLocal, init_db
 from app.pages import page
 from app.paths import STATIC
-from app.routers import dashboard, diet, exercise, exercises, food_ai, garmin, insights, plans, profile, strava
+from app.routers import dashboard, diet, exercise, exercises, food_ai, garmin, insights, plans, profile, strava, users
 from app.services.garmin import GarminError, garmin_service
 from app.services.strava import strava_service
 
@@ -81,7 +81,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Health Tracker", lifespan=lifespan)
 app.middleware("http")(auth.auth_middleware)
 app.include_router(auth.router)
-for r in (profile, diet, food_ai, exercise, exercises, plans, garmin, strava, insights, dashboard):
+for r in (profile, diet, food_ai, exercise, exercises, plans, garmin, strava, insights, dashboard, users):
     app.include_router(r.router)
 
 app.mount("/static", StaticFiles(directory=STATIC), name="static")

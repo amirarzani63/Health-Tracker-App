@@ -22,6 +22,15 @@ def update_profile(data: ProfileIn, db: Session = Depends(get_db)):
         setattr(profile, k, v)
     profile.setup_done = True
     db.commit()
+    if (profile.name or "").strip():  # keep the name on the "Who's tracking?" list in step
+        from app.db import SessionLocal, current_user
+        from app.models import AppUser
+
+        with SessionLocal() as reg:
+            u = reg.get(AppUser, current_user.get())
+            if u:
+                u.name = profile.name.strip()[:60]
+                reg.commit()
     return profile
 
 

@@ -222,3 +222,14 @@ class CardioLog(Base):
     activity: Mapped[str] = mapped_column(String(30))
     minutes: Mapped[int] = mapped_column(Integer)
     calories: Mapped[float] = mapped_column(Float)
+
+
+class AppUser(Base):
+    """People who use this app. Each one has their own private data (see app.db.engine_for)."""
+
+    __tablename__ = "app_users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(60))
+    color: Mapped[str] = mapped_column(String(10), default="#ff8a3d")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)

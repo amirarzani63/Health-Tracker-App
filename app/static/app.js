@@ -11,9 +11,11 @@ const minutes = (s) => { const m = Math.round(s / 60); return m >= 60 ? `${Math.
 const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const numOrNull = (v) => (v === "" || v == null ? null : Number(v));
 const shortDay = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+// per-person browser settings: keys are prefixed with the chosen person's id
+const WHO = (() => { try { return localStorage.getItem("who") || "1"; } catch { return "1"; } })();
 const store = {
-  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
-  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  get(k) { try { return localStorage.getItem(WHO === "1" ? k : `u${WHO}:${k}`); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(WHO === "1" ? k : `u${WHO}:${k}`, v); } catch {} },
 };
 
 async function api(path, opts = {}) {
@@ -1751,6 +1753,47 @@ $("#unitsSelect").addEventListener("change", async (e) => {
 api("/api/profile").then((p) => {
   if ((p.units === "imperial") !== U.imperial) { U.set(p.units === "imperial"); show(state.view || "dashboard"); }
 }).catch(() => {});
+// ---------------------------------------------------------------- people: who's tracking?
+async function loadWho(openIfUnchosen = true) {
+  let r;
+  try { r = await api("/api/users"); } catch { return; }
+  const me = r.users.find((u) => u.current) || r.users[0];
+  try { localStorage.setItem("who", String(r.current)); } catch {}
+  if (String(r.current) !== WHO) { location.reload(); return; }
+  $("#whoBtn .who-name").textContent = me.name;
+  $("#whoBtn .who-dot").style.background = me.color;
+  $("#whoBtn .who-dot").textContent = me.name.slice(0, 1).toUpperCase();
+  $("#whoList").innerHTML = r.users.map((u) => `<button type="button" class="who-item${u.current ? " on" : ""}" data-who="${u.id}">
+    <span class="who-dot" style="background:${esc(u.color)}">${esc(u.name.slice(0, 1).toUpperCase())}</span><span>${esc(u.name)}</span>${u.current ? `<span class="small muted">· now</span>` : ""}</button>`).join("");
+  if (openIfUnchosen && r.users.length > 1 && !r.chosen) $("#whoDialog").showModal();
+}
+$("#whoBtn").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); $("#whoDialog").showModal(); });
+$("#whoClose").addEventListener("click", () => $("#whoDialog").close());
+$("#whoAddBtn").addEventListener("click", () => { $(".who-pick").classList.add("hidden"); $("#whoAddForm").classList.remove("hidden"); $("#whoAddForm").elements.name.focus(); });
+$("#whoAddBack").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); });
+$("#whoList").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-who]");
+  if (!b) return;
+  try {
+    await api("/api/users/select", { method: "POST", body: { id: Number(b.dataset.who) } });
+    try { localStorage.setItem("who", b.dataset.who); } catch {}
+    location.hash = ""; location.reload();
+  } catch (err) { toast(err.message, true); }
+});
+$("#whoAddForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = e.target, btn = $("button[type=submit]", f), body = formData(f);
+  for (const k of ["birth_year", "height_cm", "weight_kg"]) body[k] = Number(body[k]);
+  body.target_weight_kg = body.target_weight_kg ? Number(body.target_weight_kg) : null;
+  btn.disabled = true; btn.textContent = "Setting up their plan…";
+  try {
+    const r = await api("/api/users", { method: "POST", body });
+    try { localStorage.setItem("who", String(r.id)); } catch {}
+    location.hash = ""; location.reload();
+  } catch (err) { toast(err.message, true); btn.disabled = false; btn.textContent = "Create profile"; }
+});
+loadWho();
+
 const initial = location.hash.slice(1) === "plans" ? "exercise" : location.hash.slice(1);
 show(loaders[initial] ? initial : "dashboard");
 autoSync();

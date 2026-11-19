@@ -193,3 +193,23 @@ def test_exercise_picker(client):
     r = client.get("/api/exercises").json()
     assert r["plan_sessions"] == ["Full Body A", "Full Body B", "Full Body C"]
     assert "Goblet Squat" in r["plan_exercises"]["Legs"]
+
+
+def test_people_have_separate_data(client):
+    r = client.get("/api/users").json()
+    assert [u["id"] for u in r["users"]] == [1]
+    client.post("/api/weights", json={"day": "2026-11-19", "weight_kg": 105.5})
+    new = client.post("/api/users", json={"name": "Sara", "sex": "female", "birth_year": 1990, "height_cm": 165,
+                                          "weight_kg": 70, "target_weight_kg": 64, "focus": "lose_weight",
+                                          "equipment": "home", "diet_type": "vegetarian"}).json()
+    assert new["id"] == 2
+    # the new person is now selected and sees only their own data and targets
+    p = client.get("/api/profile").json()
+    assert (p["name"], p["sex"], p["weight_kg"], p["diet_type"], p["equipment"]) == ("Sara", "female", 70, "vegetarian", "home")
+    assert [w["weight_kg"] for w in client.get("/api/weights").json()] == [70]
+    assert client.get("/api/goals").json()["target_weight_kg"] == 64
+    client.post("/api/users/select", json={"id": 1})
+    assert [w["weight_kg"] for w in client.get("/api/weights").json()] == [105.5]
+    assert client.get("/api/profile").json()["name"] != "Sara"
+    assert len(client.get("/api/users").json()["users"]) == 2
+    assert client.post("/api/users/select", json={"id": 99}).status_code == 404
