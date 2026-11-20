@@ -1782,10 +1782,7 @@ async function loadWho(openIfUnchosen = true) {
   // profiles made before the full questionnaire: ask the missing questions (once per visit)
   try {
     const p = await api("/api/profile");
-    if (openIfUnchosen && !p.details_done && !sessionStorage.getItem("askedDetails")) {
-      sessionStorage.setItem("askedDetails", "1");
-      $("#whoDialog").showModal(); $("#whoEditBtn").click();
-    }
+    if (!p.details_done && state.view !== "about") show("about");
   } catch {}
 }
 $("#whoBtn").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); $("#whoDialog").showModal(); });
@@ -1813,8 +1810,8 @@ $("#whoAddForm").addEventListener("change", (e) => {  // "None" and real injurie
   if (!g || !e.target.checked) return;
   $$("input", g).forEach((c) => { if ((e.target.value === "none") !== (c.value === "none")) c.checked = false; });
 });
-$("#whoAddBtn").addEventListener("click", () => { openWhoForm("add"); $("#whoAddForm").elements.name.focus(); });
-$("#whoEditBtn").addEventListener("click", async () => {
+$("#whoAddBtn").addEventListener("click", () => { mountWhoForm($("#whoDialog")); $("#whoAddBack").classList.remove("hidden"); openWhoForm("add"); $("#whoAddForm").elements.name.focus(); });
+async function fillMyProfile() {
   openWhoForm("edit");
   const f = $("#whoAddForm").elements;
   try {
@@ -1836,9 +1833,20 @@ $("#whoEditBtn").addEventListener("click", async () => {
     }
     syncWeightGoal();
   } catch (err) { toast(err.message, true); }
-});
+}
+// the questionnaire lives in the "About me" tab (and in the people dialog when adding someone)
+function mountWhoForm(host) {
+  const f = $("#whoAddForm"), r = $("#whoResult");
+  if (f.parentElement !== host) { host.appendChild(f); host.appendChild(r); }
+}
+loaders.about = async () => {
+  mountWhoForm($("#aboutHost"));
+  $("#whoAddBack").classList.add("hidden");
+  await fillMyProfile();
+};
+$("#whoEditBtn").addEventListener("click", () => { $("#whoDialog").close(); show("about"); });
 $("#whoAddBack").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); });
-$("#whoDone").addEventListener("click", () => { location.hash = ""; location.reload(); });
+$("#whoDone").addEventListener("click", () => { location.hash = "#dashboard"; location.reload(); });
 $("#whoAddForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = e.target, el = f.elements, btn = $("#whoSubmit");
