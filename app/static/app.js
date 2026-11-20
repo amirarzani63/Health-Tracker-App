@@ -1482,7 +1482,7 @@ $("#profileForm").addEventListener("submit", async (e) => {
       allergies: d.allergies.split(",").map((s) => s.trim()).filter(Boolean),
     } });
     toast("Profile saved");
-    applySex(d.sex); loadWho(false);
+    loadWho(false);
   } catch (err) { toast(err.message, true); }
 });
 
@@ -1758,14 +1758,33 @@ api("/api/profile").then((p) => {
   if ((p.units === "imperial") !== U.imperial) { U.set(p.units === "imperial"); show(state.view || "dashboard"); }
 }).catch(() => {});
 // ---------------------------------------------------------------- people: who's tracking?
-// colour theme follows the person: men share one look (navy + orange), women share another (plum + pink)
-function applySex(sex) {
-  const f = sex === "female";
-  document.documentElement.toggleAttribute("data-sex", f);
-  if (f) document.documentElement.setAttribute("data-sex", "female");
-  try { localStorage.setItem("sex", f ? "female" : "male"); } catch {}
-  if (document.documentElement.getAttribute("data-theme") !== "light") $('meta[name="theme-color"]')?.setAttribute("content", f ? "#0e0618" : "#050816");
+// each person has their own colour scheme
+const SCHEME_NAMES = { orange: "Orange & navy", pink: "Pink & plum", emerald: "Emerald & teal", violet: "Violet & indigo", red: "Red & charcoal", gold: "Gold & blue" };
+const SCHEME_BG = { orange: "#050816", pink: "#0e0618", emerald: "#03120f", violet: "#0b0820", red: "#120607", gold: "#080b14" };
+function applyScheme(scheme) {
+  scheme = scheme || "orange";
+  if (scheme === "orange") document.documentElement.removeAttribute("data-scheme");
+  else document.documentElement.setAttribute("data-scheme", scheme);
+  try { localStorage.setItem("scheme", scheme); } catch {}
+  if (document.documentElement.getAttribute("data-theme") !== "light") $('meta[name="theme-color"]')?.setAttribute("content", SCHEME_BG[scheme] || "#050816");
 }
+function renderSchemes(r) {
+  const me = r.users.find((u) => u.current);
+  const taken = Object.fromEntries(r.users.filter((u) => !u.current).map((u) => [u.scheme, u.name]));
+  $("#schemePicks").innerHTML = Object.entries(r.schemes).map(([k, c]) => `<button type="button" data-scheme-pick="${k}"
+    class="${me?.scheme === k ? "on" : ""}" style="background:radial-gradient(circle at 35% 35%, ${c}, ${SCHEME_BG[k]} 85%)"
+    title="${esc(SCHEME_NAMES[k])}${taken[k] ? " (" + esc(taken[k]) + ")" : ""}" aria-label="${esc(SCHEME_NAMES[k])}" ${taken[k] ? "disabled" : ""}></button>`).join("");
+}
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-scheme-pick]");
+  if (!b) return;
+  try {
+    await api("/api/users/me/scheme", { method: "PUT", body: { scheme: b.dataset.schemePick } });
+    applyScheme(b.dataset.schemePick);
+    toast(`🎨 ${SCHEME_NAMES[b.dataset.schemePick]}`);
+    loadWho(false);
+  } catch (err) { toast(err.message, true); }
+});
 async function loadWho(openIfUnchosen = true) {
   let r;
   try { r = await api("/api/users"); } catch { return; }
@@ -1773,7 +1792,9 @@ async function loadWho(openIfUnchosen = true) {
   try { localStorage.setItem("who", String(r.current)); } catch {}
   if (String(r.current) !== WHO) { location.reload(); return; }
   $("#whoBtn .who-name").textContent = me.name;
-  applySex(me.sex);
+  applyScheme(me.scheme);
+  $("#whoBtn .who-dot").style.background = me.color;
+  renderSchemes(r);
   $("#whoBtn .who-dot").style.background = me.color;
   $("#whoBtn .who-dot").textContent = me.name.slice(0, 1).toUpperCase();
   $("#whoList").innerHTML = r.users.map((u) => `<button type="button" class="who-item${u.current ? " on" : ""}" data-who="${u.id}">

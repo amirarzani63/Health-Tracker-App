@@ -13,6 +13,29 @@ from app.services import insights
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 COLORS = ["#ff8a3d", "#3dbbff", "#39d98a", "#ff5c8a", "#b28cff", "#ffd23d"]
+# colour schemes, each with its main colour (also used for the person's round initial)
+SCHEMES = {"orange": "#ff7a1a", "pink": "#ff3d9a", "emerald": "#22e39a", "violet": "#a46bff", "red": "#ff4d4d", "gold": "#ffc21a"}
+
+
+def _free_scheme(db, prefer: str) -> str:
+    used = {u.scheme for u in db.scalars(select(AppUser)).all() if u.scheme}
+    for k in [prefer, *SCHEMES]:
+        if k not in used:
+            return k
+    return prefer
+
+
+def _ensure_schemes(db) -> None:
+    """Give everyone who doesn't have one their own colour scheme (orange for men, pink for women first)."""
+    changed = False
+    for u in db.scalars(select(AppUser).order_by(AppUser.id)).all():
+        if not u.scheme:
+            u.scheme = _free_scheme(db, "pink" if _sex(u.id) == "female" else "orange")
+            u.color = SCHEMES[u.scheme]
+            db.flush()
+            changed = True
+    if changed:
+        db.commit()
 
 
 def _ensure_first(db) -> None:
@@ -20,7 +43,7 @@ def _ensure_first(db) -> None:
     if db.get(AppUser, 1) is None:
         with session_for(1) as udb:
             name = (insights.get_profile(udb).name or "").strip() or "Me"
-        db.add(AppUser(id=1, name=name, color=COLORS[0]))
+        db.add(AppUser(id=1, name=name, color=COLORS[0], scheme="orange"))
         db.commit()
 
 
@@ -30,7 +53,8 @@ def _sex(uid: int) -> str:
 
 
 def _out(u: AppUser, current: int) -> dict:
-    return {"id": u.id, "name": u.name, "color": u.color, "current": u.id == current, "sex": _sex(u.id)}
+    return {"id": u.id, "name": u.name, "color": u.color, "current": u.id == current, "sex": _sex(u.id),
+            "scheme": u.scheme or "orange"}
 
 
 @router.get("")
@@ -38,9 +62,10 @@ def list_users(request: Request):
     cur = request_user(request)
     with SessionLocal() as db:
         _ensure_first(db)
+        _ensure_schemes(db)
         users = db.scalars(select(AppUser).order_by(AppUser.id)).all()
         return {"users": [_out(u, cur) for u in users], "current": cur,
-                "chosen": USER_COOKIE in request.cookies}
+                "chosen": USER_COOKIE in request.cookies, "schemes": SCHEMES}
 
 
 def _select(response: Response, request: Request, uid: int):
@@ -160,7 +185,9 @@ def add_user(data: Details, request: Request, response: Response):
         ids = db.scalars(select(AppUser.id)).all()
         n = len(ids)
         # explicit id: profile 1 was inserted with a fixed id, so Postgres' counter can't be trusted
-        u = AppUser(id=max(ids) + 1, name=data.name.strip(), color=COLORS[n % len(COLORS)])
+        _ensure_schemes(db)
+        scheme = _free_scheme(db, "pink" if data.sex == "female" else "orange")
+        u = AppUser(id=max(ids) + 1, name=data.name.strip(), color=SCHEMES[scheme], scheme=scheme)
         db.add(u)
         db.commit()
         uid = u.id
@@ -185,6 +212,26 @@ def update_me(data: Details, request: Request):
             u.name = data.name.strip()
             db.commit()
     return {"id": uid, "summary": summary}
+
+
+class SchemePick(BaseModel):
+    scheme: str
+
+
+@router.put("/me/scheme")
+def set_scheme(data: SchemePick, request: Request):
+    if data.scheme not in SCHEMES:
+        raise HTTPException(422, "Unknown colour scheme.")
+    uid = request_user(request)
+    with SessionLocal() as db:
+        _ensure_first(db)
+        taken = db.scalar(select(AppUser).where(AppUser.scheme == data.scheme, AppUser.id != uid))
+        if taken:
+            raise HTTPException(409, f"{taken.name} already uses that colour. Pick another.")
+        u = db.get(AppUser, uid)
+        u.scheme, u.color = data.scheme, SCHEMES[data.scheme]
+        db.commit()
+        return {"scheme": u.scheme}
 
 
 class Pick(BaseModel):

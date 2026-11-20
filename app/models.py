@@ -239,4 +239,5 @@ class AppUser(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(60))
     color: Mapped[str] = mapped_column(String(10), default="#ff8a3d")
+    scheme: Mapped[str] = mapped_column(String(20), default="")  # app colour scheme, one per person
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)

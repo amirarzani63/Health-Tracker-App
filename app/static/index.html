@@ -22,7 +22,7 @@
       if (m) m.setAttribute("content", t === "light" ? "#f4f6fb" : "#050816");
     })();
   </script>
-  <script>try{if(localStorage.getItem("sex")==="female")document.documentElement.setAttribute("data-sex","female")}catch(e){}</script>
+  <script>try{var sc=localStorage.getItem("scheme");if(sc&&sc!=="orange")document.documentElement.setAttribute("data-scheme",sc)}catch(e){}</script>
   <link rel="stylesheet" href="/static/styles.css">
   <script src="/static/vendor/chart.umd.js"></script>
 </head>
@@ -53,6 +53,9 @@
 
   <!-- TODAY -->
   <section id="view-about" class="view">
+    <div class="card"><h3>Your app colours</h3>
+      <p class="small muted">Everyone has their own colour scheme. Faded colours are taken by someone else.</p>
+      <div class="scheme-picks" id="schemePicks"></div></div>
     <div class="card" id="aboutHost"></div>
   </section>
 

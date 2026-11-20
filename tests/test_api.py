@@ -239,3 +239,13 @@ def test_new_person_targets_are_worked_out_exactly(client):
     bad = {k: v for k, v in SARA.items() if k != "activity_level"}
     assert client.post("/api/users", json=bad).status_code == 422
     assert client.post("/api/users", json={**SARA, "goal_weeks": None}).status_code == 422
+
+
+def test_each_person_has_their_own_colour_scheme(client):
+    client.post("/api/users", json=SARA)                       # a woman: pink
+    client.post("/api/users", json={**SARA, "name": "Ali", "sex": "male"})  # orange is taken by profile 1
+    users = client.get("/api/users").json()["users"]
+    schemes = [u["scheme"] for u in users]
+    assert schemes[:2] == ["orange", "pink"] and len(set(schemes)) == 3
+    assert client.put("/api/users/me/scheme", json={"scheme": "pink"}).status_code == 409  # Sara's
+    assert client.put("/api/users/me/scheme", json={"scheme": "gold"}).json()["scheme"] == "gold"
