@@ -283,3 +283,11 @@ def test_beginner_at_full_gym_starts_with_machines_and_dumbbells(client):
     assert names and not any("barbell" in n.lower() or n in ("Front squat", "Conventional deadlift") for n in names)
     refresh_beginner_plans()
     assert refresh_beginner_plans() == 0  # runs only once per person
+
+
+def test_foods_people_add_are_shared_by_everyone(client):
+    client.post("/api/users", json=SARA)  # now Sara
+    client.post("/api/my-foods", json={"name": "Sara's zrazy bake", "calories": 300, "protein_g": 20, "fat_g": 10, "carbs_g": 30})
+    client.post("/api/users/select", json={"id": 1})
+    found = client.get("/api/food-library?q=zrazy").json()
+    assert found and found[0]["calories"] == 300

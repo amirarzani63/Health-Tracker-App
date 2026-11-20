@@ -430,3 +430,442 @@ sauteed shrimp|shrimp sauteed in oil|pan fried shrimp|garlic shrimp,1 large shri
 bulgur pilaf with tomato and peppers|tomato bulgur pilaf|bulgur pilaf,1 cup (185 g),185,240,5.6,34.4,10.4,8,gluten
 large green olives|green olives,1 large olive (5 g),5,7.5,0,0.25,0.75,0.25,
 shrimp with bulgur pilaf and olives|shrimp bulgur dinner,1 plate,400,525,42,45,22,11,fish gluten
+# Persian ----------------------------------------
+sabzi polo|herb rice,1 cup (160 g),160,290,5,48,8,2,
+albaloo polo|sour cherry rice,1 cup (170 g),170,330,5,60,8,1.5,
+shirin polo|sweet rice with orange peel,1 cup (170 g),170,350,5,62,9,1.5,nuts
+tahchin|tah chin|tachin,1 piece (200 g),200,420,20,48,16,1,egg dairy meat
+chelo|steamed persian rice,1 cup (160 g),160,280,5,50,6,0.6,
+kabab torsh|torsh kabab,1 skewer (150 g),150,360,30,6,24,1,meat nuts
+chenjeh kabab|chenjeh,1 skewer (150 g),150,330,36,2,20,0,meat
+kabab tabei|kabab tabei pan,1 patty (150 g),150,390,25,6,30,1,meat
+khoresh karafs|celery stew,1 cup (240 g),240,260,18,10,17,3,meat
+khoresh gheymeh bademjan|gheymeh bademjan,1 cup (240 g),240,320,18,20,19,6,meat
+khoresh aloo esfenaj|aloo esfenaj,1 cup (240 g),240,250,18,16,13,4,meat
+khoresh beh|quince stew,1 cup (240 g),240,290,18,24,14,4,meat
+abgoosht dizi,1 bowl (400 g),400,520,32,40,26,9,meat
+ash anar|pomegranate soup,1 cup (240 g),240,220,9,32,7,5,meat
+ash jo|barley soup,1 cup (240 g),240,190,8,28,5,5,dairy
+haleem|halim,1 cup (240 g),240,320,20,38,10,4,meat gluten
+kaleh pacheh,1 bowl (350 g),350,550,40,4,42,0,meat
+kashk bademjan|kashke bademjan,1 cup (200 g),200,280,7,16,22,6,dairy nuts
+borani esfenaj|spinach yogurt dip,1 cup (200 g),200,170,10,12,9,3,dairy
+yogurt cucumber dip,1 cup (220 g),220,150,9,14,7,1,dairy
+mast o musir|yogurt shallot dip,1 cup (220 g),220,160,9,12,9,1,dairy
+kotlet|persian cutlet,1 cutlet (80 g),80,210,10,12,14,1,meat egg
+olivieh|olivier salad,1 cup (200 g),200,380,14,22,27,3,egg meat
+kookoo sibzamini|potato kuku,1 piece (100 g),100,220,7,18,14,2,egg
+salad olivieh sandwich|olivieh sandwich,1 sandwich,250,620,20,58,34,4,egg meat gluten
+sangak bread,1 piece (100 g),100,260,9,52,1.5,4,gluten
+taftun bread,1 piece (100 g),100,280,9,56,2,2.5,gluten
+nan berenji|rice cookie,1 cookie (15 g),15,70,1,9,3.5,0.2,egg
+koloocheh|koloocheh cookie,1 cookie (60 g),60,260,4,38,10,1.5,gluten nuts
+ghotab,1 piece (30 g),30,140,2,15,8,0.7,gluten nuts
+bastani sonnati|persian ice cream|saffron ice cream,1 cup (150 g),150,330,6,40,17,0.5,dairy nuts
+sharbat|persian syrup drink,1 glass (250 ml),250,100,0,25,0,0,
+chai nabat|tea with rock candy,1 cup with 1 piece nabat,240,40,0,10,0,0,
+sekanjabin|sekanjabin drink,1 glass (250 ml),250,110,0,27,0,0,
+ajil|persian nut mix,1 handful (30 g),30,170,5,9,13,2,nuts
+lavashak|fruit leather,1 sheet (20 g),20,60,0.3,15,0,1,
+noon khamei|cream puff,1 puff (40 g),40,140,2,14,9,0.2,gluten egg dairy
+# Turkish ----------------------------------------
+lahmacun|turkish pizza,1 piece (130 g),130,300,13,40,10,3,gluten meat
+pide|turkish pide,1 slice (100 g),100,260,11,30,10,1.5,gluten dairy meat
+iskender kebab|iskender,1 plate (400 g),400,750,40,50,42,3,gluten meat dairy
+adana kebab,1 skewer (150 g),150,400,27,3,31,0.5,meat
+doner kebab wrap|doner wrap|durum,1 wrap,350,650,32,58,32,4,gluten meat dairy
+menemen,1 cup (200 g),200,220,11,10,15,2,egg
+simit,1 simit (100 g),100,300,10,55,5,3,gluten
+borek|burek|börek,1 piece (100 g),100,320,10,26,20,1.5,gluten dairy
+manti|turkish dumplings,1 cup (200 g),200,380,17,44,15,2,gluten meat dairy
+kofte|köfte|turkish meatballs,1 meatball (30 g),30,80,6,1.5,5.5,0.2,meat
+imam bayildi,1 piece (200 g),200,250,4,18,19,6,
+mercimek corbasi|turkish red lentil soup,1 cup (240 g),240,180,9,26,5,6,
+turkish delight|lokum,1 piece (15 g),15,55,0.1,13,0.2,0,
+kunefe|künefe,1 piece (150 g),150,500,10,55,27,1,gluten dairy nuts
+sutlac|turkish rice pudding,1 cup (200 g),200,260,8,44,6,0.3,dairy
+gozleme|gözleme,1 piece (200 g),200,420,14,52,17,3,gluten dairy
+# Levant & Arabic ----------------------------------------
+shawarma wrap|chicken shawarma,1 wrap,330,600,35,55,26,4,gluten meat
+beef shawarma plate|shawarma plate,1 plate (450 g),450,800,45,70,36,6,meat
+kibbeh|kibbe,1 piece (60 g),60,160,8,13,8,2,gluten meat
+manakish|manakeesh|zaatar manakish,1 piece (130 g),130,380,8,45,19,3,gluten
+cheese manakish,1 piece (140 g),140,420,15,44,20,2,gluten dairy
+baba ganoush|baba ghanoush,1 tbsp (15 g),15,20,0.4,1.2,1.6,0.6,nuts
+muhammara,1 tbsp (15 g),15,45,0.8,2.5,3.6,0.6,nuts gluten
+mujadara|mujaddara,1 cup (200 g),200,320,12,48,9,10,
+ful medames|foul,1 cup (250 g),250,280,15,35,9,12,
+mansaf,1 plate (450 g),450,850,48,70,40,2,meat dairy nuts
+kabsa|kabsa rice,1 plate (400 g),400,720,38,80,26,3,meat
+mandi|chicken mandi,1 plate (400 g),400,700,40,78,24,2,meat
+maqluba|maqloubeh,1 cup (250 g),250,380,18,42,15,4,meat
+shish taouk,1 skewer (150 g),150,250,35,3,11,0.5,meat dairy
+knafeh|kanafeh,1 piece (150 g),150,500,10,55,27,1,gluten dairy nuts
+maamoul|ma'amoul,1 cookie (40 g),40,180,2.5,23,9,1,gluten nuts
+labneh sandwich|labneh wrap,1 wrap,150,330,11,38,15,3,gluten dairy
+zaatar|za'atar with oil,1 tbsp (10 g),10,50,0.5,1.5,4.8,0.8,
+arabic coffee|qahwa,1 small cup (60 ml),60,2,0,0.3,0,0,
+koshari|kushari,1 plate (400 g),400,620,20,110,11,12,gluten
+molokhia|mulukhiyah,1 cup (240 g),240,180,14,10,9,4,meat
+# Greek & Mediterranean ----------------------------------------
+moussaka,1 piece (250 g),250,450,20,20,32,4,meat dairy egg gluten
+spanakopita,1 piece (100 g),100,270,8,20,18,2,gluten dairy egg
+souvlaki|chicken souvlaki,1 skewer (100 g),100,190,25,2,9,0.3,meat
+pita gyros|gyros pita,1 wrap,300,600,28,52,30,3,gluten meat dairy
+pastitsio,1 piece (250 g),250,480,24,38,26,2,gluten meat dairy egg
+gemista|stuffed peppers greek,1 pepper (250 g),250,280,5,40,11,5,
+horiatiki|village salad,1 bowl (250 g),250,300,9,12,25,4,dairy
+spanakorizo|spinach rice,1 cup (220 g),220,260,6,38,10,4,
+fasolada|greek bean soup,1 cup (240 g),240,230,10,32,7,10,
+loukoumades,1 piece (15 g),15,55,1,7,2.5,0.2,gluten nuts
+galaktoboureko,1 piece (120 g),120,360,7,44,17,0.5,gluten dairy egg
+greek yogurt with honey,1 cup (200 g),200,300,18,30,11,0,dairy
+# Italian ----------------------------------------
+penne arrabbiata|arrabbiata,1 cup (200 g),200,320,10,55,7,4,gluten
+spaghetti aglio e olio|aglio e olio,1 cup (180 g),180,360,9,48,15,2,gluten
+cacio e pepe,1 cup (200 g),200,450,17,52,19,2,gluten dairy
+fettuccine|plain fettuccine,1 cup cooked (160 g),160,250,9,49,1.5,3,gluten egg
+ravioli|cheese ravioli,1 cup (200 g),200,380,16,46,14,2,gluten dairy egg
+tortellini,1 cup (150 g),150,330,14,45,10,2,gluten dairy egg meat
+gnocchi,1 cup (190 g),190,250,6,52,1.5,3,gluten
+eggplant parmesan|melanzane parmigiana,1 piece (250 g),250,400,15,24,27,6,dairy gluten egg
+chicken parmesan|chicken parmigiana,1 piece (250 g),250,520,40,24,28,2,meat dairy gluten egg
+osso buco,1 piece (300 g),300,540,50,8,32,2,meat
+minestrone,1 cup (240 g),240,130,5,20,3.5,4,gluten
+bruschetta,1 piece (60 g),60,120,3,16,5,1,gluten
+caprese salad|caprese,1 plate (200 g),200,340,18,6,27,1,dairy
+calzone,1 calzone (300 g),300,780,32,84,34,4,gluten dairy meat
+focaccia,1 slice (60 g),60,170,4,24,6,1,gluten
+arancini,1 ball (100 g),100,260,7,30,12,1.5,gluten dairy egg
+tiramisu,1 piece (120 g),120,360,6,34,22,0.5,gluten dairy egg
+panna cotta,1 cup (120 g),120,260,4,24,16,0,dairy
+gelato,1 scoop (70 g),70,150,3,20,7,0,dairy
+cannoli,1 cannoli (75 g),75,250,6,26,14,0.5,gluten dairy
+affogato,1 cup (100 g),100,170,3,20,8,0,dairy
+# French ----------------------------------------
+quiche lorraine|quiche,1 slice (150 g),150,450,15,24,33,1,gluten dairy egg meat
+croque monsieur,1 sandwich,200,520,28,36,29,2,gluten dairy meat
+ratatouille,1 cup (240 g),240,150,3,16,9,5,
+coq au vin,1 plate (350 g),350,520,45,10,30,2,meat
+beef bourguignon|boeuf bourguignon,1 cup (250 g),250,420,38,10,22,2,meat
+french onion soup,1 bowl (350 g),350,370,15,35,19,3,gluten dairy
+crepe|crêpe|plain crepe,1 crepe (60 g),60,130,4.5,17,5,0.5,gluten egg dairy
+nutella crepe,1 crepe (90 g),90,290,6,34,14,1,gluten egg dairy nuts
+macaron,1 macaron (15 g),15,70,1.3,9,3.5,0.4,nuts egg
+eclair|éclair,1 eclair (100 g),100,260,6,24,16,0.5,gluten dairy egg
+creme brulee|crème brûlée,1 cup (120 g),120,330,5,26,23,0,dairy egg
+croque madame,1 sandwich,250,600,33,36,36,2,gluten dairy meat egg
+salade nicoise|nicoise salad,1 plate (350 g),350,420,26,20,26,6,fish egg
+brie|camembert,1 slice (30 g),30,100,6,0.1,8.3,0,dairy
+madeleine,1 madeleine (20 g),20,90,1.5,11,4.5,0.2,gluten egg dairy
+# Indian & South Asian ----------------------------------------
+chicken tikka,1 piece (40 g),40,70,10,1,3,0.2,meat dairy
+tandoori chicken,1 leg (200 g),200,320,40,4,16,1,meat dairy
+palak paneer|saag paneer,1 cup (240 g),240,340,15,12,26,4,dairy
+paneer tikka,1 piece (30 g),30,85,5,1.5,6.5,0.2,dairy
+paneer|indian cottage cheese,1 cube (20 g),20,64,4,0.6,5,0,dairy
+chole,1 cup (240 g),240,290,12,40,10,11,
+rajma|kidney bean curry,1 cup (240 g),240,250,12,36,7,11,
+aloo gobi,1 cup (200 g),200,180,4,22,9,5,
+dal makhani,1 cup (240 g),240,330,14,34,16,10,dairy
+lamb rogan josh|rogan josh,1 cup (240 g),240,380,30,10,25,2,meat dairy
+korma|chicken korma,1 cup (240 g),240,450,30,14,31,2,meat dairy nuts
+vindaloo|chicken vindaloo,1 cup (240 g),240,350,30,12,20,3,meat
+masala dosa|dosa,1 dosa (200 g),200,390,8,58,14,4,
+idli,1 idli (40 g),40,58,2,12,0.4,0.6,
+sambar,1 cup (240 g),240,150,7,22,4,6,
+uttapam,1 uttapam (120 g),120,220,6,36,6,3,
+vada|medu vada,1 vada (50 g),50,140,5,14,7,2.5,
+pakora|bhaji|onion bhaji,1 piece (30 g),30,80,2,8,4.5,1,
+paratha|aloo paratha,1 paratha (100 g),100,290,6,40,12,4,gluten dairy
+puri,1 puri (25 g),25,100,2,11,5.5,0.5,gluten
+phulka,1 roti (40 g),40,110,3.5,20,2,3,gluten
+garlic naan,1 naan (100 g),100,300,9,48,8,2,gluten dairy
+raita,1 tbsp (15 g),15,10,0.6,0.8,0.5,0.1,dairy
+mango lassi,1 glass (250 ml),250,220,7,40,4,1,dairy
+masala chai|indian chai,1 cup (240 ml),240,110,4,15,4,0,dairy
+gulab jamun,1 piece (40 g),40,150,2,22,6,0.2,gluten dairy
+jalebi,1 piece (30 g),30,140,1,20,6,0.2,gluten
+kheer|indian rice pudding,1 cup (200 g),200,280,8,42,9,0.5,dairy nuts
+pav bhaji,1 plate (2 pav + bhaji),350,600,14,80,26,9,gluten dairy
+vegetable biryani|veg biryani,1 cup (200 g),200,300,6,48,9,3,dairy
+khichdi,1 cup (200 g),200,220,8,38,4,5,dairy
+poha,1 cup (160 g),160,250,5,40,8,2,nuts
+upma,1 cup (200 g),200,250,6,40,8,3,gluten
+bhel puri,1 cup (100 g),100,280,6,40,11,3,gluten nuts
+pani puri|golgappa,1 piece (20 g),20,36,0.8,6,1,0.5,gluten
+dhokla,1 piece (40 g),40,64,2.5,10,1.5,1,
+nihari,1 cup (240 g),240,450,32,10,32,1,meat gluten
+haleem pakistani|daleem,1 cup (240 g),240,350,22,32,15,5,meat gluten
+chapli kebab,1 kebab (100 g),100,280,17,6,21,1,meat egg
+seekh kebab,1 kebab (60 g),60,150,10,2,11,0.5,meat
+# Chinese ----------------------------------------
+kung pao chicken,1 cup (200 g),200,380,28,16,23,3,meat nuts soy
+general tso chicken|general tso's chicken,1 cup (200 g),200,500,24,48,24,1,meat soy gluten egg
+orange chicken,1 cup (200 g),200,490,22,52,22,1,meat soy gluten egg
+beef and broccoli,1 cup (220 g),220,300,26,14,15,3,meat soy
+mapo tofu,1 cup (240 g),240,320,18,10,24,2,soy meat
+hot and sour soup,1 cup (240 g),240,95,6,10,3.5,1,soy egg
+wonton soup,1 cup (240 g),240,180,10,20,6,1,gluten meat
+wonton|fried wonton,1 piece (15 g),15,50,2,5,2.5,0.2,gluten meat
+egg roll,1 roll (90 g),90,220,7,24,11,2,gluten meat egg
+bao|bao bun|pork bun,1 bun (80 g),80,230,8,32,8,1,gluten meat
+peking duck,1 roll with pancake (60 g),60,170,8,12,10,0.5,meat gluten
+char siu|bbq pork,100 g,100,250,24,10,13,0,meat soy
+har gow|shrimp dumpling,1 piece (25 g),25,45,2.5,6,1.2,0.3,fish gluten
+siu mai|shumai,1 piece (25 g),25,55,3.5,4,3,0.2,meat fish gluten
+congee|rice porridge|jook,1 cup (240 g),240,120,4,24,1,0.5,
+lo mein,1 cup (200 g),200,320,12,44,10,3,gluten soy egg
+dan dan noodles,1 bowl (350 g),350,620,24,64,30,4,gluten soy meat nuts
+egg fried rice,1 cup (200 g),200,330,8,48,11,1.5,egg soy
+szechuan beef|sichuan beef,1 cup (200 g),200,380,26,18,22,2,meat soy
+sesame chicken,1 cup (200 g),200,520,24,50,25,1,meat soy gluten
+moo shu pork,1 cup (200 g),200,320,20,12,22,2,meat soy egg
+scallion pancake,1 pancake (100 g),100,300,6,38,14,2,gluten
+hot pot|chinese hot pot,1 bowl (500 g),500,500,40,30,24,5,meat soy
+mooncake,1 mooncake (100 g),100,420,7,60,17,2,gluten egg nuts
+bubble tea|boba tea|milk tea with tapioca,1 cup (500 ml),500,350,3,65,9,0,dairy
+# Japanese ----------------------------------------
+teriyaki chicken,1 plate without rice (250 g),250,420,40,22,18,1,meat soy
+chicken katsu|tonkatsu|katsu,1 cutlet (150 g),150,420,25,22,25,1,meat gluten egg
+katsu curry,1 plate (500 g),500,850,32,110,30,5,meat gluten egg
+tempura|shrimp tempura,1 piece (25 g),25,60,3,4,3.5,0.2,fish gluten egg
+udon|udon soup,1 bowl (500 g),500,400,15,72,5,3,gluten soy fish
+soba|soba noodles,1 cup cooked (115 g),115,110,6,24,0.1,1.5,gluten
+yakitori,1 skewer (40 g),40,80,8,3,4,0,meat soy
+potsticker,1 piece (25 g),25,60,2.5,6,2.8,0.3,gluten meat
+okonomiyaki,1 pancake (250 g),250,450,16,40,25,3,gluten egg meat
+onigiri|rice ball,1 onigiri (110 g),110,180,4,38,1,0.5,fish
+tuna roll|tekka maki,1 piece (20 g),20,30,1.8,5,0.2,0.1,fish
+salmon avocado roll,1 piece (30 g),30,45,2,6,1.5,0.4,fish
+spicy tuna roll,1 piece (30 g),30,48,2.2,5.8,1.8,0.2,fish egg
+dragon roll,1 piece (35 g),35,70,2.5,8,3,0.4,fish egg
+tuna sashimi,1 slice (15 g),15,20,4.5,0,0.1,0,fish
+edamame pods|salted edamame,1 cup in pods (155 g),155,190,17,15,8,8,soy
+seaweed salad|wakame salad,1 cup (100 g),100,70,1,10,3,3,soy
+tamagoyaki,1 piece (30 g),30,50,3.5,2,3,0,egg
+chirashi|chirashi bowl,1 bowl (400 g),400,560,32,80,10,1,fish
+donburi|oyakodon,1 bowl (400 g),400,620,30,90,14,2,meat egg soy
+gyudon|beef bowl,1 bowl (400 g),400,700,25,95,22,2,meat soy
+matcha latte,1 cup (350 ml),350,190,8,25,6,0.5,dairy
+mochi,1 piece (40 g),40,95,1.5,21,0.5,0.2,
+sake,1 glass (180 ml),180,240,1,9,0,0,alcohol
+# Korean ----------------------------------------
+bibimbap,1 bowl (500 g),500,600,25,85,17,6,egg meat soy
+bulgogi,1 cup (150 g),150,300,24,12,17,1,meat soy
+korean fried chicken,1 piece (60 g),60,190,11,9,12,0.3,meat gluten soy
+kimchi,1 cup (150 g),150,35,2,6,0.7,3,fish
+kimchi jjigae|kimchi stew,1 bowl (400 g),400,300,20,14,18,5,meat soy fish
+japchae,1 cup (150 g),150,280,6,42,10,2,soy meat
+tteokbokki|ddukbokki,1 cup (200 g),200,380,8,78,4,2,soy fish
+kimbap|gimbap,1 piece (25 g),25,40,1.3,7,0.8,0.3,egg meat fish
+galbi|kalbi|korean short ribs,100 g,100,320,22,6,23,0,meat soy
+samgyeopsal|korean pork belly,100 g,100,500,10,0,50,0,meat
+sundubu jjigae|soft tofu stew,1 bowl (400 g),400,280,18,12,18,3,soy fish egg
+kimchi fried rice,1 cup (200 g),200,340,8,50,12,2,egg fish
+korean pancake|pajeon,1 slice (100 g),100,230,6,26,11,2,gluten egg fish
+soju,1 shot (50 ml),50,65,0,0,0,0,alcohol
+# Thai, Vietnamese & Southeast Asian ----------------------------------------
+tom yum|tom yum soup,1 cup (240 g),240,90,9,7,3,1,fish
+tom kha gai|tom kha,1 cup (240 g),240,250,13,8,19,1,meat fish
+massaman curry,1 cup (240 g),240,450,25,22,30,3,meat nuts
+thai red curry,1 cup (240 g),240,400,25,14,28,3,meat fish
+panang curry,1 cup (240 g),240,420,25,14,30,2,meat fish nuts
+pad see ew,1 plate (350 g),350,620,25,80,22,3,gluten soy egg meat
+drunken noodles|pad kee mao,1 plate (350 g),350,600,26,75,22,4,soy meat egg
+khao pad|thai fried rice,1 plate (300 g),300,520,18,72,17,2,egg soy fish
+som tam|papaya salad,1 cup (150 g),150,90,2.5,16,2,3,fish nuts
+larb|laab,1 cup (150 g),150,230,24,6,12,1,meat fish
+satay|chicken satay,1 skewer (40 g),40,80,8,2,4.5,0.3,meat nuts
+peanut sauce|satay sauce,1 tbsp (16 g),16,50,2,3,3.8,0.5,nuts soy
+mango sticky rice,1 plate (250 g),250,480,6,85,14,3,
+thai iced tea,1 glass (350 ml),350,250,3,40,9,0,dairy
+banh mi,1 sandwich (300 g),300,600,28,70,22,4,gluten meat egg
+bun cha,1 bowl (450 g),450,600,30,70,22,3,meat fish
+bun bo hue,1 bowl (600 g),600,550,35,65,15,3,meat fish
+goi cuon|summer roll|fresh spring roll,1 roll (100 g),100,120,7,18,2,1,fish
+vietnamese iced coffee|ca phe sua da,1 glass (200 ml),200,150,3,25,4,0,dairy
+nasi goreng,1 plate (350 g),350,600,20,80,22,3,egg soy meat fish
+mee goreng,1 plate (350 g),350,620,20,80,24,4,gluten egg soy
+laksa,1 bowl (600 g),600,700,28,65,36,4,fish meat egg
+rendang|beef rendang,1 cup (200 g),200,460,32,8,34,3,meat
+nasi lemak,1 plate (350 g),350,650,20,75,30,4,fish egg nuts
+chicken adobo|adobo,1 cup (200 g),200,380,30,4,27,0,meat soy
+sinigang,1 bowl (400 g),400,250,22,12,13,3,meat fish
+pancit|pancit canton,1 cup (200 g),200,320,14,44,10,3,gluten soy meat
+lumpia|lumpia shanghai,1 roll (30 g),30,85,3.5,7,5,0.4,gluten meat
+lechon|roast pork belly,100 g,100,450,20,0,41,0,meat
+halo halo,1 cup (300 g),300,350,5,70,6,2,dairy
+chicken rice|hainanese chicken rice,1 plate (400 g),400,600,32,72,20,1,meat soy
+# Mexican & Latin American ----------------------------------------
+enchiladas|chicken enchilada,1 enchilada (180 g),180,320,20,26,15,4,meat dairy
+tamale|tamal,1 tamale (130 g),130,280,9,26,15,3,meat
+chilaquiles,1 plate (300 g),300,520,18,48,29,6,dairy egg
+pozole|posole,1 bowl (400 g),400,330,25,30,12,6,meat
+carnitas,100 g,100,250,24,0,17,0,meat
+carne asada,100 g,100,230,26,1,13,0,meat
+al pastor|tacos al pastor,1 taco (90 g),90,180,10,15,9,2,meat
+fish taco,1 taco (120 g),120,230,12,20,11,2,fish dairy
+birria taco|quesabirria,1 taco (130 g),130,300,17,16,18,2,meat dairy
+tostada,1 tostada (100 g),100,200,8,20,10,4,dairy
+elote|mexican street corn,1 ear (150 g),150,250,7,28,14,3,dairy
+churros|churro,1 churro (35 g),35,120,1.5,14,6.5,0.4,gluten
+horchata,1 glass (250 ml),250,180,1,38,2.5,0,dairy
+mole|chicken mole,1 cup (240 g),240,420,30,18,26,4,meat nuts
+arepa|arepa con queso,1 arepa (120 g),120,280,8,34,12,3,dairy
+empanada,1 empanada (100 g),100,280,9,26,16,1.5,gluten meat
+pupusa,1 pupusa (130 g),130,300,10,34,14,4,dairy
+feijoada,1 cup (250 g),250,380,25,30,17,9,meat
+pao de queijo|cheese bread,1 piece (25 g),25,80,2,9,4,0,dairy egg
+ceviche,1 cup (180 g),180,170,26,10,2,2,fish
+lomo saltado,1 plate (400 g),400,650,35,60,28,5,meat soy
+aji de gallina,1 cup (240 g),240,420,28,20,25,2,meat dairy nuts gluten
+picanha,100 g,100,290,23,0,22,0,meat
+arroz con pollo,1 cup (240 g),240,350,22,40,10,2,meat
+tres leches cake|tres leches,1 slice (120 g),120,360,7,50,15,0.3,gluten dairy egg
+flan,1 piece (120 g),120,250,7,38,8,0,dairy egg
+dulce de leche,1 tbsp (20 g),20,64,1.4,11,1.6,0,dairy
+plantain|fried plantain|maduros,1 cup (120 g),120,280,1.5,48,10,3.5,
+tostones,1 piece (25 g),25,70,0.3,10,3.5,0.7,
+rice and beans|arroz con habichuelas,1 cup (240 g),240,330,12,58,5,9,
+jerk chicken,1 leg (200 g),200,360,40,6,19,1,meat
+curry goat,1 cup (240 g),240,380,35,8,23,2,meat
+ackee and saltfish,1 cup (200 g),200,380,22,6,30,3,fish
+roti caribbean|chicken roti,1 roti wrap (350 g),350,700,30,75,30,6,gluten meat
+# Spanish & Portuguese ----------------------------------------
+tortilla espanola|spanish omelette|tortilla de patatas,1 slice (150 g),150,250,9,18,16,1.5,egg
+gazpacho,1 cup (240 g),240,110,2,10,7,2,
+patatas bravas,1 cup (150 g),150,290,3,32,17,3,
+croquetas|croquettes,1 piece (30 g),30,80,2.5,7,4.5,0.3,gluten dairy meat
+jamon iberico|serrano ham|jamón,1 slice (15 g),15,40,4.5,0,2.4,0,meat
+chorizo,1 slice (10 g),10,45,2.4,0.2,3.8,0,meat
+pastel de nata|portuguese custard tart,1 tart (60 g),60,190,3,24,9,0.3,gluten dairy egg
+bacalhau|salt cod with potatoes,1 plate (350 g),350,520,38,30,27,3,fish egg
+gambas al ajillo|garlic prawns,1 cup (150 g),150,300,24,3,21,0.3,fish
+sangria,1 glass (200 ml),200,180,0.2,18,0,0,alcohol
+# African ----------------------------------------
+injera,1 piece (125 g),125,165,6,33,1,4,
+doro wat|doro wot,1 cup (240 g),240,350,30,10,21,3,meat egg
+misir wat|misir wot,1 cup (240 g),240,250,13,34,7,12,
+shiro|shiro wat,1 cup (240 g),240,260,13,30,10,9,
+tibs|ethiopian tibs,1 cup (200 g),200,380,32,6,25,2,meat
+jollof rice,1 cup (200 g),200,320,6,52,10,2,
+egusi soup,1 cup (240 g),240,450,25,10,35,4,meat fish
+fufu,1 cup (240 g),240,330,1,80,0.5,4,
+suya,1 skewer (100 g),100,250,25,4,15,1,meat nuts
+bobotie,1 cup (240 g),240,420,26,20,26,2,meat egg dairy
+tagine|chicken tagine,1 cup (250 g),250,350,28,20,17,5,meat nuts
+harira,1 cup (240 g),240,200,10,28,5,7,meat gluten
+couscous royal|moroccan couscous with meat,1 plate (450 g),450,700,38,80,24,8,gluten meat
+mandazi,1 piece (50 g),50,180,3,22,9,0.6,gluten egg dairy
+bunny chow,1 quarter loaf (450 g),450,800,32,95,32,8,gluten meat
+biltong,1 piece (10 g),10,30,5.5,0.3,0.8,0,meat
+# European, Russian, German & British ----------------------------------------
+borscht|borsch,1 cup (240 g),240,130,5,16,5,4,meat dairy
+pelmeni,1 piece (12 g),12,30,1.4,3,1.3,0.1,gluten meat
+pierogi|varenyky,1 piece (40 g),40,90,3,13,3,0.6,gluten dairy
+blini,1 blini (40 g),40,90,3,12,3.5,0.4,gluten egg dairy
+syrniki,1 piece (50 g),50,120,7,10,6,0.2,dairy egg gluten
+beef stroganoff|stroganoff,1 cup (240 g),240,400,28,10,28,1,meat dairy
+plov|uzbek plov,1 cup (220 g),220,400,14,48,17,2,meat
+khachapuri,1 slice (100 g),100,330,13,32,17,1,gluten dairy egg
+schnitzel|wiener schnitzel,1 piece (150 g),150,430,30,18,26,1,meat gluten egg
+bratwurst,1 sausage (85 g),85,280,12,2,25,0,meat
+currywurst,1 serving (200 g),200,450,14,22,34,2,meat
+sauerkraut,1 cup (140 g),140,27,1.3,6,0.2,4,
+pretzel bread|soft pretzel|brezel,1 pretzel (100 g),100,340,9,70,3,2,gluten
+spaetzle|spätzle,1 cup (150 g),150,300,10,48,7,2,gluten egg
+apple strudel|strudel,1 slice (100 g),100,270,3,38,12,2,gluten dairy
+black forest cake,1 slice (100 g),100,330,4,38,18,1.5,gluten dairy egg
+swedish meatballs,1 meatball (25 g),25,70,4,2,5,0.1,meat dairy gluten
+cinnamon bun|kanelbulle,1 bun (80 g),80,300,5,42,12,1.5,gluten dairy egg
+smorrebrod|open sandwich,1 slice (120 g),120,250,12,20,13,3,gluten fish egg
+herring|pickled herring,1 piece (30 g),30,75,4,3,5,0,fish
+fondue|cheese fondue,1 cup with bread (200 g),200,560,26,40,32,2,dairy gluten
+raclette,1 portion (200 g cheese+potatoes),350,750,32,40,50,4,dairy
+rosti|rösti,1 piece (150 g),150,250,3,28,14,3,
+goulash soup|gulyas,1 cup (240 g),240,250,18,15,13,3,meat
+moules frites|mussels and fries,1 plate (500 g),500,850,40,70,45,6,fish
+belgian waffle,1 waffle (100 g),100,360,7,45,17,1,gluten egg dairy
+stamppot,1 cup (250 g),250,280,8,30,15,5,meat dairy
+bangers and mash,1 plate (400 g),400,700,25,55,42,5,meat dairy gluten
+cornish pasty|pasty,1 pasty (230 g),230,620,16,58,36,3,gluten meat
+sausage roll,1 roll (100 g),100,330,9,26,22,1,gluten meat
+scone,1 scone (70 g),70,250,5,35,10,1,gluten dairy egg
+scotch egg,1 egg (120 g),120,300,15,13,21,1,egg meat gluten
+yorkshire pudding,1 pudding (40 g),40,100,3.5,10,5,0.4,gluten egg dairy
+beans on toast,1 plate (250 g),250,330,14,52,6,10,gluten
+haggis,1 cup (150 g),150,400,16,24,27,1,meat gluten
+crumpet,1 crumpet (55 g),55,100,3,20,0.5,1,gluten
+sticky toffee pudding,1 portion (150 g),150,500,5,72,22,1,gluten dairy egg
+# American ----------------------------------------
+buffalo wings|hot wings,1 wing (35 g),35,90,7,0.5,6.5,0,meat dairy
+mozzarella sticks,1 stick (30 g),30,90,4.5,7,5,0.3,gluten dairy
+onion rings,1 ring (15 g),15,45,0.6,5,2.6,0.3,gluten
+corn dog,1 corn dog (75 g),75,220,7,23,11,1,gluten meat
+philly cheesesteak|cheesesteak,1 sandwich (300 g),300,700,40,55,35,2,gluten meat dairy
+reuben sandwich|reuben,1 sandwich (300 g),300,700,35,40,44,4,gluten meat dairy
+pulled pork sandwich,1 sandwich (250 g),250,500,28,48,21,2,gluten meat
+bbq ribs|pork ribs,1 rib (75 g),75,220,14,4,16,0,meat
+brisket,100 g,100,280,26,1,19,0,meat
+meatloaf,1 slice (150 g),150,330,22,12,21,1,meat egg gluten
+biscuits and gravy,1 plate (300 g),300,650,15,55,40,2,gluten dairy meat
+clam chowder,1 cup (240 g),240,230,10,20,12,1,fish dairy gluten
+cobb salad,1 bowl (350 g),350,520,35,12,38,5,meat egg dairy
+chicken pot pie,1 pie (300 g),300,650,22,52,40,3,gluten meat dairy
+cornbread,1 piece (60 g),60,180,4,28,6,1,gluten egg dairy
+pumpkin pie,1 slice (125 g),125,320,6,40,15,2.5,gluten dairy egg
+pecan pie,1 slice (120 g),120,500,6,64,25,2,gluten nuts egg
+banana bread,1 slice (60 g),60,200,3,30,8,1,gluten egg
+milkshake,1 cup (350 ml),350,500,12,70,20,0,dairy
+bagel with cream cheese,1 bagel,130,430,13,58,15,2,gluten dairy
+lox bagel|bagel and lox,1 bagel,180,480,25,60,15,2,gluten dairy fish
+chicken and waffles,1 plate (350 g),350,850,40,70,45,2,gluten meat egg dairy
+poutine,1 cup (250 g),250,600,15,55,35,4,dairy gluten
+butter tart,1 tart (60 g),60,250,2,34,12,0.5,gluten egg dairy
+nanaimo bar,1 bar (60 g),60,280,3,30,17,1,gluten dairy egg nuts
+tourtiere|tourtière,1 slice (150 g),150,450,18,30,29,2,gluten meat
+# More fruits, vegetables & staples ----------------------------------------
+lychee|litchi,1 lychee (10 g),10,7,0.1,1.7,0,0.1,
+dragon fruit|pitaya,1 cup (200 g),200,120,2.4,26,0.8,6,
+passion fruit,1 fruit (18 g),18,17,0.4,4.2,0.1,1.9,
+guava,1 guava (55 g),55,37,1.4,8,0.5,3,
+jackfruit,1 cup (165 g),165,157,2.8,38,1,2.5,
+coconut|fresh coconut,1 piece (45 g),45,160,1.5,7,15,4,
+cranberries dried|craisins,1 tbsp (10 g),10,31,0,8.3,0.1,0.5,
+prunes,1 prune (10 g),10,24,0.2,6.4,0,0.7,
+quince,1 quince (90 g),90,52,0.4,14,0.1,1.7,
+mulberries,1 cup (140 g),140,60,2,14,0.5,2.4,
+sour cherries,1 cup (155 g),155,78,1.6,19,0.5,2.5,
+okra,1 cup (100 g),100,33,1.9,7,0.2,3.2,
+artichoke,1 artichoke (120 g),120,64,3.5,14,0.4,7,
+leek,1 leek (90 g),90,55,1.3,13,0.3,1.6,
+radish,1 radish (5 g),5,1,0,0.2,0,0.1,
+turnip,1 cup (130 g),130,36,1.2,8,0.1,2.3,
+pumpkin|butternut squash,1 cup (205 g),205,82,1.8,22,0.2,6.6,
+bok choy,1 cup (170 g cooked),170,20,2.7,3,0.3,1.7,
+fresh herbs|parsley|cilantro|coriander,1 cup (60 g),60,22,1.8,3.8,0.5,2,
+garlic,1 clove (3 g),3,4,0.2,1,0,0.1,
+ginger,1 tbsp (6 g),6,5,0.1,1,0,0.1,
+wild rice,1 cup cooked (164 g),164,166,6.5,35,0.6,3,
+farro,1 cup cooked (170 g),170,220,8,47,1.5,7,gluten
+buckwheat|kasha,1 cup cooked (168 g),168,155,5.7,33,1,4.5,
+millet,1 cup cooked (174 g),174,207,6,41,1.7,2.3,
+freekeh,1 cup cooked (160 g),160,200,7,40,1.5,8,gluten
+white beans|cannellini,1 cup cooked (179 g),179,250,17,45,0.6,11,
+mung beans,1 cup cooked (202 g),202,212,14,39,0.8,15,
+cottage cheese low fat,1 cup (226 g),226,180,28,8,2.5,0,dairy
+ricotta,1 tbsp (15 g),15,26,1.7,0.5,1.9,0,dairy
+goat milk,1 cup (240 ml),240,170,9,11,10,0,dairy
+lassi|sweet lassi,1 glass (250 ml),250,180,6,28,5,0,dairy
+egg whites carton|liquid egg whites,1 tbsp (15 g),15,8,1.6,0.1,0,0,egg
+duck breast,100 g,100,200,24,0,11,0,meat
+goat meat,100 g cooked,100,143,27,0,3,0,meat
+venison,100 g cooked,100,158,30,0,3.2,0,meat
+veal,100 g cooked,100,196,32,0,7,0,meat
+halibut,100 g cooked,100,140,27,0,2.9,0,fish
+anchovies,1 fillet (4 g),4,8,1.2,0,0.4,0,fish
+octopus,100 g cooked,100,164,30,4.4,2.1,0,fish
+scallops,1 scallop (15 g),15,17,3,0.8,0.1,0,fish
+lobster,100 g cooked,100,89,19,0,0.9,0,fish
+oysters,1 oyster (14 g),14,10,1.3,0.6,0.3,0,fish

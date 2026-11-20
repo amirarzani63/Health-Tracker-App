@@ -59,12 +59,23 @@ def builtin_foods() -> tuple[Food, ...]:
     return tuple(foods)
 
 
+def _shared():
+    """Foods people add are shared by everyone: they're kept in the main (profile 1) tables."""
+    from app.db import SessionLocal
+    return SessionLocal()
+
+
 def custom_foods(db: Session | None) -> list[Food]:
     if db is None:
         return []
-    return [Food(names=[c.name.lower()], unit=c.unit or "1 serving", grams=0, calories=c.calories,
-                 protein_g=c.protein_g, carbs_g=c.carbs_g, fat_g=c.fat_g, fiber_g=c.fiber_g, custom=True)
-            for c in db.scalars(select(CustomFood))]
+    with _shared() as sdb:
+        rows = list(sdb.scalars(select(CustomFood)))
+        if db.bind is not sdb.bind:  # foods a person saved privately before sharing existed
+            names = {r.name.lower() for r in rows}
+            rows += [c for c in db.scalars(select(CustomFood)) if c.name.lower() not in names]
+        return [Food(names=[c.name.lower()], unit=c.unit or "1 serving", grams=0, calories=c.calories,
+                     protein_g=c.protein_g, carbs_g=c.carbs_g, fat_g=c.fat_g, fiber_g=c.fiber_g, custom=True)
+                for c in rows]
 
 
 def all_foods(db: Session | None = None) -> list[Food]:
@@ -122,10 +133,12 @@ def search(query: str, db: Session | None = None, banned: set[str] | None = None
 
 def save_custom(db: Session, name: str, unit: str, values: dict) -> CustomFood:
     name = name.strip()[:120]
-    row = db.scalar(select(CustomFood).where(CustomFood.name == name)) or CustomFood(name=name)
-    row.unit = (unit or "1 serving").strip()[:60]
-    for k in ("calories", "protein_g", "carbs_g", "fat_g", "fiber_g"):
-        setattr(row, k, max(0.0, float(values.get(k) or 0)))
-    db.add(row)
-    db.commit()
-    return row
+    with _shared() as sdb:
+        row = sdb.scalar(select(CustomFood).where(CustomFood.name == name)) or CustomFood(name=name)
+        row.unit = (unit or "1 serving").strip()[:60]
+        for k in ("calories", "protein_g", "carbs_g", "fat_g", "fiber_g"):
+            setattr(row, k, max(0.0, float(values.get(k) or 0)))
+        sdb.add(row)
+        sdb.commit()
+        sdb.refresh(row)
+        return row

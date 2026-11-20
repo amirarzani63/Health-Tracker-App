@@ -55,7 +55,7 @@ def test_endpoint_and_bulk_log(client):
 def test_database_rows_are_consistent():
     from app.services import food_db
     foods = food_db.builtin_foods()
-    assert len(foods) > 350
+    assert len(foods) > 800
     seen = {}
     for f in foods:
         for n in f.names:
@@ -74,12 +74,12 @@ def test_cup_amounts_and_trailing_amounts():
 
 
 def test_my_foods_are_learned(client):
-    r = client.post("/api/foods/analyze", data={"description": "2 mama's kotlet"})
+    r = client.post("/api/foods/analyze", data={"description": "2 mama's zrazy qorma"})
     assert r.json()["items"] == []
-    client.post("/api/my-foods", json={"name": "Mama's kotlet", "calories": 210, "protein_g": 12, "fat_g": 13, "carbs_g": 11})
-    items = client.post("/api/foods/analyze", data={"description": "2 mama's kotlet and a banana"}).json()["items"]
+    client.post("/api/my-foods", json={"name": "Mama's zrazy qorma", "calories": 210, "protein_g": 12, "fat_g": 13, "carbs_g": 11})
+    items = client.post("/api/foods/analyze", data={"description": "2 mama's zrazy qorma and a banana"}).json()["items"]
     assert [round(i["calories"]) for i in items] == [420, 105]
-    found = client.get("/api/food-library?q=kotlet").json()
+    found = client.get("/api/food-library?q=zrazy").json()
     assert found[0]["custom"] and found[0]["calories"] == 210
     assert client.get("/api/food-db/stats").json()["mine"] == 1
 
