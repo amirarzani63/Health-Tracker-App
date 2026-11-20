@@ -24,7 +24,7 @@ def test_grams_scale_portion():
 
 def test_longest_name_wins_and_fractions():
     assert parse_item("greek yogurt")["protein_g"] == 20
-    assert parse_item("1/2 avocado")["calories"] == 80
+    assert parse_item("1/2 avocado")["calories"] == 160  # half of a 320 kcal avocado
     assert parse_item("1 tbsp peanut butter")["calories"] == 94
 
 
@@ -82,3 +82,18 @@ def test_my_foods_are_learned(client):
     found = client.get("/api/food-library?q=kotlet").json()
     assert found[0]["custom"] and found[0]["calories"] == 210
     assert client.get("/api/food-db/stats").json()["mine"] == 1
+
+
+def test_every_food_is_measured_in_one_logical_unit():
+    """Portions are one cup / tbsp / piece / slice / item (or grams), never "10 olives" or "1/2 cup"."""
+    import csv
+    import re
+    from app.services.food_db import CSV_PATH
+    bad = []
+    for r in csv.reader(open(CSV_PATH)):
+        if not r or r[0].startswith("#") or r[0] == "names" or r[0].startswith("grapefruit") or r[0].startswith("sub"):
+            continue
+        m = re.match(r"^(\d+/\d+|\d+(?:\.\d+)?)\s+(\S+)", r[1])
+        if m and m.group(2) not in ("g", "ml") and m.group(1) != "1":
+            bad.append(r[1])
+    assert not bad, bad
