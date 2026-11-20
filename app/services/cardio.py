@@ -55,6 +55,10 @@ ACTIVITIES = {
     "surfing": ("Surfing", 3.0),
     "snorkeling": ("Snorkeling", 5.0),
     "water_polo": ("Water polo", 10.0),
+    "yoga_hatha": ("Yoga: Hatha (gentle)", 2.5),
+    "yoga_vinyasa": ("Yoga: Vinyasa / flow (sun salutations)", 3.3),
+    "yoga_power": ("Yoga: Power / Ashtanga", 4.0),
+    "yoga_yin": ("Yoga: Yin / restorative", 2.0),
     "water_skiing": ("Water skiing / wakeboarding", 6.0),
 }
 

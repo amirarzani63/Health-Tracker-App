@@ -1009,6 +1009,10 @@ const CARDIO_OPTS = {
   jump_rope: { label: "Rope skipping", photo: "Rope Jumping", met: 8.8,
     how: ["Small, low hops on the balls of your feet; turn the rope with your wrists.", "Beginners: skip 30 seconds, rest 30 seconds, and repeat. Count only the time you skip."] },
   // sports: pick any of them on any day; effort values from the Compendium of Physical Activities
+  yoga_hatha: { label: "Yoga: Hatha (gentle)", group: "Yoga", met: 2.5, how: ["Count the whole class or session."] },
+  yoga_vinyasa: { label: "Yoga: Vinyasa / flow (sun salutations)", group: "Yoga", met: 3.3, how: ["Flowing from pose to pose."] },
+  yoga_power: { label: "Yoga: Power / Ashtanga", group: "Yoga", met: 4.0, how: ["Strong, sweaty, continuous practice."] },
+  yoga_yin: { label: "Yoga: Yin / restorative", group: "Yoga", met: 2.0, how: ["Long, relaxed holds and breathing."] },
   tennis_singles: { label: "Tennis (singles)", group: "Racquet sports", met: 8.0, how: ["Count only the time you're playing, not long breaks."] },
   tennis_doubles: { label: "Tennis (doubles)", group: "Racquet sports", met: 6.0, how: ["Count only the time you're playing, not long breaks."] },
   padel: { label: "Padel", group: "Racquet sports", met: 6.0, how: ["Count the time on court."] },
@@ -1041,7 +1045,7 @@ const CARDIO_OPTS = {
   water_polo: { label: "Water polo", group: "Water sports", met: 10.0, how: ["Count your playing time."] },
   water_skiing: { label: "Water skiing / wakeboarding", group: "Water sports", met: 6.0, how: ["Count the time on the water."] },
 };
-const SPORT_ICON = { "Racquet sports": "🎾", "Winter sports": "⛷️", "Water sports": "🏊" };
+const SPORT_ICON = { Yoga: "🧘", "Racquet sports": "🎾", "Winter sports": "⛷️", "Water sports": "🏊" };
 const cardioThumb = (k) => CARDIO_OPTS[k]?.photo ? `<img class="cl-thumb" data-cl-photo="${esc(CARDIO_OPTS[k].photo)}" alt="">`
   : `<span class="cl-thumb cl-emoji">${SPORT_ICON[CARDIO_OPTS[k]?.group] || "🏃"}</span>`;
 // dropdown options grouped: gym cardio first, then each sport family

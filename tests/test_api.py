@@ -268,9 +268,9 @@ def test_person_can_be_chosen_by_header(client):
 
 def test_sports_can_be_logged_on_any_day_and_count_as_burn(client):
     client.put("/api/profile", json={**client.get("/api/profile").json(), "weight_kg": 80})
-    for act, met in (("tennis_singles", 8.0), ("ski_downhill", 5.3), ("swim_freestyle", 5.8), ("padel", 6.0)):
+    for act, met in (("yoga_vinyasa", 3.3), ("tennis_singles", 8.0), ("ski_downhill", 5.3), ("swim_freestyle", 5.8), ("padel", 6.0)):
         r = client.post("/api/cardio-log", json={"day": "2026-11-10", "activity": act, "minutes": 60}).json()
         assert r["items"][-1]["calories"] == round(met * 3.5 * 80 / 200 * 60)
     r = client.get("/api/cardio-log?day=2026-11-10").json()
-    assert r["total_minutes"] == 240
+    assert r["total_minutes"] == 300
     assert client.post("/api/cardio-log", json={"day": "2026-11-10", "activity": "made_up", "minutes": 10}).status_code == 422
