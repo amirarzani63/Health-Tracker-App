@@ -79,3 +79,46 @@ def logged(db: Session, start: date, end: date) -> dict[date, float]:
     for r in db.scalars(select(CardioLog).where(CardioLog.day >= start, CardioLog.day <= end)):
         out[r.day] = out.get(r.day, 0) + r.calories
     return out
+
+
+STRENGTH_MET = 5.0  # weight training, moderate-to-vigorous with short rests (Compendium of Physical Activities)
+
+
+def _minutes(text: str) -> float:
+    import re
+    m = re.search(r"(\d+(?:\.\d+)?)\s*min", str(text or ""))
+    return float(m.group(1)) if m else 0.0
+
+
+def planned_workout_kcal(db: Session, start: date, end: date, done: dict, profile) -> dict[date, float]:
+    """Calories from planned workouts marked done (✓) that weren't logged as cardio.
+
+    Strength days: the whole session (lifting + any cardio finisher) at ~5 METs; if cardio was also logged
+    that day, only the lifting part counts so nothing is counted twice. Cardio days ticked done without a
+    cardio log count their planned minutes at ~5 METs.
+    """
+    from datetime import timedelta
+
+    from app.models import WorkoutPlan
+    plan = db.scalar(select(WorkoutPlan).where(WorkoutPlan.active).order_by(WorkoutPlan.created_at.desc()))
+    if not plan or not profile or not profile.weight_kg:
+        return {}
+    by_wd = {d.get("weekday"): d for d in plan.days or []}
+    names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    logged_days = set(logged(db, start, end))
+    per_min = STRENGTH_MET * 3.5 * profile.weight_kg / 200
+    out: dict[date, float] = {}
+    d = start
+    while d <= end:
+        day = by_wd.get(names[d.weekday()])
+        if done.get(d.isoformat()) is True and day:
+            if day.get("type") == "strength":
+                exs = day.get("exercises") or []
+                cardio_min = sum(_minutes(e.get("reps")) for e in exs if e.get("pattern") == "cardio")
+                total = day.get("minutes") or (len([e for e in exs if e.get("pattern") != "cardio"]) * 8 + cardio_min)
+                mins = total - cardio_min if d in logged_days else total
+                out[d] = round(per_min * max(0, mins))
+            elif day.get("type") == "cardio" and d not in logged_days:
+                out[d] = round(per_min * (day.get("minutes") or 0))
+        d += timedelta(days=1)
+    return out

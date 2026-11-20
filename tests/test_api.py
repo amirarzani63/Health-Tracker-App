@@ -317,3 +317,19 @@ def test_app_script_has_no_syntax_errors():
     r = subprocess.run([node, "-e", "new Function(require('fs').readFileSync(process.argv[1], 'utf8'))", str(STATIC / "app.js")],
                        capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
+
+
+def test_finished_strength_workout_counts_as_exercise_burn(client):
+    from datetime import date, timedelta
+    client.post("/api/users", json={**SARA, "injuries": ["none"]})
+    plan = client.get("/api/plans/active").json()
+    names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    strength = {d["weekday"]: d for d in plan["days"] if d["type"] == "strength"}
+    day = next(date.today() - timedelta(days=i) for i in range(7) if names[(date.today() - timedelta(days=i)).weekday()] in strength)
+    before = client.get(f"/api/dashboard?day={day}").json()
+    client.post("/api/plans/checkins/all", json={"day": day.isoformat(), "done": True})
+    after = client.get(f"/api/dashboard?day={day}").json()
+    mins = strength[names[day.weekday()]]["minutes"]
+    expected = round(5.0 * 3.5 * 70 / 200 * mins)
+    assert after["cardio_kcal"] - before["cardio_kcal"] == expected > 0
+    assert after["burned"] - before["burned"] == expected

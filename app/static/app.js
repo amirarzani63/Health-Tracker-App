@@ -305,7 +305,7 @@ function renderCluster(d) {
         <div class="vs-row"><span>Resting</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (restKcal / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(restKcal)}</b></div>
         <div class="vs-row"><span>Exercise</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (exKcal / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(exKcal)}</b></div>`}
         ${eaten > 0 ? `<span class="ibox-big ${net <= 0 ? "good" : "bad"}">${net <= 0 ? `You burned ${fmt(-net)} more than you ate` : `You ate ${fmt(net)} more than you burned`}</span>` : `<span class="ibox-big">Nothing eaten logged yet</span>`}
-        <span class="ibox-hint">${d.burn_source === "typed" ? "Burned = the total you typed from your watch." : `Resting = what your body uses just to stay alive (breathing, heartbeat, keeping warm), worked out from your age, height and weight. Exercise = cardio you logged${exKcal ? "" : " (nothing yet: tap to log cardio)"}.`}</span>
+        <span class="ibox-hint">${d.burn_source === "typed" ? "Burned = the total you typed from your watch." : `Resting = what your body uses just to stay alive (breathing, heartbeat, keeping warm), worked out from your age, height and weight. Exercise = workouts you marked done ✓ (weights count too) + cardio and sports you logged${exKcal ? "" : " (nothing yet: tick today's workout as done, or log cardio)"}.`}</span>
         <span class="ibox-hint">${net <= 0 ? "Good: burning more than you eat is what makes you lose weight." : "To lose weight, you need to burn more than you eat."}</span>`}
       </div>
       <div class="ibox tap" role="button" tabindex="0" data-quick="steps">

@@ -129,8 +129,12 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
     logs = {r.day: r for r in db.scalars(select(DayLog).where(DayLog.day >= start, DayLog.day <= end))}
     checked = checkins(db)
     from app.services import cardio as _cardio
-    cardio_kcal = _cardio.logged(db, start, end)
     _profile = get_profile(db)
+    cardio_kcal = _cardio.logged(db, start, end)
+    # workouts marked done also burn calories (lifting counts, not only logged cardio)
+    status = workout_status(db, end) if end >= start else {}
+    for day, kcal in _cardio.planned_workout_kcal(db, start, end, status, _profile).items():
+        cardio_kcal[day] = cardio_kcal.get(day, 0) + kcal
 
     out = []
     d = start
