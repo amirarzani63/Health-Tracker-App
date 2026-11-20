@@ -745,7 +745,7 @@ async function openExercise(name, part) {
     ? `<span class="mtag prim">Main: ${info.primaryNames.map(esc).join(", ")}</span>` : `<span class="mtag">General movement</span>`)
     + (info.secondaryNames.length ? `<span class="mtag sec">Also: ${info.secondaryNames.map(esc).join(", ")}</span>` : "");
   $("#exCues").innerHTML = info.cues.map((c) => `<li>${esc(c)}</li>`).join("")
-    + `<li class="vid-li"><a class="vid-link" href="${videoUrl(name)}" target="_blank" rel="noopener">▶ Watch a video of this exercise</a></li>`;
+    + `<li class="vid-li">${videoButton(name, "▶ Watch the video for this exercise")}</li>`;
   $("#exDialog").showModal();
 }
 $("#exClose").onclick = () => $("#exDialog").close();
@@ -946,8 +946,29 @@ function sessionTitle(s) {
 }
 const dayName = (wd) => DAY_LONG[wd] || wd;
 
-// a free YouTube search for a demonstration (just a link: no account, API or cost)
+// one exact demonstration video per exercise, played in YouTube's free privacy-enhanced player
+const VIDEOS = { map: null };
+api("/api/exercise-videos").then((m) => { VIDEOS.map = m; }).catch(() => {});
 const videoUrl = (name) => "https://www.youtube.com/results?search_query=" + encodeURIComponent(`how to do ${name.replace(/\s*\(.*?\)/g, "")} exercise proper form`);
+function videoButton(name, label = "▶ Watch video") {
+  return `<button type="button" class="vid-link" data-video="${esc(name)}">${label}</button>`;
+}
+async function playVideo(name) {
+  if (!VIDEOS.map) { try { VIDEOS.map = await api("/api/exercise-videos"); } catch { VIDEOS.map = {}; } }
+  const id = VIDEOS.map[name];
+  if (!id) { window.open(videoUrl(name), "_blank", "noopener"); return; }
+  const dlg = $("#videoDialog");
+  $("#videoTitle").textContent = name;
+  $("#videoFrame").innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1&modestbranding=1"
+    title="${esc(name)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  $("#videoOpen").href = `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
+  dlg.showModal();
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-video]");
+  if (!b) return;
+  e.preventDefault(); playVideo(b.dataset.video);
+});
 function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
   return `<div class="exlist${compact ? " compact" : ""}">
     ${title ? `<h3 class="poster-title">${esc(title)}</h3>` : ""}${sub ? `<p class="poster-sub">${sub}</p>` : ""}
@@ -959,7 +980,7 @@ function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
       <div class="exmus"></div>
       <ol class="exsteps"${x.howto ? ' data-own="1"' : ""}>${(x.howto || []).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>
       <div class="exbtns"><button class="ghost small" data-ex="${esc(x.photo || x.exercise)}">How to do it</button>
-      ${x.pattern === "cardio" ? "" : `<a class="vid-link" href="${videoUrl(x.exercise)}" target="_blank" rel="noopener">▶ Watch a video</a>`}</div>
+      ${x.pattern === "cardio" ? "" : videoButton(x.exercise)}</div>
     </article>`).join("")}</div>`;
 }
 async function hydratePosters(root = document) {
@@ -2269,3 +2290,6 @@ async function cardioPreview() {
 }
 new MutationObserver(() => fillCardioPhotos()).observe(document.body, { childList: true, subtree: true });
 document.addEventListener("change", (e) => { if (e.target.id === "cardioAct") cardioPreview(); });
+
+$("#videoClose").addEventListener("click", () => { $("#videoFrame").innerHTML = ""; $("#videoDialog").close(); });
+$("#videoDialog").addEventListener("close", () => { $("#videoFrame").innerHTML = ""; });  // stop playback

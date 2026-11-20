@@ -79,3 +79,13 @@ def test_every_generated_plan_exercise_has_the_right_photo():
     for n in names:
         m = match(n)
         assert m and m["images"] and m["name"] == PHOTO[n].lstrip("~"), n
+
+
+def test_every_plan_exercise_has_one_exact_video():
+    import re
+    from app.services.preset_plan import DAYS
+    from app.services.videos import VIDEOS
+    from app.services.workout_planner import PHOTO
+    names = set(PHOTO) | {e["exercise"] for d in DAYS for e in d["exercises"] if e.get("pattern") != "cardio"}
+    assert not sorted(n for n in names if n not in VIDEOS)
+    assert all(re.fullmatch(r"[A-Za-z0-9_-]{11}", v) for v in VIDEOS.values())

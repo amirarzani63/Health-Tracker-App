@@ -76,3 +76,10 @@ def exlib_match(data: _Names):
 @router.get("/exlib/search")
 def exlib_search(q: str = ""):
     return exlib.search(q)
+
+
+@router.get("/exercise-videos")
+def exercise_videos() -> dict:
+    """Exercise name -> YouTube video id (one exact demonstration per exercise)."""
+    from app.services.videos import VIDEOS
+    return VIDEOS

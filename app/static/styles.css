@@ -1371,3 +1371,9 @@ body.dlg-open { overflow: hidden; }
 .shop-list label.got { opacity: .45; }
 .shop-list label.got .shop-item { text-decoration: line-through; }
 .shop-amt { font-weight: 700; text-align: right; }
+
+.video-dialog { width: min(720px, 96vw); padding: 12px; }
+.video-dialog .dlg-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.video-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 10px; overflow: hidden; }
+.video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+button.vid-link { background: none; cursor: pointer; }
