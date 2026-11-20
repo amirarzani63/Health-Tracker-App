@@ -869,3 +869,5 @@ octopus,100 g cooked,100,164,30,4.4,2.1,0,fish
 scallops,1 scallop (15 g),15,17,3,0.8,0.1,0,fish
 lobster,100 g cooked,100,89,19,0,0.9,0,fish
 oysters,1 oyster (14 g),14,10,1.3,0.6,0.3,0,fish
+# Homemade (Nov 2026): the user's recipe, 25 meatballs per batch
+turkey meatballs|turkey meatball|homemade turkey meatballs|my turkey meatballs,1 meatball,0,36,5,2.5,0.7,0.4,meat
