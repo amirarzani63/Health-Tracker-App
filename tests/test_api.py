@@ -198,7 +198,7 @@ def test_exercise_picker(client):
 SARA = {"name": "Sara", "sex": "female", "birth_year": 1990, "height_cm": 165, "weight_kg": 70,
         "activity_level": "light", "weight_goal": "lose", "target_weight_kg": 64, "goal_weeks": 12,
         "muscle_goal": "tone", "focus_areas": ["core", "shoulders"], "training_days": 3, "session_minutes": 45,
-        "experience": "beginner", "equipment": "home", "injuries": ["knees"], "diet_type": "vegetarian"}
+        "experience": "beginner", "equipment": "home", "equipment_list": ["dumbbells", "bench"], "injuries": ["knees"], "diet_type": "vegetarian"}
 
 
 def test_people_have_separate_data(client):
@@ -278,7 +278,7 @@ def test_sports_can_be_logged_on_any_day_and_count_as_burn(client):
 
 def test_beginner_at_full_gym_starts_with_machines_and_dumbbells(client):
     from app.routers.users import refresh_beginner_plans
-    client.post("/api/users", json={**SARA, "equipment": "gym", "injuries": ["none"]})
+    client.post("/api/users", json={**SARA, "equipment_list": ["dumbbells", "barbell", "bench", "cable", "machines", "pullup"], "injuries": ["none"]})
     names = [e["exercise"] for d in client.get("/api/plans/active").json()["days"] for e in d["exercises"]]
     assert names and not any("barbell" in n.lower() or n in ("Front squat", "Conventional deadlift") for n in names)
     refresh_beginner_plans()

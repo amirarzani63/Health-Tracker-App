@@ -36,6 +36,7 @@ class ProfileIn(BaseModel):
     muscle_goal: str = ""
     focus_areas: list[str] = []
     injuries: list[str] = []
+    equipment_list: list[str] = []
 
 
 class ProfileOut(ProfileIn, ORM):

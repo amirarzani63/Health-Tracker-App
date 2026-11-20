@@ -35,6 +35,91 @@ EXERCISES = {
     "carry": {"gym": ["Farmer's carry"], "home": ["Suitcase carry"], "bodyweight": ["Bear crawl"]},
 }
 
+# ---- Equipment-aware exercise catalog: (exercise, equipment it needs, type)
+# type: bar = barbell lift, mach = machine/cable, db = dumbbell, bw = bodyweight, hard = hard bodyweight
+EQUIPMENT_ITEMS = ["dumbbells", "barbell", "bench", "cable", "machines", "pullup", "bands", "kettlebell", "cardio"]
+EQUIPMENT_PRESETS = {"gym": set(EQUIPMENT_ITEMS), "home": {"dumbbells", "bench", "bands"}, "bodyweight": set()}
+CATALOG = {
+    "squat": [("Barbell back squat", {"barbell"}, "bar"), ("Front squat", {"barbell"}, "bar"), ("Leg press", {"machines"}, "mach"),
+              ("Goblet squat", {"dumbbells"}, "db"), ("Dumbbell split squat", {"dumbbells"}, "db"),
+              ("Bulgarian split squat", {"bench"}, "bw"), ("Bodyweight squat", set(), "bw")],
+    "hinge": [("Romanian deadlift", {"barbell"}, "bar"), ("Conventional deadlift", {"barbell"}, "bar"),
+              ("Hip thrust", {"barbell", "bench"}, "bar"), ("Dumbbell Romanian deadlift", {"dumbbells"}, "db"),
+              ("Dumbbell hip thrust", {"dumbbells", "bench"}, "db"), ("Back extension", {"machines"}, "mach"),
+              ("Single-leg RDL", {"dumbbells"}, "db"), ("Glute bridge", set(), "bw"), ("Single-leg hip hinge", set(), "bw")],
+    "h_push": [("Barbell bench press", {"barbell", "bench"}, "bar"), ("Dumbbell bench press", {"dumbbells", "bench"}, "db"),
+               ("Machine chest press", {"machines"}, "mach"), ("Incline dumbbell press", {"dumbbells", "bench"}, "db"),
+               ("Dumbbell floor press", {"dumbbells"}, "db"), ("Push-up", set(), "bw"), ("Decline push-up", set(), "hard")],
+    "v_push": [("Overhead barbell press", {"barbell"}, "bar"), ("Seated dumbbell shoulder press", {"dumbbells", "bench"}, "db"),
+               ("Dumbbell shoulder press", {"dumbbells"}, "db"), ("Arnold press", {"dumbbells"}, "db"), ("Pike push-up", set(), "hard")],
+    "h_pull": [("Barbell row", {"barbell"}, "bar"), ("Seated cable row", {"cable"}, "mach"), ("Chest-supported row", {"dumbbells", "bench"}, "db"),
+               ("One-arm dumbbell row", {"dumbbells"}, "db"), ("Band row", {"bands"}, "bw"), ("Inverted row (table)", set(), "hard")],
+    "v_pull": [("Pull-up", {"pullup"}, "hard"), ("Lat pulldown", {"cable"}, "mach"), ("Pull-up / negative", {"pullup"}, "bw"),
+               ("Band lat pulldown", {"bands"}, "bw"), ("Superman pull", set(), "bw")],
+    "lunge": [("Walking lunge", {"dumbbells"}, "db"), ("Step-up", {"dumbbells", "bench"}, "db"), ("Dumbbell reverse lunge", {"dumbbells"}, "db"),
+              ("Reverse lunge", set(), "bw"), ("Lateral lunge", set(), "bw")],
+    "calf": [("Standing calf raise", {"machines"}, "mach"), ("Single-leg calf raise", set(), "bw")],
+    "biceps": [("EZ-bar curl", {"barbell"}, "bar"), ("Cable curl", {"cable"}, "mach"), ("Dumbbell curl", {"dumbbells"}, "db"),
+               ("Hammer curl", {"dumbbells"}, "db"), ("Chin-up hold", {"pullup"}, "hard"), ("Towel curl", set(), "bw")],
+    "triceps": [("Cable pushdown", {"cable"}, "mach"), ("Skull crusher", {"barbell", "bench"}, "bar"),
+                ("Overhead dumbbell extension", {"dumbbells"}, "db"), ("Bench dip", {"bench"}, "bw"), ("Diamond push-up", set(), "hard")],
+    "core": [("Cable crunch", {"cable"}, "mach"), ("Hanging knee raise", {"pullup"}, "bw"), ("Dead bug", set(), "bw"),
+             ("Plank", set(), "bw"), ("Hollow hold", set(), "hard")],
+    "carry": [("Farmer's carry", {"dumbbells"}, "db"), ("Suitcase carry", {"dumbbells"}, "db"), ("Bear crawl", set(), "bw")],
+}
+FOCUS_CATALOG = {
+    "core": [("Cable crunch", {"cable"}), ("Hanging knee raise", {"pullup"}), ("Dead bug", set()), ("Plank", set()), ("Side plank", set())],
+    "shoulders": [("Dumbbell lateral raise", {"dumbbells"}), ("Face pull (cable with rope)", {"cable"}),
+                  ("Dumbbell rear-delt fly", {"dumbbells"}), ("Seated dumbbell shoulder press", {"dumbbells", "bench"}),
+                  ("Prone Y-T raise", set()), ("Wall slide", set())],
+    "arms": [("Cable curl", {"cable"}), ("Rope triceps pushdown (cable)", {"cable"}), ("Hammer curl", {"dumbbells"}),
+             ("Overhead dumbbell extension", {"dumbbells"}), ("Diamond push-up", set()), ("Bench dip", {"bench"})],
+    "back": [("Face pull (cable with rope)", {"cable"}), ("Back extension", {"machines"}), ("Seated cable row", {"cable"}),
+             ("Dumbbell rear-delt fly", {"dumbbells"}), ("One-arm dumbbell row", {"dumbbells"}), ("Superman hold", set()), ("Prone Y-T raise", set())],
+    "legs": [("Leg extension", {"machines"}), ("Leg curl", {"machines"}), ("Goblet squat", {"dumbbells"}),
+             ("Dumbbell reverse lunge", {"dumbbells"}), ("Bodyweight squat", set()), ("Reverse lunge", set())],
+    "glutes": [("Hip thrust", {"barbell", "bench"}), ("Cable glute kickback", {"cable"}), ("Dumbbell hip thrust", {"dumbbells", "bench"}),
+               ("Glute bridge", set()), ("Single-leg glute bridge", set())],
+    "chest": [("Cable fly", {"cable"}), ("Incline dumbbell press", {"dumbbells", "bench"}), ("Dumbbell fly", {"dumbbells", "bench"}),
+              ("Push-up", set()), ("Incline push-up", set())],
+}
+
+
+def equipment_set(equipment: str, equipment_list: list[str] | None = None) -> set[str]:
+    if equipment_list:
+        return set(equipment_list)
+    return set(EQUIPMENT_PRESETS.get(equipment, EQUIPMENT_PRESETS["gym"]))
+
+
+def ranked(pattern: str, have: set[str], experience: str, age: int, main: bool) -> list[str]:
+    """Exercises for a movement the person can do with their equipment, best fit first.
+
+    Beginners: machines and dumbbells first (easy to learn safely), hard bodyweight moves last.
+    Experienced: barbell compound lifts first for the main lifts (the core of proven programs).
+    55+: barbell squats/deadlifts moved down in favour of machines and dumbbells (joint-friendly).
+    """
+    opts = [(n, kind) for n, needs, kind in CATALOG[pattern] if needs <= have]
+    if experience == "beginner":
+        order = {"mach": 0, "db": 1, "bw": 2, "bar": 3, "hard": 4}
+    elif main:
+        order = {"bar": 0, "db": 1, "mach": 2, "hard": 3, "bw": 4}
+    else:
+        order = {"mach": 0, "db": 1, "bar": 2, "hard": 3, "bw": 4}
+    if age >= 55:
+        order["bar"] = 3
+    return [n for n, kind in sorted(opts, key=lambda o: order[o[1]])]
+
+
+PROGRAM_BASIS = {
+    2: "Full body A/B twice a week: the minimum that trains every muscle twice weekly (ACSM guideline).",
+    3: "Full body A/B/C three times a week: the structure used by popular free programs such as StrongLifts 5x5, Starting Strength and GZCLP.",
+    4: "Upper/lower split, 4 days: the classic structure of free programs such as PHUL and the upper/lower templates used by most coaches.",
+    5: "Push / pull / legs + upper / lower (PHAT-style), 5 days.",
+    6: "Push / pull / legs twice a week: the structure of the popular free Reddit PPL program.",
+}
+BEGINNER_BASIS = {4: "Full body 4 days alternating A/B/C: beginners progress fastest training each muscle often (like GZCLP / Fierce 5)."}
+
+
 # Beginners at a full gym: machine and dumbbell versions that are easy to learn safely without a coach.
 BEGINNER_GYM = {
     "squat": ["Goblet squat", "Leg press"],
@@ -219,7 +304,9 @@ def _week_note(week: int, weeks: int, goal: str) -> str:
 def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
                   equipment: str = "gym", experience: str = "intermediate",
                   include_cardio: bool = True, focus_areas: list[str] | None = None,
-                  injuries: list[str] | None = None, session_minutes: int = 60) -> dict:
+                  injuries: list[str] | None = None, session_minutes: int = 60,
+                  equipment_list: list[str] | None = None, age: int = 35, sex: str = "male", bmi: float = 24) -> dict:
+    have = equipment_set(equipment, equipment_list)
     focus_areas, injuries = focus_areas or [], [i for i in (injuries or []) if i != "none"]
     # roughly 8-10 minutes per exercise including rest; the warm-up takes the rest
     max_ex = max(3, min(8, (session_minutes - 5) // 8))
@@ -230,9 +317,9 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
     if experience == "beginner" and days_per_week == 4:
         split = ["full_a", "full_b", "full_a", "full_c"]
 
-    beginner_gym = experience == "beginner" and equipment == "gym"
+    beginner_gym = experience == "beginner" and "barbell" in have
     scheme = GOAL_SCHEME.get(goal, GOAL_SCHEME["general"])
-    set_adj = EXPERIENCE_SET_ADJUST.get(experience, 0)
+    set_adj = EXPERIENCE_SET_ADJUST.get(experience, 0) - (1 if age >= 60 else 0)  # 60+: a little less volume
     usage: dict[str, int] = {}
 
     training_days = []
@@ -240,7 +327,7 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
         title, patterns = DAY_TEMPLATES[key]
         exercises = []
         for i, pattern in enumerate(patterns):
-            options = (BEGINNER_GYM.get(pattern) if beginner_gym else None) or EXERCISES[pattern][equipment]
+            options = ranked(pattern, have, experience, age, i < 2 and pattern in MAIN_PATTERNS) or EXERCISES[pattern]["bodyweight"]
             idx = usage.get(pattern, 0)
             usage[pattern] = idx + 1
             is_main = i < 2 and pattern in MAIN_PATTERNS
@@ -260,7 +347,7 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
         # the person's focus areas: one extra exercise each, rotating, most important first
         extra_n = 0
         for area in focus_areas:
-            pool = FOCUS_EXTRAS.get(area, {}).get(equipment, [])
+            pool = [n for n, needs in FOCUS_CATALOG.get(area, []) if needs <= have]
             for k in range(len(pool)):
                 ex = pool[(usage.get("focus:" + area, 0) + k) % len(pool)]
                 if _avoid(ex, "", injuries) or any(e["exercise"] == ex for e in exercises):
@@ -279,7 +366,7 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
                 drop = next((i for i in range(len(exercises) - 1, -1, -1) if not exercises[i].get("focus")), len(exercises) - 1)
             exercises.pop(drop)
         if focus_areas:
-            title += " + " + " & ".join(FOCUS_LABELS.get(a, a) for a in focus_areas[:2] if a in FOCUS_EXTRAS)
+            title += " + " + " & ".join(FOCUS_LABELS.get(a, a) for a in focus_areas[:2] if a in FOCUS_CATALOG)
         if "flexibility" in focus_areas:
             exercises.append({"exercise": "Stretch: hips, hamstrings, chest and shoulders", "pattern": "mobility",
                               "sets": 1, "reps": "8 minutes", "rest_s": 0, "focus": "flexibility"})
@@ -302,7 +389,17 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
     if beginner_gym and weeks >= 4:
         progression[-2]["note"] += (" Moves feeling easy with good form? Next plan can use barbell versions "
                                     "(squat, bench press, deadlift): set your fitness level to 'Some experience' in About me.")
-    name = f"{goal.replace('_', ' ').title()} · {days_per_week} days/week · {equipment}"
+    basis = (BEGINNER_BASIS.get(days_per_week) if experience == "beginner" else None) or PROGRAM_BASIS[days_per_week]
+    notes = [f"Program basis: {basis} Sets and reps follow NSCA/ACSM ranges for your goal "
+             f"({'3-6 reps for strength' if goal == 'strength' else '6-12 reps for muscle' if goal == 'hypertrophy' else '8-15 reps'})."]
+    if age >= 60:
+        notes.append("Age 60+: one fewer round per exercise and machines/dumbbells first, to protect joints while building strength.")
+    if bmi >= 30:
+        notes.append("Cardio is low-impact (bike, elliptical, incline walking) to protect knees and ankles.")
+    progression[0]["note"] = " ".join(notes) + " " + progression[0]["note"]
+    kit = ("full gym" if {"barbell", "machines", "cable"} <= have else "gym" if have & {"cable", "machines", "barbell"}
+           else "home" if have else "no equipment")
+    name = f"{goal.replace('_', ' ').title()} · {days_per_week} days/week · {kit}"
     return {"name": name, "goal": goal, "weeks": weeks, "days": days, "progression": progression}
 
 

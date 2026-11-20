@@ -11,8 +11,11 @@ def test_plan_shapes(days, equipment):
     strength = [d for d in plan["days"] if d["type"] == "strength"]
     assert len(strength) == days
     for d in strength:
+        from app.services.workout_planner import CATALOG, EQUIPMENT_PRESETS
+        have = EQUIPMENT_PRESETS[equipment]
         for ex in d["exercises"]:
-            assert ex["exercise"] in EXERCISES[ex["pattern"]][equipment]
+            ok = {n for n, needs, _ in CATALOG[ex["pattern"]] if needs <= have}
+            assert ex["exercise"] in ok, (equipment, ex["exercise"])
     assert len({d["weekday"] for d in plan["days"]}) == len(plan["days"])  # no double-booked days
 
 
@@ -35,3 +38,21 @@ def test_readiness():
     low = SimpleNamespace(body_battery_high=30, sleep_s=5 * 3600, avg_stress=60)
     assert readiness(good)["level"] == "good"
     assert readiness(low)["level"] == "low"
+
+
+
+def test_equipment_age_and_experience_shape_the_plan():
+    from app.services.workout_planner import CATALOG
+    kit = ["dumbbells", "bench", "cable", "pullup"]  # no barbell, no machines
+    plan = generate_plan(goal="fat_loss", days_per_week=4, experience="beginner", include_cardio=False, equipment_list=kit)
+    needs = {n: nd for lst in CATALOG.values() for n, nd, _ in lst}
+    for d in plan["days"]:
+        for ex in d["exercises"]:
+            assert needs.get(ex["exercise"], set()) <= set(kit), ex["exercise"]
+    pro = generate_plan(goal="strength", days_per_week=4, experience="advanced", include_cardio=False)
+    firsts = [d["exercises"][0]["exercise"] for d in pro["days"]]
+    assert any("Barbell" in f or "deadlift" in f.lower() or "squat" in f.lower() for f in firsts)
+    older = generate_plan(goal="strength", days_per_week=4, experience="advanced", include_cardio=False, age=63)
+    mains = [e["exercise"] for d in older["days"] for e in d["exercises"][:2]]
+    assert "Barbell back squat" not in mains and "Conventional deadlift" not in mains
+    assert "Program basis" in older["progression"][0]["note"] and "60+" in older["progression"][0]["note"]

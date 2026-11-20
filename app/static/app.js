@@ -976,7 +976,9 @@ function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
       <header><span class="exnum">${i + 1}</span><h4>${esc(x.exercise)}</h4></header>
       <div class="pimg"><span class="pimg-ph">${esc(x.exercise.slice(0, 1))}</span></div>
       ${x.pattern === "cardio" ? `<dl class="exstats one"><div><dt>How long</dt><dd>${esc(x.reps)}</dd></div></dl>` : `<dl class="exstats"><div><dt>Rounds</dt><dd>${x.sets}</dd></div><div><dt>Times each round</dt><dd>${esc(x.reps)}</dd></div>
-        ${x.rest_s ? `<div><dt>Rest between rounds</dt><dd>${x.rest_s} sec</dd></div>` : ""}</dl>`}
+        ${x.rest_s ? `<div><dt>Rest between rounds</dt><dd>${x.rest_s} sec</dd></div>` : ""}</dl>
+        ${x.load ? `<p class="exload">🏋️ Start with <b>${U.imperial ? `${fmt(x.load.lb)} lb` : `${fmt(x.load.kg, 1)} kg`}</b> ${esc(x.load.per)}
+          <span class="muted small">· too easy (3+ reps left)? go up next time. Can't finish the reps? go down.</span></p>` : ""}`}
       <div class="exmus"></div>
       <ol class="exsteps"${x.howto ? ' data-own="1"' : ""}>${(x.howto || []).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>
       <div class="exbtns"><button class="ghost small" data-ex="${esc(x.photo || x.exercise)}">How to do it</button>
@@ -1910,8 +1912,14 @@ function syncWeightGoal() {
   $(".wg-more", f).classList.toggle("hidden", keep);
 }
 $("#whoAddForm").elements.weight_goal.addEventListener("change", syncWeightGoal);
-$("#whoAddForm").addEventListener("change", (e) => {  // "None" and real injuries can't both be ticked
-  const g = e.target.closest('[data-group="injuries"]');
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-eq-fill]");
+  if (!b) return;
+  const want = b.dataset.eqFill === "all" ? ["dumbbells", "barbell", "bench", "cable", "machines", "pullup", "bands", "kettlebell", "cardio"] : ["dumbbells", "bench"];
+  $$('[data-group="equipment_list"] input').forEach((c) => { c.checked = want.includes(c.value); });
+});
+$("#whoAddForm").addEventListener("change", (e) => {  // "None" and real choices can't both be ticked
+  const g = e.target.closest('[data-group="injuries"], [data-group="equipment_list"]');
   if (!g || !e.target.checked) return;
   $$("input", g).forEach((c) => { if ((e.target.value === "none") !== (c.value === "none")) c.checked = false; });
 });
@@ -1924,7 +1932,7 @@ async function fillMyProfile() {
     const r1 = (v) => Math.round(v * 10) / 10;
     f.name.value = p.name || ""; f.sex.value = p.sex; f.birth_year.value = p.birth_year;
     f.height_cm.value = r1(p.height_cm); f.weight_kg.value = r1(p.weight_kg);
-    f.experience.value = p.experience; f.equipment.value = p.equipment; f.diet_type.value = p.diet_type;
+    f.experience.value = p.experience; f.diet_type.value = p.diet_type;
     f.allergies.value = (p.allergies || []).join(", ");
     if (p.details_done) {  // answers given in the questionnaire before; older profiles must answer them now
       f.activity_level.value = p.activity_level; f.weight_goal.value = p.goal;
@@ -1933,6 +1941,8 @@ async function fillMyProfile() {
       f.session_minutes.value = String(p.session_minutes);
       const tick = (grp, vals) => $$(`[data-group="${grp}"] input`).forEach((c) => { c.checked = vals.includes(c.value); });
       tick("focus_areas", p.focus_areas || []); tick("injuries", (p.injuries || []).length ? p.injuries : ["none"]);
+      if ((p.equipment_list || []).length) tick("equipment_list", p.equipment_list);
+      else if (p.equipment === "bodyweight") tick("equipment_list", ["none"]);
     } else {
       $("#whoFormNote").textContent = "A few new questions need answering so your targets are exact (they're left blank on purpose).";
     }
@@ -1959,10 +1969,11 @@ $("#whoAddForm").addEventListener("submit", async (e) => {
   const picked = (grp) => $$(`[data-group="${grp}"] input:checked`, f).map((c) => c.value);
   // nothing is guessed: point at the first unanswered question
   const need = ["name", "sex", "birth_year", "height_cm", "weight_kg", "activity_level", "weight_goal", "muscle_goal",
-    "training_days", "session_minutes", "experience", "equipment", "diet_type"];
+    "training_days", "session_minutes", "experience", "diet_type"];
   if (el.weight_goal.value && el.weight_goal.value !== "maintain") need.push("target_weight_kg", "goal_weeks");
   const miss = need.find((k) => !String(el[k].value).trim());
   if (miss) { el[miss].scrollIntoView({ block: "center" }); el[miss].focus(); toast("Please answer every question.", true); return; }
+  if (!picked("equipment_list").length) { $('[data-group="equipment_list"]', f).scrollIntoView({ block: "center" }); toast("Tick the equipment you can use, or “No equipment”.", true); return; }
   if (!picked("injuries").length) { $('[data-group="injuries"]', f).scrollIntoView({ block: "center" }); toast("Tick your injuries, or “None”.", true); return; }
   const body = {
     name: el.name.value.trim(), sex: el.sex.value, birth_year: Number(el.birth_year.value),
@@ -1971,7 +1982,8 @@ $("#whoAddForm").addEventListener("submit", async (e) => {
     target_weight_kg: el.weight_goal.value === "maintain" ? null : Number(el.target_weight_kg.value),
     goal_weeks: el.weight_goal.value === "maintain" ? null : Number(el.goal_weeks.value),
     muscle_goal: el.muscle_goal.value, focus_areas: picked("focus_areas"), training_days: Number(el.training_days.value),
-    session_minutes: Number(el.session_minutes.value), experience: el.experience.value, equipment: el.equipment.value,
+    session_minutes: Number(el.session_minutes.value), experience: el.experience.value,
+    equipment_list: picked("equipment_list").filter((x) => x !== "none"),
     injuries: picked("injuries"), diet_type: el.diet_type.value,
     allergies: el.allergies.value.split(",").map((x) => x.trim()).filter(Boolean),
     rebuild_plan: f.dataset.mode === "edit" ? el.rebuild_plan.checked : true,

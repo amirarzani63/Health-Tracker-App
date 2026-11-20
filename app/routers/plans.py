@@ -15,14 +15,24 @@ from app.services.workout_planner import generate_plan
 router = APIRouter(prefix="/api/plans", tags=["plans"])
 
 
+def _with_loads(plan: WorkoutPlan | None, db: Session) -> dict | None:
+    """The plan with a suggested starting weight on each exercise, worked out for this person."""
+    if plan is None:
+        return None
+    from app.services.loads import add_loads
+    out = PlanOut.model_validate(plan).model_dump()
+    out["days"] = add_loads(plan.days or [], get_profile(db), plan.goal)
+    return out
+
+
 @router.get("", response_model=list[PlanOut])
 def list_plans(db: Session = Depends(get_db)):
-    return db.scalars(select(WorkoutPlan).order_by(WorkoutPlan.created_at.desc())).all()
+    return [_with_loads(p, db) for p in db.scalars(select(WorkoutPlan).order_by(WorkoutPlan.created_at.desc())).all()]
 
 
 @router.get("/active", response_model=PlanOut | None)
 def active_plan(db: Session = Depends(get_db)):
-    return db.scalar(select(WorkoutPlan).where(WorkoutPlan.active).order_by(WorkoutPlan.created_at.desc()))
+    return _with_loads(db.scalar(select(WorkoutPlan).where(WorkoutPlan.active).order_by(WorkoutPlan.created_at.desc())), db)
 
 
 @router.post("/generate", response_model=PlanOut)

@@ -96,7 +96,8 @@ class Details(BaseModel):
     training_days: int = Field(ge=0, le=7)
     session_minutes: int = Field(ge=15, le=180)
     experience: str = Field(pattern="^(beginner|intermediate|advanced)$")
-    equipment: str = Field(pattern="^(gym|home|bodyweight)$")
+    equipment: str = Field("gym", pattern="^(gym|home|bodyweight)$")
+    equipment_list: list[str]  # exactly what the person can use; [] = no equipment
     injuries: list[str] = Field(min_length=1)
     diet_type: str = Field(pattern="^(omnivore|vegetarian|vegan|pescatarian)$")
     allergies: list[str] = []
@@ -110,8 +111,21 @@ class Details(BaseModel):
                 raise HTTPException(422, "To lose weight, the goal weight must be below your current weight.")
             if self.weight_goal == "gain" and self.target_weight_kg <= self.weight_kg:
                 raise HTTPException(422, "To gain weight, the goal weight must be above your current weight.")
+        from app.services.workout_planner import EQUIPMENT_ITEMS
+        if set(self.equipment_list) - set(EQUIPMENT_ITEMS):
+            raise HTTPException(422, "Unknown equipment.")
+        have = set(self.equipment_list)
+        self.equipment = "gym" if have & {"barbell", "machines", "cable"} else "home" if have else "bodyweight"
         if set(self.focus_areas) - AREAS or set(self.injuries) - INJURIES:
             raise HTTPException(422, "Unknown focus area or injury.")
+
+
+def person_args(p) -> dict:
+    """Equipment, age, sex and body size: what the plan generator needs to fit the person."""
+    from app.services import nutrition
+    h = (p.height_cm or 170) / 100
+    return {"equipment_list": p.equipment_list or None, "age": nutrition.age_on(p.birth_year),
+            "sex": p.sex, "bmi": p.weight_kg / (h * h)}
 
 
 def apply_details(udb, d: Details) -> list[str]:
@@ -131,6 +145,7 @@ def apply_details(udb, d: Details) -> list[str]:
     p.injuries = [i for i in d.injuries if i != "none"] or []
     p.training_days, p.session_minutes = max(1, d.training_days), d.session_minutes
     p.experience, p.equipment, p.diet_type, p.allergies = d.experience, d.equipment, d.diet_type, d.allergies
+    p.equipment_list = list(d.equipment_list)
     p.setup_done = p.details_done = True
     g.target_weight_kg = d.target_weight_kg if d.weight_goal != "maintain" else None
     g.calorie_target = g.protein_target_g = g.carbs_target_g = g.fat_target_g = None  # worked out exactly from the answers
@@ -150,7 +165,8 @@ def apply_details(udb, d: Details) -> list[str]:
         plan = generate_plan(goal=plan_goal, days_per_week=min(6, max(2, d.training_days)), weeks=6 if plan_goal in ("strength", "hypertrophy") else 4,
                              equipment=d.equipment, experience=d.experience,
                              include_cardio=d.weight_goal == "lose" or "cardio" in d.focus_areas or d.training_days >= 3,
-                             focus_areas=d.focus_areas, injuries=p.injuries, session_minutes=d.session_minutes)
+                             focus_areas=d.focus_areas, injuries=p.injuries, session_minutes=d.session_minutes,
+                             **person_args(p))
         udb.execute(update(WorkoutPlan).values(active=False))
         udb.add(WorkoutPlan(name=plan["name"], goal=plan["goal"], weeks=plan["weeks"], days=plan["days"],
                             progression=plan["progression"], active=True))
@@ -310,7 +326,7 @@ def refresh_beginner_plans() -> int:
                                     equipment="gym", experience="beginner",
                                     include_cardio=any(d.get("type") == "cardio" for d in plan.days),
                                     focus_areas=p.focus_areas or [], injuries=p.injuries or [],
-                                    session_minutes=p.session_minutes or 60)
+                                    session_minutes=p.session_minutes or 60, **person_args(p))
                 plan.days, plan.progression = new["days"], new["progression"]
                 done += 1
             udb.add(StoredSecret(key=marker, value=date.today().isoformat()))

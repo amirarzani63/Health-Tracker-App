@@ -32,6 +32,7 @@ class Profile(Base):
     muscle_goal: Mapped[str] = mapped_column(String(20), default="")  # tone | build | strength | none
     focus_areas: Mapped[list] = mapped_column(JSON, default=list)  # core, shoulders, arms, ...
     injuries: Mapped[list] = mapped_column(JSON, default=list)  # knees, lower_back, shoulders, wrists, neck
+    equipment_list: Mapped[list] = mapped_column(JSON, default=list)  # dumbbells, barbell, bench, cable, machines, ...
     details_done: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
