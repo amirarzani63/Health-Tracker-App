@@ -2152,7 +2152,37 @@ function renderMealPlan() {
       <span class="mp-name">${esc(m.name)}${Math.abs(m.portion - 1) >= 0.1 ? ` <span class="muted small">(${m.portion > 1 ? "a bigger" : "a smaller"} portion, ×${m.portion})</span>` : ""}</span>
       <span class="mp-kcal">${fmt(m.calories)} kcal · ${fmt(m.protein_g)} g protein</span></li>`).join("")}</ul>
     <p class="small"><b>Day total: ${fmt(d.calories)} calories · ${fmt(d.protein_g)} g protein</b></p>`;
+  renderShopping();
 }
+// ---- the week's shopping list: everything for the menu above, with amounts; tick items off in the store
+function renderShopping() {
+  const list = weeklyState.data?.shopping_list, el = $("#shoppingCard");
+  if (!el || !list) return;
+  const key = `shop:${weeklyState.data.meal_plan[0].day}`;
+  let got = {};
+  try { got = JSON.parse(store.get(key) || "{}"); } catch {}
+  const n = list.reduce((t, s) => t + s.items.length, 0), done = list.reduce((t, s) => t + s.items.filter((i) => got[i.item]).length, 0);
+  el.innerHTML = `<h3>🛒 Shopping list for this week</h3>
+    <p class="muted small">Everything you need for this week's meals above, already added up for your portions. Tick items off as you shop.</p>
+    <p class="small"><b>${done} of ${n} items in the basket</b></p>
+    ${list.map((s) => `<h4 class="shop-sec">${esc(s.section)}</h4><ul class="shop-list">${s.items.map((i) => `<li>
+      <label class="${got[i.item] ? "got" : ""}"><input type="checkbox" data-shop="${esc(i.item)}" ${got[i.item] ? "checked" : ""}>
+      <span class="shop-item">${esc(i.item)}</span><span class="shop-amt">${esc(i.amount)}${i.hint ? ` <span class="muted small">(${esc(i.hint)})</span>` : ""}</span></label></li>`).join("")}</ul>`).join("")}
+    <button type="button" class="ghost small-btn" data-shop-clear>Untick everything</button>`;
+}
+document.addEventListener("change", (e) => {
+  const c = e.target.closest("[data-shop]");
+  if (!c) return;
+  const key = `shop:${weeklyState.data.meal_plan[0].day}`;
+  let got = {};
+  try { got = JSON.parse(store.get(key) || "{}"); } catch {}
+  if (c.checked) got[c.dataset.shop] = 1; else delete got[c.dataset.shop];
+  store.set(key, JSON.stringify(got)); renderShopping();
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("[data-shop-clear]")) return;
+  store.set(`shop:${weeklyState.data.meal_plan[0].day}`, "{}"); renderShopping();
+});
 document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-mp-day]");
   if (!b) return;

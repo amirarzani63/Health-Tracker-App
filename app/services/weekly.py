@@ -4,6 +4,7 @@ Everything here is computed inside the app from what the user logged; no outside
 """
 
 import json
+import math
 from datetime import date, timedelta
 from statistics import mean
 
@@ -143,3 +144,61 @@ def meal_plan(db: Session, today: date | None = None) -> list[dict]:
         days.append({"day": (ws + timedelta(days=i)).isoformat(), "meals": meals,
                      "calories": sum(m["calories"] for m in meals), "protein_g": sum(m["protein_g"] for m in meals)})
     return days
+
+
+SECTION_ORDER = ["Fruit & vegetables", "Meat & fish", "Dairy & eggs", "Bread", "Pantry", "Frozen"]
+LOAF_SLICES = 20
+
+
+def _amount(total: float, unit: str) -> tuple[str, str]:
+    """A shop-friendly amount and, where useful, what to pick up (packs, loaves, dozens)."""
+    import math
+    if unit == "g":
+        g = math.ceil(total / 50) * 50
+        return (f"{g / 1000:g} kg" if g >= 1000 else f"{g} g"), ""
+    if unit == "ml":
+        ml = math.ceil(total / 100) * 100
+        return (f"{ml / 1000:g} L" if ml >= 1000 else f"{ml} ml"), ""
+    if unit in ("tbsp", "tsp", "scoop"):
+        n = math.ceil(total * 2) / 2
+        return f"{n:g} {unit}{'s' if unit == 'scoop' and n != 1 else ''}", ""
+    if unit == "slice":
+        n = math.ceil(total)
+        return f"{n} slices", f"{math.ceil(n / LOAF_SLICES)} loaf" + ("s" if n > LOAF_SLICES else "")
+    if unit == "can":
+        return f"{math.ceil(total)} can" + ("s" if math.ceil(total) != 1 else ""), ""
+    n = math.ceil(total - 1e-9)
+    return str(n), ""
+
+
+def shopping_list(plan: list[dict]) -> list[dict]:
+    """Everything to buy for the week's menu, added up from each meal's ingredients and portion size."""
+    ideas = {m["name"]: m for m in nutrition.MEAL_IDEAS}
+    totals: dict[tuple, float] = {}
+    for day in plan:
+        for meal in day["meals"]:
+            idea = ideas.get(meal["name"])
+            for item, qty, unit, section in (idea or {}).get("ingredients", []):
+                key = (section, item, unit)
+                totals[key] = totals.get(key, 0) + qty * meal["portion"]
+    out = []
+    for section in SECTION_ORDER:
+        items = []
+        for (sec, item, unit), total in sorted(totals.items()):
+            if sec != section:
+                continue
+            amount, hint = _amount(total, unit)
+            if unit == "slice" and section != "Bread":
+                hint = ""
+            if unit in ("tbsp", "tsp"):
+                tbsp = total / (3 if unit == "tsp" else 1)
+                kind = "bottle" if any(w in item.lower() for w in ("oil", "sauce")) else "tub" if item == "Hummus" else "jar"
+                hint = f"1 {kind}" if tbsp <= 30 else f"{math.ceil(tbsp / 30)} {kind}s"
+            if unit == "scoop":
+                hint = "1 tub (lasts weeks)"
+            if item == "Eggs":
+                hint = f"{math.ceil(int(amount) / 12)} dozen" if int(amount) > 6 else ""
+            items.append({"item": item, "amount": amount, "hint": hint})
+        if items:
+            out.append({"section": section, "items": items})
+    return out

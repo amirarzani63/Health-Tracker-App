@@ -291,3 +291,14 @@ def test_foods_people_add_are_shared_by_everyone(client):
     client.post("/api/users/select", json={"id": 1})
     found = client.get("/api/food-library?q=zrazy").json()
     assert found and found[0]["calories"] == 300
+
+
+def test_weekly_shopping_list_matches_the_menu(client):
+    r = client.get("/api/weekly").json()
+    assert r["shopping_list"] and r["meal_plan"]
+    items = {i["item"] for s in r["shopping_list"] for i in s["items"]}
+    assert not any("tofu" in i.lower() or "tempeh" in i.lower() for i in items)
+    from app.services import nutrition
+    names = {m["name"] for d in r["meal_plan"] for m in d["meals"]}
+    needed = {ing[0] for m in nutrition.MEAL_IDEAS if m["name"] in names for ing in m["ingredients"]}
+    assert needed == items

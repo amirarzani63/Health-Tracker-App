@@ -127,56 +127,83 @@ def compute_targets(profile, garmin_active_calories: float | None = None,
 
 # tags: meat, fish, dairy, egg, gluten, nuts, soy
 # Meal ideas with approximate macros. tags as above.
-MEAL_IDEAS = [
-    {"meal": "breakfast", "name": "Greek yogurt bowl with berries, oats & honey", "calories": 420, "protein_g": 30, "carbs_g": 58, "fat_g": 8, "tags": ["dairy", "gluten"]},
-    {"meal": "breakfast", "name": "3-egg veggie omelette with whole-grain toast", "calories": 410, "protein_g": 27, "carbs_g": 30, "fat_g": 19, "tags": ["egg", "gluten"]},
-    {"meal": "breakfast", "name": "Overnight oats with pea protein, banana & PB", "calories": 520, "protein_g": 34, "carbs_g": 66, "fat_g": 14, "tags": ["nuts", "gluten"]},
-    {"meal": "breakfast", "name": "Tofu scramble with spinach, peppers & toast", "calories": 390, "protein_g": 26, "carbs_g": 32, "fat_g": 17, "tags": ["soy", "gluten"]},
-    {"meal": "breakfast", "name": "Cottage cheese with pineapple & almonds", "calories": 340, "protein_g": 30, "carbs_g": 26, "fat_g": 12, "tags": ["dairy", "nuts"]},
-    {"meal": "lunch", "name": "Grilled chicken quinoa bowl with roasted veg", "calories": 560, "protein_g": 48, "carbs_g": 55, "fat_g": 15, "tags": ["meat"]},
-    {"meal": "lunch", "name": "Lentil & vegetable soup with crusty bread", "calories": 480, "protein_g": 24, "carbs_g": 76, "fat_g": 8, "tags": ["gluten"]},
-    {"meal": "lunch", "name": "Tuna salad wrap with greens & avocado", "calories": 470, "protein_g": 36, "carbs_g": 38, "fat_g": 19, "tags": ["fish", "gluten"]},
-    {"meal": "lunch", "name": "Chickpea, feta & cucumber Mediterranean salad", "calories": 510, "protein_g": 22, "carbs_g": 52, "fat_g": 24, "tags": ["dairy"]},
-    {"meal": "lunch", "name": "Tofu & edamame soba noodle bowl", "calories": 540, "protein_g": 32, "carbs_g": 68, "fat_g": 15, "tags": ["soy", "gluten"]},
-    {"meal": "lunch", "name": "Black bean & sweet potato burrito bowl", "calories": 530, "protein_g": 20, "carbs_g": 88, "fat_g": 11, "tags": []},
-    {"meal": "dinner", "name": "Baked salmon, sweet potato & broccoli", "calories": 610, "protein_g": 42, "carbs_g": 45, "fat_g": 28, "tags": ["fish"]},
-    {"meal": "dinner", "name": "Lean beef stir-fry with brown rice", "calories": 650, "protein_g": 45, "carbs_g": 62, "fat_g": 22, "tags": ["meat", "soy"]},
-    {"meal": "dinner", "name": "Chicken fajitas with peppers & corn tortillas", "calories": 580, "protein_g": 46, "carbs_g": 54, "fat_g": 18, "tags": ["meat"]},
-    {"meal": "dinner", "name": "Red lentil dal with basmati rice & spinach", "calories": 560, "protein_g": 25, "carbs_g": 92, "fat_g": 10, "tags": []},
-    {"meal": "dinner", "name": "Whole-wheat pasta with turkey bolognese", "calories": 640, "protein_g": 44, "carbs_g": 72, "fat_g": 17, "tags": ["meat", "gluten"]},
-    {"meal": "dinner", "name": "Shrimp & vegetable coconut curry with rice", "calories": 600, "protein_g": 34, "carbs_g": 66, "fat_g": 21, "tags": ["fish"]},
-    {"meal": "dinner", "name": "Tempeh & vegetable peanut stir-fry", "calories": 590, "protein_g": 33, "carbs_g": 50, "fat_g": 28, "tags": ["soy", "nuts"]},
-    {"meal": "snack", "name": "Protein shake (whey) with banana", "calories": 230, "protein_g": 26, "carbs_g": 30, "fat_g": 2, "tags": ["dairy"]},
-    {"meal": "snack", "name": "Pea-protein smoothie with berries", "calories": 220, "protein_g": 25, "carbs_g": 24, "fat_g": 3, "tags": []},
-    {"meal": "snack", "name": "Apple with 2 tbsp peanut butter", "calories": 285, "protein_g": 8, "carbs_g": 31, "fat_g": 16, "tags": ["nuts"]},
-    {"meal": "snack", "name": "Hummus with carrot & cucumber sticks", "calories": 180, "protein_g": 6, "carbs_g": 20, "fat_g": 9, "tags": []},
-    {"meal": "snack", "name": "Hard-boiled eggs (2) & cherry tomatoes", "calories": 170, "protein_g": 13, "carbs_g": 5, "fat_g": 10, "tags": ["egg"]},
-    {"meal": "snack", "name": "Rice cakes with cottage cheese", "calories": 190, "protein_g": 16, "carbs_g": 24, "fat_g": 2, "tags": ["dairy"]},
-]
+# Meal ideas: everyday food from any supermarket (no tofu/tempeh/specialty items).
+# Each has the ingredients for ONE serving: (item, amount, unit, store section). The weekly
+# shopping list adds these up for the week's menu. tags: meat, fish, dairy, egg, gluten, nuts, soy
+def _m(meal, name, kcal, p, c, f, fiber, tags, ingredients):
+    return {"meal": meal, "name": name, "calories": kcal, "protein_g": p, "carbs_g": c, "fat_g": f,
+            "fiber_g": fiber, "tags": tags, "ingredients": ingredients}
 
-# Approximate fibre (g) per serving / per meal idea, merged into the tables above.
-_FIBER = {
-    "Oatmeal (1 cup cooked)": 4, "Banana, medium": 3.1, "Apple, medium": 4.4, "Blueberries (1 cup)": 3.6,
-    "Tofu, firm (150g)": 3.5, "Lentils, cooked (1 cup)": 15.6, "Chickpeas, cooked (1 cup)": 12.5,
-    "Brown rice, cooked (1 cup)": 3.5, "Quinoa, cooked (1 cup)": 5.2, "Sweet potato, baked (medium)": 3.8,
-    "Whole wheat bread (slice)": 1.9, "Whole wheat pasta, cooked (1 cup)": 6.3, "Broccoli (1 cup)": 5.1,
-    "Mixed salad greens (2 cups)": 2, "Avocado (half)": 5, "Almonds (28g)": 3.5, "Peanut butter (2 tbsp)": 1.9,
-    "Pea protein (1 scoop)": 1,
-    "Greek yogurt bowl with berries, oats & honey": 5, "3-egg veggie omelette with whole-grain toast": 4,
-    "Overnight oats with pea protein, banana & PB": 8, "Tofu scramble with spinach, peppers & toast": 6,
-    "Cottage cheese with pineapple & almonds": 3, "Grilled chicken quinoa bowl with roasted veg": 8,
-    "Lentil & vegetable soup with crusty bread": 16, "Tuna salad wrap with greens & avocado": 8,
-    "Chickpea, feta & cucumber Mediterranean salad": 11, "Tofu & edamame soba noodle bowl": 8,
-    "Black bean & sweet potato burrito bowl": 18, "Baked salmon, sweet potato & broccoli": 9,
-    "Lean beef stir-fry with brown rice": 6, "Chicken fajitas with peppers & corn tortillas": 7,
-    "Red lentil dal with basmati rice & spinach": 14, "Whole-wheat pasta with turkey bolognese": 10,
-    "Shrimp & vegetable coconut curry with rice": 5, "Tempeh & vegetable peanut stir-fry": 9,
-    "Protein shake (whey) with banana": 3, "Pea-protein smoothie with berries": 5,
-    "Apple with 2 tbsp peanut butter": 6.5, "Hummus with carrot & cucumber sticks": 6,
-    "Hard-boiled eggs (2) & cherry tomatoes": 1.5, "Rice cakes with cottage cheese": 1,
-}
-for _item in MEAL_IDEAS:
-    _item["fiber_g"] = _FIBER.get(_item["name"], 0)
+
+P, M, D, B, PA, FR = "Fruit & vegetables", "Meat & fish", "Dairy & eggs", "Bread", "Pantry", "Frozen"
+MEAL_IDEAS = [
+    # breakfast
+    _m("breakfast", "Greek yogurt bowl with berries, oats & honey", 420, 30, 58, 8, 7, ["dairy", "gluten"],
+       [("Greek yogurt (plain)", 200, "g", D), ("Frozen mixed berries", 75, "g", FR), ("Rolled oats", 30, "g", PA), ("Honey", 1, "tbsp", PA)]),
+    _m("breakfast", "3-egg veggie omelette with whole-wheat toast", 410, 27, 30, 19, 5, ["egg", "gluten", "dairy"],
+       [("Eggs", 3, "", D), ("Bell pepper", 0.5, "", P), ("Baby spinach", 30, "g", P), ("Whole-wheat bread", 1, "slice", B), ("Butter", 5, "g", D)]),
+    _m("breakfast", "Overnight oats with whey, banana & peanut butter", 520, 34, 66, 14, 8, ["dairy", "nuts", "gluten"],
+       [("Rolled oats", 50, "g", PA), ("Milk", 200, "ml", D), ("Whey protein powder", 1, "scoop", PA), ("Bananas", 1, "", P), ("Peanut butter", 1, "tbsp", PA)]),
+    _m("breakfast", "Scrambled eggs with spinach on whole-wheat toast", 420, 27, 30, 21, 5, ["egg", "gluten", "dairy"],
+       [("Eggs", 3, "", D), ("Baby spinach", 40, "g", P), ("Whole-wheat bread", 2, "slice", B), ("Butter", 5, "g", D)]),
+    _m("breakfast", "Cottage cheese with pineapple & almonds", 340, 30, 26, 12, 3, ["dairy", "nuts"],
+       [("Cottage cheese", 200, "g", D), ("Pineapple chunks (fresh or canned)", 100, "g", P), ("Almonds", 15, "g", PA)]),
+    _m("breakfast", "Oatmeal with banana, peanut butter & almond milk", 430, 12, 66, 14, 9, ["nuts", "gluten"],
+       [("Rolled oats", 50, "g", PA), ("Almond milk", 250, "ml", D), ("Bananas", 1, "", P), ("Peanut butter", 1, "tbsp", PA)]),
+    # lunch
+    _m("lunch", "Grilled chicken rice bowl with roasted vegetables", 615, 43, 69, 18, 5, ["meat"],
+       [("Chicken breast", 150, "g", M), ("Rice", 75, "g", PA), ("Frozen mixed vegetables", 150, "g", FR), ("Olive oil", 1, "tbsp", PA)]),
+    _m("lunch", "Lentil & vegetable soup with bread", 435, 22, 68, 7, 14, ["gluten"],
+       [("Red lentils (dry)", 70, "g", PA), ("Carrots", 1, "", P), ("Onions", 0.5, "", P), ("Canned diced tomatoes", 100, "g", PA),
+        ("Whole-wheat bread", 1, "slice", B), ("Olive oil", 1, "tsp", PA)]),
+    _m("lunch", "Tuna salad wrap with lettuce & avocado", 460, 36, 40, 17, 6, ["fish", "gluten", "egg"],
+       [("Canned tuna (in water)", 1, "can", PA), ("Large flour tortillas", 1, "", B), ("Light mayonnaise", 1, "tbsp", PA),
+        ("Lettuce", 30, "g", P), ("Avocados", 0.25, "", P)]),
+    _m("lunch", "Chickpea, feta & cucumber salad", 420, 16, 36, 25, 9, ["dairy"],
+       [("Canned chickpeas", 0.5, "can", PA), ("Feta cheese", 40, "g", D), ("Cucumbers", 0.5, "", P), ("Tomatoes", 1, "", P),
+        ("Olive oil", 1, "tbsp", PA), ("Lemons", 0.5, "", P)]),
+    _m("lunch", "Turkey & cheese sandwich with an apple", 445, 34, 58, 10, 8, ["meat", "dairy", "gluten"],
+       [("Whole-wheat bread", 2, "slice", B), ("Sliced turkey breast", 100, "g", M), ("Cheese slices", 1, "slice", D),
+        ("Lettuce", 20, "g", P), ("Tomatoes", 0.5, "", P), ("Apples", 1, "", P)]),
+    _m("lunch", "Chicken burrito bowl with black beans & salsa", 530, 43, 65, 10, 9, ["meat", "dairy"],
+       [("Chicken breast", 120, "g", M), ("Rice", 60, "g", PA), ("Canned black beans", 0.33, "can", PA), ("Salsa", 2, "tbsp", PA),
+        ("Shredded cheese", 20, "g", D), ("Lettuce", 30, "g", P)]),
+    # dinner
+    _m("dinner", "Baked salmon, sweet potato & broccoli", 570, 37, 50, 25, 9, ["fish"],
+       [("Salmon fillets", 150, "g", M), ("Sweet potatoes", 1, "", P), ("Broccoli", 150, "g", P), ("Olive oil", 1, "tsp", PA)]),
+    _m("dinner", "Beef & vegetable stir-fry with rice", 590, 41, 66, 15, 5, ["meat", "soy", "gluten"],
+       [("Beef sirloin (or stir-fry strips)", 150, "g", M), ("Rice", 70, "g", PA), ("Frozen stir-fry vegetables", 150, "g", FR),
+        ("Soy sauce", 1, "tbsp", PA), ("Vegetable oil", 1, "tsp", PA)]),
+    _m("dinner", "Chicken fajitas with peppers & tortillas", 545, 44, 60, 15, 6, ["meat", "gluten"],
+       [("Chicken breast", 150, "g", M), ("Bell pepper", 1, "", P), ("Onions", 0.5, "", P), ("Small flour tortillas", 2, "", B),
+        ("Vegetable oil", 1, "tsp", PA), ("Salsa", 2, "tbsp", PA)]),
+    _m("dinner", "Red lentil dal with rice & spinach", 555, 23, 99, 6, 15, [],
+       [("Red lentils (dry)", 70, "g", PA), ("Rice", 60, "g", PA), ("Onions", 0.5, "", P), ("Canned diced tomatoes", 100, "g", PA),
+        ("Baby spinach", 50, "g", P), ("Vegetable oil", 1, "tsp", PA)]),
+    _m("dinner", "Whole-wheat pasta with turkey bolognese", 585, 39, 71, 15, 9, ["meat", "gluten", "dairy"],
+       [("Ground turkey", 130, "g", M), ("Whole-wheat pasta", 80, "g", PA), ("Tomato sauce / passata", 150, "g", PA),
+        ("Onions", 0.5, "", P), ("Parmesan", 10, "g", D)]),
+    _m("dinner", "Shrimp & vegetable stir-fry with rice", 495, 38, 70, 6, 5, ["fish", "soy", "gluten"],
+       [("Frozen raw shrimp", 150, "g", FR), ("Rice", 70, "g", PA), ("Frozen stir-fry vegetables", 150, "g", FR),
+        ("Soy sauce", 1, "tbsp", PA), ("Vegetable oil", 1, "tsp", PA)]),
+    _m("dinner", "Chicken thigh tray bake with potatoes & green beans", 575, 42, 53, 22, 7, ["meat"],
+       [("Boneless chicken thighs", 180, "g", M), ("Potatoes", 250, "g", P), ("Green beans", 150, "g", P), ("Olive oil", 1, "tbsp", PA)]),
+    # snacks
+    _m("snack", "Protein shake (whey) with banana", 230, 26, 30, 2, 3, ["dairy"],
+       [("Whey protein powder", 1, "scoop", PA), ("Bananas", 1, "", P)]),
+    _m("snack", "Greek yogurt with berries", 140, 17, 16, 0.5, 2, ["dairy"],
+       [("Greek yogurt (plain)", 170, "g", D), ("Frozen mixed berries", 75, "g", FR)]),
+    _m("snack", "Apple with 2 tbsp peanut butter", 285, 8, 31, 16, 6.5, ["nuts"],
+       [("Apples", 1, "", P), ("Peanut butter", 2, "tbsp", PA)]),
+    _m("snack", "Hummus with carrot & cucumber sticks", 180, 6, 20, 9, 6, [],
+       [("Hummus", 4, "tbsp", D), ("Carrots", 1, "", P), ("Cucumbers", 0.5, "", P)]),
+    _m("snack", "Hard-boiled eggs (2) & cherry tomatoes", 170, 13, 5, 10, 1.5, ["egg"],
+       [("Eggs", 2, "", D), ("Cherry tomatoes", 100, "g", P)]),
+    _m("snack", "Rice cakes with cottage cheese", 142, 13.5, 18, 1.5, 0.5, ["dairy"],
+       [("Rice cakes", 2, "", PA), ("Cottage cheese", 100, "g", D)]),
+    _m("snack", "String cheese & almonds", 167, 10, 3, 13, 2, ["dairy", "nuts"],
+       [("String cheese", 1, "", D), ("Almonds", 15, "g", PA)]),
+]
 
 EXCLUDED_BY_DIET = {
     "omnivore": set(),

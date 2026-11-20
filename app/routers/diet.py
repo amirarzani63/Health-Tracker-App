@@ -196,7 +196,8 @@ from app.services import weekly  # noqa: E402
 @router.get("/weekly")
 def weekly_summary(db: Session = Depends(get_db)) -> dict:
     review = weekly.run_weekly(db)
-    return {"review": review, "meal_plan": weekly.meal_plan(db)}
+    plan = weekly.meal_plan(db)
+    return {"review": review, "meal_plan": plan, "shopping_list": weekly.shopping_list(plan)}
 
 
 
