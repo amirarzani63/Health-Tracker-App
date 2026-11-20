@@ -14,7 +14,8 @@ from app.services import insights
 router = APIRouter(prefix="/api/users", tags=["users"])
 COLORS = ["#ff8a3d", "#3dbbff", "#39d98a", "#ff5c8a", "#b28cff", "#ffd23d"]
 # colour schemes, each with its main colour (also used for the person's round initial)
-SCHEMES = {"orange": "#ff7a1a", "pink": "#ff3d9a", "emerald": "#22e39a", "violet": "#a46bff", "red": "#ff4d4d", "gold": "#ffc21a"}
+SCHEMES = {"orange": "#ff7a1a", "pink": "#ff3d9a", "emerald": "#22e39a", "violet": "#a46bff", "red": "#ff4d4d", "gold": "#ffc21a",
+           "sky": "#5ec8ff", "navy": "#7896ff", "forest": "#3fbf6a"}
 
 
 def _free_scheme(db, prefer: str) -> str:

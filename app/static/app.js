@@ -1759,8 +1759,8 @@ api("/api/profile").then((p) => {
 }).catch(() => {});
 // ---------------------------------------------------------------- people: who's tracking?
 // each person has their own colour scheme
-const SCHEME_NAMES = { orange: "Orange & navy", pink: "Pink & plum", emerald: "Emerald & teal", violet: "Violet & indigo", red: "Red & charcoal", gold: "Gold & blue" };
-const SCHEME_BG = { orange: "#050816", pink: "#0e0618", emerald: "#03120f", violet: "#0b0820", red: "#120607", gold: "#080b14" };
+const SCHEME_NAMES = { orange: "Orange & navy", pink: "Pink & plum", emerald: "Emerald & teal", violet: "Violet & indigo", red: "Red & charcoal", gold: "Gold & blue", sky: "Light blue", navy: "Navy", forest: "Dark green" };
+const SCHEME_BG = { orange: "#050816", pink: "#0e0618", emerald: "#03120f", violet: "#0b0820", red: "#120607", gold: "#080b14", sky: "#04101c", navy: "#020616", forest: "#030d07" };
 function applyScheme(scheme) {
   scheme = scheme || "orange";
   if (scheme === "orange") document.documentElement.removeAttribute("data-scheme");
