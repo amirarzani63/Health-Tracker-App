@@ -1379,3 +1379,10 @@ body.dlg-open { overflow: hidden; }
 button.vid-link { background: none; cursor: pointer; }
 .exload { margin: 6px 0 0; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent-soft); }
 .eq-quick { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.place-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#whoAddForm .place { display: grid; gap: 2px; padding: 10px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; text-align: left; }
+#whoAddForm .place input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+#whoAddForm .place:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-soft); background: var(--accent-soft); }
+.place .pi { font-size: 24px; }
+.eq-fine summary { cursor: pointer; margin: 4px 0; }

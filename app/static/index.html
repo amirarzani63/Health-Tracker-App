@@ -599,17 +599,21 @@
         <label>Fitness level <select name="experience" required><option value="" selected disabled>Choose…</option><option value="beginner">Beginner</option><option value="intermediate">Some experience</option><option value="advanced">Very fit</option></select></label>
         <span></span>
       </div>
-      <span class="small">What equipment can you use? (tick everything you have, or “No equipment”)</span>
-      <div class="eq-quick"><button type="button" class="ghost small-btn" data-eq-fill="all">Full gym (tick all)</button>
-        <button type="button" class="ghost small-btn" data-eq-fill="home">Home: dumbbells + bench</button></div>
+      <span class="small"><b>Where do you train?</b></span>
+      <div class="place-cards" role="radiogroup">
+        <label class="place"><input type="radio" name="train_place" value="full_gym"><span class="pi">🏢</span><b>Full gym</b><span class="small muted">Barbells, machines, cables, dumbbells</span></label>
+        <label class="place"><input type="radio" name="train_place" value="home_gym"><span class="pi">🏠</span><b>Home gym</b><span class="small muted">Dumbbells, bench, maybe a barbell or pull-up bar</span></label>
+        <label class="place"><input type="radio" name="train_place" value="home_light"><span class="pi">🛋️</span><b>At home, light weights</b><span class="small muted">Bodyweight plus light dumbbells or bands</span></label>
+        <label class="place"><input type="radio" name="train_place" value="none"><span class="pi">🤸</span><b>No equipment</b><span class="small muted">Bodyweight only</span></label>
+      </div>
+      <details class="eq-fine"><summary class="small">Fine-tune exactly what you have (optional)</summary>
       <div class="tickset" data-group="equipment_list">
         <label><input type="checkbox" value="dumbbells"> Dumbbells</label><label><input type="checkbox" value="barbell"> Barbell + squat rack</label>
         <label><input type="checkbox" value="bench"> Adjustable bench</label><label><input type="checkbox" value="cable"> Cable machine</label>
-        <label><input type="checkbox" value="machines"> Weight machines (leg press, chest press…)</label>
+        <label><input type="checkbox" value="machines"> Weight machines</label>
         <label><input type="checkbox" value="pullup"> Pull-up bar / dip station</label><label><input type="checkbox" value="bands"> Resistance bands</label>
         <label><input type="checkbox" value="kettlebell"> Kettlebells</label><label><input type="checkbox" value="cardio"> Cardio machines</label>
-        <label><input type="checkbox" value="none"> No equipment</label>
-      </div>
+      </div></details>
       <span class="small">Any pain or injuries to protect? (tick at least one)</span>
       <div class="tickset" data-group="injuries">
         <label><input type="checkbox" value="none"> None</label><label><input type="checkbox" value="knees"> Knees</label>

@@ -1912,14 +1912,24 @@ function syncWeightGoal() {
   $(".wg-more", f).classList.toggle("hidden", keep);
 }
 $("#whoAddForm").elements.weight_goal.addEventListener("change", syncWeightGoal);
-document.addEventListener("click", (e) => {
-  const b = e.target.closest("[data-eq-fill]");
-  if (!b) return;
-  const want = b.dataset.eqFill === "all" ? ["dumbbells", "barbell", "bench", "cable", "machines", "pullup", "bands", "kettlebell", "cardio"] : ["dumbbells", "bench"];
+// "Where do you train?" fills in the equipment; the optional list fine-tunes it
+const PLACE_KIT = {
+  full_gym: ["dumbbells", "barbell", "bench", "cable", "machines", "pullup", "bands", "kettlebell", "cardio"],
+  home_gym: ["dumbbells", "barbell", "bench", "pullup", "bands", "kettlebell"],
+  home_light: ["dumbbells", "bands"],
+  none: [],
+};
+document.addEventListener("change", (e) => {
+  if (e.target.name !== "train_place") return;
+  const want = PLACE_KIT[e.target.value] || [];
   $$('[data-group="equipment_list"] input').forEach((c) => { c.checked = want.includes(c.value); });
 });
+function placeFor(list) {
+  const key = [...list].sort().join();
+  return Object.keys(PLACE_KIT).find((k) => [...PLACE_KIT[k]].sort().join() === key);
+}
 $("#whoAddForm").addEventListener("change", (e) => {  // "None" and real choices can't both be ticked
-  const g = e.target.closest('[data-group="injuries"], [data-group="equipment_list"]');
+  const g = e.target.closest('[data-group="injuries"]');
   if (!g || !e.target.checked) return;
   $$("input", g).forEach((c) => { if ((e.target.value === "none") !== (c.value === "none")) c.checked = false; });
 });
@@ -1941,8 +1951,13 @@ async function fillMyProfile() {
       f.session_minutes.value = String(p.session_minutes);
       const tick = (grp, vals) => $$(`[data-group="${grp}"] input`).forEach((c) => { c.checked = vals.includes(c.value); });
       tick("focus_areas", p.focus_areas || []); tick("injuries", (p.injuries || []).length ? p.injuries : ["none"]);
-      if ((p.equipment_list || []).length) tick("equipment_list", p.equipment_list);
-      else if (p.equipment === "bodyweight") tick("equipment_list", ["none"]);
+      const kit = (p.equipment_list || []).length ? p.equipment_list : p.equipment === "bodyweight" ? [] : null;
+      if (kit) {
+        tick("equipment_list", kit);
+        const place = placeFor(kit);
+        if (place) f.train_place.value = place;
+        else { f.train_place.value = kit.includes("barbell") || kit.includes("machines") || kit.includes("cable") ? "full_gym" : kit.length ? "home_gym" : "none"; $(".eq-fine").open = true; }
+      }
     } else {
       $("#whoFormNote").textContent = "A few new questions need answering so your targets are exact (they're left blank on purpose).";
     }
@@ -1973,7 +1988,7 @@ $("#whoAddForm").addEventListener("submit", async (e) => {
   if (el.weight_goal.value && el.weight_goal.value !== "maintain") need.push("target_weight_kg", "goal_weeks");
   const miss = need.find((k) => !String(el[k].value).trim());
   if (miss) { el[miss].scrollIntoView({ block: "center" }); el[miss].focus(); toast("Please answer every question.", true); return; }
-  if (!picked("equipment_list").length) { $('[data-group="equipment_list"]', f).scrollIntoView({ block: "center" }); toast("Tick the equipment you can use, or “No equipment”.", true); return; }
+  if (!f.querySelector('[name="train_place"]:checked')) { $('.place-cards', f).scrollIntoView({ block: "center" }); toast("Choose where you train.", true); return; }
   if (!picked("injuries").length) { $('[data-group="injuries"]', f).scrollIntoView({ block: "center" }); toast("Tick your injuries, or “None”.", true); return; }
   const body = {
     name: el.name.value.trim(), sex: el.sex.value, birth_year: Number(el.birth_year.value),
@@ -1983,7 +1998,7 @@ $("#whoAddForm").addEventListener("submit", async (e) => {
     goal_weeks: el.weight_goal.value === "maintain" ? null : Number(el.goal_weeks.value),
     muscle_goal: el.muscle_goal.value, focus_areas: picked("focus_areas"), training_days: Number(el.training_days.value),
     session_minutes: Number(el.session_minutes.value), experience: el.experience.value,
-    equipment_list: picked("equipment_list").filter((x) => x !== "none"),
+    equipment_list: picked("equipment_list"),
     injuries: picked("injuries"), diet_type: el.diet_type.value,
     allergies: el.allergies.value.split(",").map((x) => x.trim()).filter(Boolean),
     rebuild_plan: f.dataset.mode === "edit" ? el.rebuild_plan.checked : true,

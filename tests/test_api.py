@@ -302,3 +302,18 @@ def test_weekly_shopping_list_matches_the_menu(client):
     names = {m["name"] for d in r["meal_plan"] for m in d["meals"]}
     needed = {ing[0] for m in nutrition.MEAL_IDEAS if m["name"] in names for ing in m["ingredients"]}
     assert needed == items
+
+
+def test_app_script_has_no_syntax_errors():
+    """A broken app.js stops the whole app on the phone, so check it parses."""
+    import shutil
+    import subprocess
+
+    import pytest
+    from app.paths import STATIC
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node not installed")
+    r = subprocess.run([node, "-e", "new Function(require('fs').readFileSync(process.argv[1], 'utf8'))", str(STATIC / "app.js")],
+                       capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
