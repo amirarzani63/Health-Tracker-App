@@ -418,14 +418,15 @@ poulet rouge rouge bowl with 2 extra chicken|rouge bowl with 2 extra chicken fil
 poulet rouge rouge bowl with 2 extra chicken and extra tzatziki|rouge bowl with 2 extra chicken fillets and extra tzatziki,1 bowl + 2 extra fillets + extra tzatziki,0,1368,84,125,61,14,
 poulet rouge extra tzatziki|extra tzatziki,1 extra tzatziki,0,62,1.5,2,5.5,0,
 # Sushi lunch (Nov 2026): estimates from the user's breakdown
-dynamite roll|dynamite maki,1 roll,0,500,18,75,14,0,fish
-sushi sauces and fried onions|spicy mayo and crispy onions,1 serving,0,150,0,10,12,0,
-california roll 6 pieces|california roll (6),6 pieces,0,230,7,38,6,0,fish
-salmon nigiri 3 pieces|salmon nigiri (3),3 pieces,0,180,12,22,5,0,fish
-salmon sashimi 100 g|salmon sashimi,about 100 g,100,200,20,0,13,0,fish
+dynamite roll|dynamite maki,1 piece (1/8 roll),35,62.5,2.25,9.4,1.75,0,fish
+spicy mayo|sushi sauces,1 tbsp (15 g),15,90,0,1,10,0,
+crispy fried onions|fried onions,1 tbsp (5 g),5,30,0.3,2.5,2,0.2,
+california roll piece|california roll (6),1 piece (30 g),30,38,1.2,6.3,1,0,fish
+salmon nigiri|salmon nigiri piece,1 piece (40 g),40,60,4,7.3,1.7,0,fish
+salmon sashimi|salmon sashimi slice,1 slice (15 g),15,30,3,0,2,0,fish
 sushi lunch combo|my sushi lunch|dynamite california nigiri sashimi lunch,1 meal,0,1260,57,145,50,0,fish
 # Home dinner (Nov 2026): estimates from the user's photo
-sauteed shrimp|shrimp sauteed in oil|pan fried shrimp|garlic shrimp,about 14 large (150 g cooked),150,195,35,1,6,0,fish
-bulgur pilaf with tomato and peppers|tomato bulgur pilaf|bulgur pilaf,about 1 1/4 cups (230 g),230,300,7,43,13,10,gluten
-large green olives|green olives,4 large (20 g),20,30,0,1,3,1,
+sauteed shrimp|shrimp sauteed in oil|pan fried shrimp|garlic shrimp,1 large shrimp (11 g cooked),11,14,2.5,0.1,0.4,0,fish
+bulgur pilaf with tomato and peppers|tomato bulgur pilaf|bulgur pilaf,1 cup (185 g),185,240,5.6,34.4,10.4,8,gluten
+large green olives|green olives,1 large olive (5 g),5,7.5,0,0.25,0.75,0.25,
 shrimp with bulgur pilaf and olives|shrimp bulgur dinner,1 plate,400,525,42,45,22,11,fish gluten
