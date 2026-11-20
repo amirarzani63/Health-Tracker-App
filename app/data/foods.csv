@@ -871,3 +871,5 @@ lobster,100 g cooked,100,89,19,0,0.9,0,fish
 oysters,1 oyster (14 g),14,10,1.3,0.6,0.3,0,fish
 # Homemade (Nov 2026): the user's recipe, 25 meatballs per batch
 turkey meatballs|turkey meatball|homemade turkey meatballs|my turkey meatballs,1 meatball,0,36,5,2.5,0.7,0.4,meat
+# From the label (Nov 2026): Oikos plain Greek yogurt 0% M.F., 1/2 cup (115 g) = 70 kcal, 13 g protein, 4 g carbs, 0 g fat
+oikos greek yogurt 0%|oikos plain greek yogurt|oikos 0% plain|oikos high protein plain|oikos greek yogurt,1 cup (230 g),230,140,26,8,0,0,dairy
