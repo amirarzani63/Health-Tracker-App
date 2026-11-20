@@ -1354,3 +1354,8 @@ body.dlg-open { overflow: hidden; }
 .scheme-picks button { width: 44px; height: 44px; border-radius: 50% !important; overflow: hidden; background-clip: padding-box; padding: 0; border: 3px solid transparent; box-shadow: none !important; }
 .scheme-picks button.on { border-color: var(--text); }
 .scheme-picks button:disabled { opacity: .25; }
+
+.cl-add { grid-template-columns: 1fr 70px auto; }
+.cl-add .cl-day { grid-column: 1 / -1; order: 3; }
+.cl-icon { font-size: 40px; text-align: center; }
+.cl-emoji { display: grid; place-items: center; font-size: 22px; }

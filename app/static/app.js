@@ -1008,7 +1008,49 @@ const CARDIO_OPTS = {
     how: ["Stand tall, push and pull the handles.", "Medium resistance; keep a smooth, steady rhythm."] },
   jump_rope: { label: "Rope skipping", photo: "Rope Jumping", met: 8.8,
     how: ["Small, low hops on the balls of your feet; turn the rope with your wrists.", "Beginners: skip 30 seconds, rest 30 seconds, and repeat. Count only the time you skip."] },
+  // sports: pick any of them on any day; effort values from the Compendium of Physical Activities
+  tennis_singles: { label: "Tennis (singles)", group: "Racquet sports", met: 8.0, how: ["Count only the time you're playing, not long breaks."] },
+  tennis_doubles: { label: "Tennis (doubles)", group: "Racquet sports", met: 6.0, how: ["Count only the time you're playing, not long breaks."] },
+  padel: { label: "Padel", group: "Racquet sports", met: 6.0, how: ["Count the time on court."] },
+  pickleball: { label: "Pickleball", group: "Racquet sports", met: 4.5, how: ["Count the time on court."] },
+  badminton: { label: "Badminton (casual)", group: "Racquet sports", met: 5.5, how: ["Pick 'competitive' if you played hard rallies."] },
+  badminton_hard: { label: "Badminton (competitive)", group: "Racquet sports", met: 7.0, how: ["Hard, fast rallies."] },
+  squash: { label: "Squash", group: "Racquet sports", met: 7.3, how: ["Count the time on court."] },
+  racquetball: { label: "Racquetball", group: "Racquet sports", met: 7.0, how: ["Count the time on court."] },
+  table_tennis: { label: "Table tennis / ping pong", group: "Racquet sports", met: 4.0, how: ["Count the time playing."] },
+  ski_downhill: { label: "Downhill skiing", group: "Winter sports", met: 5.3, how: ["Count time skiing, not lifts or breaks."] },
+  ski_cross_country: { label: "Cross-country skiing", group: "Winter sports", met: 9.0, how: ["Steady pace; count the time moving."] },
+  snowboarding: { label: "Snowboarding", group: "Winter sports", met: 5.3, how: ["Count time riding, not lifts or breaks."] },
+  ice_skating: { label: "Ice skating", group: "Winter sports", met: 7.0, how: ["Steady skating; count the time on the ice."] },
+  ice_hockey: { label: "Ice hockey", group: "Winter sports", met: 8.0, how: ["Count your time on the ice."] },
+  snowshoeing: { label: "Snowshoeing", group: "Winter sports", met: 5.3, how: ["Count the time walking."] },
+  sledding: { label: "Sledding / tobogganing", group: "Winter sports", met: 7.0, how: ["Includes walking back up the hill."] },
+  snow_shoveling: { label: "Shoveling snow", group: "Winter sports", met: 5.3, how: ["Count the time shoveling."] },
+  swim_freestyle: { label: "Swimming: front crawl (easy–moderate)", group: "Water sports", met: 5.8, how: ["Count the time swimming, not resting at the wall."] },
+  swim_hard: { label: "Swimming: laps, fast", group: "Water sports", met: 9.8, how: ["Hard, continuous laps."] },
+  swim_breaststroke: { label: "Swimming: breaststroke", group: "Water sports", met: 5.3, how: ["Count the time swimming."] },
+  swim_backstroke: { label: "Swimming: backstroke", group: "Water sports", met: 4.8, how: ["Count the time swimming."] },
+  swim_leisure: { label: "Swimming: leisurely / playing", group: "Water sports", met: 6.0, how: ["Splashing around, not laps."] },
+  water_aerobics: { label: "Water aerobics / aqua fit", group: "Water sports", met: 5.5, how: ["Count the class time."] },
+  kayaking: { label: "Kayaking", group: "Water sports", met: 5.0, how: ["Steady paddling."] },
+  canoeing: { label: "Canoeing", group: "Water sports", met: 5.8, how: ["Steady paddling."] },
+  paddleboarding: { label: "Stand-up paddleboarding", group: "Water sports", met: 6.0, how: ["Count the time paddling."] },
+  rowing_boat: { label: "Rowing (boat)", group: "Water sports", met: 7.0, how: ["Steady rowing."] },
+  surfing: { label: "Surfing", group: "Water sports", met: 3.0, how: ["Count the time in the water."] },
+  snorkeling: { label: "Snorkeling", group: "Water sports", met: 5.0, how: ["Count the time swimming."] },
+  water_polo: { label: "Water polo", group: "Water sports", met: 10.0, how: ["Count your playing time."] },
+  water_skiing: { label: "Water skiing / wakeboarding", group: "Water sports", met: 6.0, how: ["Count the time on the water."] },
 };
+const SPORT_ICON = { "Racquet sports": "🎾", "Winter sports": "⛷️", "Water sports": "🏊" };
+const cardioThumb = (k) => CARDIO_OPTS[k]?.photo ? `<img class="cl-thumb" data-cl-photo="${esc(CARDIO_OPTS[k].photo)}" alt="">`
+  : `<span class="cl-thumb cl-emoji">${SPORT_ICON[CARDIO_OPTS[k]?.group] || "🏃"}</span>`;
+// dropdown options grouped: gym cardio first, then each sport family
+function cardioOptions(cur) {
+  const groups = {};
+  for (const [k, o] of Object.entries(CARDIO_OPTS)) (groups[o.group || "Cardio"] ||= []).push([k, o]);
+  return Object.entries(groups).map(([g, items]) => `<optgroup label="${esc(g)}">${items.map(([k, o]) =>
+    `<option value="${k}"${k === cur ? " selected" : ""}>${esc(o.label)}</option>`).join("")}</optgroup>`).join("");
+}
 const cardioState = { picks: {}, kg: 105 };
 const LEGACY_CARDIO = { walk: "treadmill_walk_flat", rower: "bike", stairs: "elliptical" };
 const fixCardio = (k) => LEGACY_CARDIO[k] || k;
@@ -1038,7 +1080,7 @@ async function loadCardio() {
 function cardioPicker(iso, day) {
   const list = cardioList(iso, plannedCardioMin(day)), total = list.reduce((t, x) => t + x.minutes, 0);
   const isDefault = list.length === 1 && (cardioState.picks.default || "treadmill_walk") === list[0].activity;
-  const opts = (cur) => Object.entries(CARDIO_OPTS).map(([k, o]) => `<option value="${k}"${k === cur ? " selected" : ""}>${o.label}</option>`).join("");
+  const opts = (cur) => cardioOptions(cur);
   return `<div class="cardio-pick" data-cardio-day="${iso}"><span class="cp-title">🏃 Your cardio for this day</span>
     ${list.map((x, i) => `<div class="cp-row" data-cr="${i}">
       <select data-cr-act aria-label="Activity">${opts(x.activity)}</select>
@@ -2111,13 +2153,14 @@ document.addEventListener("click", (e) => {
 
 // ---------------------------------------------------------------- cardio done: activity + minutes -> calories
 function renderCardioLog(r, listEl, burnEl) {
-  listEl.innerHTML = r.items.map((x) => `<li><span class="cl-act"><img class="cl-thumb" data-cl-photo="${esc(CARDIO_OPTS[x.activity]?.photo || "")}" alt="">${esc(x.label)} · ${x.minutes} min</span>
+  listEl.innerHTML = r.items.map((x) => `<li><span class="cl-act">${cardioThumb(x.activity)}${esc(x.label)} · ${x.minutes} min</span>
     <span><b>${fmt(x.calories)} kcal</b> <button type="button" class="icon" data-cl-del="${x.id}" aria-label="Delete">✕</button></span></li>`).join("")
     || `<li class="muted small">Nothing logged yet.</li>`;
   if (burnEl) burnEl.innerHTML = `Calories burned today ≈ <b>${fmt(r.resting)}</b> (your body at rest) + <b>${fmt(r.total_calories)}</b> (cardio) = <b>${fmt(r.resting + r.total_calories)}</b>`;
 }
 async function loadCardioLog() {
-  if (!$("#cardioAct").options.length) $("#cardioAct").innerHTML = Object.entries(CARDIO_OPTS).map(([k, o]) => `<option value="${k}">${o.label}</option>`).join("");
+  if (!$("#cardioAct").options.length) $("#cardioAct").innerHTML = cardioOptions();
+  try { const dEl = $("#cardioLogForm").elements.day; dEl.max = today(); if (!dEl.value) dEl.value = today(); } catch {}
   cardioPreview();
   try { renderCardioLog(await api(`/api/cardio-log?day=${today()}`), $("#cardioLogList"), $("#cardioBurn")); } catch {}
 }
@@ -2125,10 +2168,13 @@ $("#cardioLogForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = e.target;
   try {
-    const r = await api("/api/cardio-log", { method: "POST", body: { day: today(), activity: f.activity.value, minutes: Number(f.minutes.value) } });
+    const day = f.day?.value || today();
+    const r0 = await api("/api/cardio-log", { method: "POST", body: { day, activity: f.activity.value, minutes: Number(f.minutes.value) } });
+    const r = day === today() ? r0 : await api(`/api/cardio-log?day=${today()}`);
+    if (day !== today()) toast(`Saved for ${shortDay(day)}`);
     renderCardioLog(r, $("#cardioLogList"), $("#cardioBurn"));
     if (cal.plan) { cal.marks = await api("/api/plans/checkins/all"); $("#activePlan").innerHTML = renderWeek(cal.plan); loadDayLogs(); }
-    toast(`🏃 ${CARDIO_OPTS[f.activity.value].label}: ${f.minutes.value} min · ${fmt(r.items.at(-1).calories)} kcal`);
+    toast(`🏃 ${CARDIO_OPTS[f.activity.value].label}: ${f.minutes.value} min · ${fmt(r0.items.at(-1).calories)} kcal`);
     f.minutes.value = "";
   } catch (err) { toast(err.message, true); }
 });
@@ -2147,7 +2193,7 @@ async function loadDayLogs() {
   if (!el) return;
   try {
     const r = await api(`/api/cardio-log?day=${cal.sel}`);
-    el.innerHTML = r.items.length ? `<span class="small"><b>Logged for this day:</b></span><ul class="cl-list">${r.items.map((x) => `<li><span class="cl-act"><img class="cl-thumb" data-cl-photo="${esc(CARDIO_OPTS[x.activity]?.photo || "")}" alt="">${esc(x.label)} · ${x.minutes} min</span>
+    el.innerHTML = r.items.length ? `<span class="small"><b>Logged for this day:</b></span><ul class="cl-list">${r.items.map((x) => `<li><span class="cl-act">${cardioThumb(x.activity)}${esc(x.label)} · ${x.minutes} min</span>
       <span><b>${fmt(x.calories)} kcal</b> <button type="button" class="icon" data-cl-del="${x.id}" aria-label="Delete">✕</button></span></li>`).join("")}</ul>
       <span class="small">Cardio total: <b>${r.total_minutes} min · ${fmt(r.total_calories)} kcal</b></span>` : "";
   } catch {}
@@ -2177,6 +2223,8 @@ async function fillCardioPhotos(root = document) {
 async function cardioPreview() {
   const o = CARDIO_OPTS[$("#cardioAct").value], el = $("#cardioPreview");
   if (!o || !el) return;
+  const icon = SPORT_ICON[o.group];
+  if (!o.photo) { el.innerHTML = `<span class="cl-icon">${icon || "🏃"}</span><span class="small">${esc(o.how[0])} About ${fmt(kcalFor($("#cardioAct").value, 60))} calories an hour for you.</span>`; return; }
   const m = (await exlibLookup([o.photo]))[o.photo];
   el.innerHTML = m?.images?.length ? `<img src="${m.images[0]}" alt="${esc(o.label)}"><span class="small">${esc(o.how[0])}</span>` : "";
 }

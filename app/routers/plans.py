@@ -150,7 +150,9 @@ def set_checkin(data: CheckIn, db: Session = Depends(get_db)) -> dict:
 
 # ---- which cardio activity the user picked for a day ("default" = for every cardio day) ----
 _CARDIO = "cardio_choices"
-CARDIO_KEYS = {"walk", "treadmill_walk_flat", "treadmill_walk", "run", "treadmill_run", "bike", "recumbent", "elliptical", "rower", "stairs", "jump_rope"}
+from app.services.cardio import ACTIVITIES as _ACTS
+
+CARDIO_KEYS = set(_ACTS)
 
 
 class CardioItem(BaseModel):

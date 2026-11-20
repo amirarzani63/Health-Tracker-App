@@ -221,10 +221,12 @@
             <span class="daylog-in"><input name="steps" type="number" inputmode="numeric" min="0" max="200000" placeholder="e.g. 8500" required><button type="submit">Save</button></span></label>
         </form>
         <div class="daylog-row" id="cardioLogBox">
-          <span class="cl-title">🏃 Cardio you did today</span>
+          <span class="cl-title">🏃 Cardio &amp; sports you did</span>
+          <span class="small muted">Gym cardio, racquet, winter or water sports: pick it, enter the minutes, and the calories are added to that day's burn.</span>
           <form id="cardioLogForm" class="cl-add">
             <select name="activity" id="cardioAct" aria-label="Activity"></select>
             <input name="minutes" type="number" inputmode="numeric" min="1" max="600" placeholder="min" aria-label="Minutes" required>
+            <input name="day" type="date" aria-label="Day" class="cl-day">
             <button type="submit">Add</button>
           </form>
           <div class="cl-preview" id="cardioPreview"></div>
