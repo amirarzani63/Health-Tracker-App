@@ -249,3 +249,10 @@ def test_each_person_has_their_own_colour_scheme(client):
     assert schemes[:2] == ["orange", "pink"] and len(set(schemes)) == 3
     assert client.put("/api/users/me/scheme", json={"scheme": "pink"}).status_code == 409  # Sara's
     assert client.put("/api/users/me/scheme", json={"scheme": "gold"}).json()["scheme"] == "gold"
+
+
+def test_people_picker_can_switch():
+    """Tapping a name in "Who's tracking?" must switch person (this handler was once lost in a refactor)."""
+    from app.paths import STATIC
+    js = (STATIC / "app.js").read_text()
+    assert '$("#whoList").addEventListener("click"' in js and '"/api/users/select"' in js

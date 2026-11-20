@@ -1806,7 +1806,19 @@ async function loadWho(openIfUnchosen = true) {
     if (!p.details_done && state.view !== "about") show("about");
   } catch {}
 }
-$("#whoBtn").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); $("#whoDialog").showModal(); });
+$("#whoBtn").addEventListener("click", () => {
+  if ($("#whoAddForm").closest("dialog")) { $("#whoAddForm").classList.add("hidden"); $("#whoResult").classList.add("hidden"); }
+  $(".who-pick").classList.remove("hidden"); $("#whoDialog").showModal();
+});
+$("#whoList").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-who]");
+  if (!b) return;
+  try {
+    await api("/api/users/select", { method: "POST", body: { id: Number(b.dataset.who) } });
+    try { localStorage.setItem("who", b.dataset.who); } catch {}
+    location.hash = ""; location.reload();
+  } catch (err) { toast(err.message, true); }
+});
 $("#whoClose").addEventListener("click", () => $("#whoDialog").close());
 function openWhoForm(mode) {
   const f = $("#whoAddForm");
@@ -1866,7 +1878,7 @@ loaders.about = async () => {
   await fillMyProfile();
 };
 $("#whoEditBtn").addEventListener("click", () => { $("#whoDialog").close(); show("about"); });
-$("#whoAddBack").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); });
+$("#whoAddBack").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); if (state.view === "about") loaders.about(); });
 $("#whoDone").addEventListener("click", () => { location.hash = "#dashboard"; location.reload(); });
 $("#whoAddForm").addEventListener("submit", async (e) => {
   e.preventDefault();
