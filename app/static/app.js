@@ -1921,6 +1921,7 @@ function mountWhoForm(host) {
 }
 loaders.about = async () => {
   mountWhoForm($("#aboutHost"));
+  api("/api/users/me/maths").then((r) => { $("#aboutMaths").innerHTML = r.lines.map((x) => `<li${x.startsWith("⚠") ? ' class="warn-text"' : ""}>${esc(x)}</li>`).join(""); }).catch(() => {});
   $("#whoAddBack").classList.add("hidden");
   await fillMyProfile();
 };

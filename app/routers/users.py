@@ -142,24 +142,7 @@ def apply_details(udb, d: Details) -> list[str]:
         entry.weight_kg = d.weight_kg
     udb.commit()
 
-    t = insights.targets_for(udb, date.today())
-    adj, capped = nutrition.goal_adjust(p, g)
-    mult = nutrition.DAILY_LIFE[d.activity_level]
-    wk = nutrition.workout_kcal_per_day(p)
-    age = nutrition.age_on(d.birth_year)
-    out = [f"Resting burn: {round(t.bmr):,} kcal/day (Mifflin–St Jeor: {d.sex}, {age} years, {d.height_cm:g} cm, {d.weight_kg:g} kg)",
-           f"Everyday life: {round(t.bmr):,} × {mult} ({ACTIVITY_LABEL[d.activity_level]}) = {round(t.bmr * mult):,} kcal",
-           f"Workouts: {d.training_days} × {d.session_minutes} min a week ≈ {round(wk):,} kcal/day on average",
-           f"Total daily burn: {round(t.tdee):,} kcal"]
-    if d.weight_goal == "maintain":
-        out.append(f"Goal: keep your weight → eat {round(t.calories):,} kcal/day")
-    else:
-        kg = abs(d.target_weight_kg - d.weight_kg)
-        per_wk = abs(adj) * 7 / nutrition.KCAL_PER_KG
-        out.append(f"Goal: {'lose' if adj < 0 else 'gain'} {kg:.1f} kg in {d.goal_weeks} weeks → {round(adj):+,} kcal/day "
-                   f"(about {per_wk:.2f} kg a week{'; ' + capped if capped else ''})")
-        out.append(f"Daily food budget: {round(t.calories):,} kcal")
-    out.append(f"Protein: {round(t.protein_g)} g/day · carbs {round(t.carbs_g)} g · fat {round(t.fat_g)} g")
+    out = budget_maths(udb)
 
     if d.rebuild_plan and d.training_days > 0:
         plan_goal = {"build": "hypertrophy", "strength": "strength"}.get(d.muscle_goal) \
@@ -176,6 +159,45 @@ def apply_details(udb, d: Details) -> list[str]:
                    + (f", with extra {', '.join(d.focus_areas)} work" if d.focus_areas else "")
                    + (f", avoiding strain on {', '.join(i.replace('_', ' ') for i in p.injuries)}" if p.injuries else ""))
     return out
+
+
+def budget_maths(udb) -> list[str]:
+    """Every step from the person's answers to their daily food budget, in plain words."""
+    from app.services import nutrition
+
+    p, g = insights.get_profile(udb), insights.get_goals(udb)
+    t = insights.targets_for(udb, date.today())
+    age = nutrition.age_on(p.birth_year)
+    out = [f"For {p.name or 'this profile'}: {p.sex}, {age} years, {p.height_cm:g} cm, {p.weight_kg:g} kg",
+           f"Resting burn: {round(t.bmr):,} kcal/day (Mifflin–St Jeor formula)"]
+    if not p.details_done:
+        out.append("⚠ The About me questions haven't been answered for this profile yet, so this is the old estimate "
+                   f"(× {nutrition.ACTIVITY_MULTIPLIERS.get(p.activity_level, 1.55)} activity, assumed).")
+    else:
+        mult = nutrition.DAILY_LIFE.get(p.activity_level, 1.2)
+        out += [f"Everyday life: {round(t.bmr):,} × {mult} ({ACTIVITY_LABEL.get(p.activity_level, p.activity_level)}) = {round(t.bmr * mult):,} kcal",
+                f"Workouts: {p.training_days} × {p.session_minutes} min a week ≈ {round(nutrition.workout_kcal_per_day(p)):,} kcal/day on average"]
+    out.append(f"Total daily burn: {round(t.tdee):,} kcal")
+    if g.calorie_target:
+        out.append(f"⚠ A fixed limit of {round(g.calorie_target):,} kcal is set (from an earlier plan or weekly review), "
+                   "so it's used instead of the calculation. Saving About me replaces it.")
+    else:
+        adj, capped = nutrition.goal_adjust(p, g)
+        if p.goal == "maintain" or not adj:
+            out.append(f"Goal: keep your weight → {round(t.calories):,} kcal/day")
+        else:
+            kg = abs((g.target_weight_kg or p.weight_kg) - p.weight_kg)
+            out.append(f"Goal: {'lose' if adj < 0 else 'gain'} {kg:.1f} kg in {p.goal_weeks} weeks → {round(adj):+,} kcal/day "
+                       f"(about {abs(adj) * 7 / nutrition.KCAL_PER_KG:.2f} kg a week{'; ' + capped if capped else ''})")
+    out.append(f"Daily food budget: {round(t.calories):,} kcal")
+    out.append(f"Protein: {round(t.protein_g)} g/day · carbs {round(t.carbs_g)} g · fat {round(t.fat_g)} g")
+    return out
+
+
+@router.get("/me/maths")
+def my_maths(request: Request):
+    with session_for(request_user(request)) as udb:
+        return {"lines": budget_maths(udb)}
 
 
 @router.post("")
