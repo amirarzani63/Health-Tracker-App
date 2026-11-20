@@ -65,9 +65,15 @@ CATALOG = {
                 ("Overhead dumbbell extension", {"dumbbells"}, "db"), ("Bench dip", {"bench"}, "bw"), ("Diamond push-up", set(), "hard")],
     "core": [("Cable crunch", {"cable"}, "mach"), ("Hanging knee raise", {"pullup"}, "bw"), ("Dead bug", set(), "bw"),
              ("Plank", set(), "bw"), ("Hollow hold", set(), "hard")],
+    "oblique": [("Cable woodchop", {"cable"}, "mach"), ("Pallof press", {"cable"}, "mach"), ("Band Pallof press", {"bands"}, "bw"),
+                ("Side plank", set(), "bw"), ("Russian twist", set(), "bw"), ("Bicycle crunch", set(), "bw")],
+    "lower_abs": [("Hanging knee raise", {"pullup"}, "bw"), ("Reverse crunch", set(), "bw"), ("Cable crunch", {"cable"}, "mach"),
+                  ("Mountain climbers", set(), "bw"), ("Dead bug", set(), "bw")],
     "carry": [("Farmer's carry", {"dumbbells"}, "db"), ("Suitcase carry", {"dumbbells"}, "db"), ("Bear crawl", set(), "bw")],
 }
 FOCUS_CATALOG = {
+    "waist": [("Cable woodchop", {"cable"}), ("Pallof press", {"cable"}), ("Side plank", set()), ("Bicycle crunch", set()),
+              ("Russian twist", set()), ("Reverse crunch", set()), ("Mountain climbers", set())],
     "core": [("Cable crunch", {"cable"}), ("Hanging knee raise", {"pullup"}), ("Dead bug", set()), ("Plank", set()), ("Side plank", set())],
     "shoulders": [("Dumbbell lateral raise", {"dumbbells"}), ("Face pull (cable with rope)", {"cable"}),
                   ("Dumbbell rear-delt fly", {"dumbbells"}), ("Seated dumbbell shoulder press", {"dumbbells", "bench"}),
@@ -108,6 +114,43 @@ def ranked(pattern: str, have: set[str], experience: str, age: int, main: bool) 
     if age >= 55:
         order["bar"] = 3
     return [n for n, kind in sorted(opts, key=lambda o: order[o[1]])]
+
+
+# Muscle-group ("body-part") split: each day trains one or two muscle groups. Slots are movement
+# patterns from CATALOG or "f:<area>" picks from FOCUS_CATALOG; a day never repeats an exercise.
+BODY_PART_DAYS = {
+    "chest_tri": ("Chest & triceps", ["h_push", "f:chest", "f:chest", "triceps", "triceps", "oblique"]),
+    "back_bi": ("Back & biceps", ["v_pull", "h_pull", "f:back", "biceps", "biceps", "lower_abs"]),
+    "legs": ("Legs & glutes", ["squat", "hinge", "lunge", "f:legs", "f:glutes", "calf"]),
+    "shoulders_abs": ("Shoulders & abs", ["v_push", "f:shoulders", "f:shoulders", "f:shoulders", "oblique", "lower_abs"]),
+    "arms_abs": ("Arms & abs", ["biceps", "triceps", "biceps", "triceps", "oblique", "lower_abs"]),
+    "shoulders_arms": ("Shoulders & arms", ["v_push", "f:shoulders", "biceps", "triceps", "f:shoulders", "f:arms", "oblique"]),
+    "push": ("Chest, shoulders & triceps", ["h_push", "v_push", "f:chest", "f:shoulders", "triceps", "oblique"]),
+    "pull": ("Back & biceps", ["v_pull", "h_pull", "f:back", "biceps", "f:shoulders", "lower_abs"]),
+    "legs_abs": ("Legs & abs", ["squat", "hinge", "lunge", "calf", "oblique", "lower_abs"]),
+}
+BODY_PART_SPLITS = {
+    2: ["push", "legs_abs"], 3: ["push", "pull", "legs_abs"],
+    4: ["chest_tri", "back_bi", "legs", "shoulders_abs"],
+    5: ["chest_tri", "back_bi", "legs", "shoulders_abs", "arms_abs"],
+    6: ["chest_tri", "back_bi", "legs", "shoulders_abs", "arms_abs", "legs_abs"],
+}
+NAMED_SPLITS = {
+    "full_body": {2: ["full_a", "full_b"], 3: ["full_a", "full_b", "full_c"], 4: ["full_a", "full_b", "full_a", "full_c"],
+                  5: ["full_a", "full_b", "full_c", "full_a", "full_b"], 6: ["full_a", "full_b", "full_c"] * 2},
+    "upper_lower": {2: ["upper_a", "lower_a"], 3: ["upper_a", "lower_a", "upper_b"], 4: ["upper_a", "lower_a", "upper_b", "lower_b"],
+                    5: ["upper_a", "lower_a", "upper_b", "lower_b", "upper_a"], 6: ["upper_a", "lower_a", "upper_b", "lower_b"] * 2},
+    "ppl": {2: ["push", "legs"], 3: ["push", "pull", "legs"], 4: ["push", "pull", "legs", "upper_a"],
+            5: ["push", "pull", "legs", "upper_a", "lower_a"], 6: ["push", "pull", "legs"] * 2},
+}
+SPLIT_BASIS = {
+    "body_part": "Muscle-group split: each day focuses on one or two muscle groups (chest & triceps, back & biceps, legs, shoulders & abs), the classic bodybuilding 'bro split' used by most free muscle-building programs.",
+    "full_body": "Full body each session (StrongLifts / GZCLP-style).",
+    "upper_lower": "Upper/lower split (PHUL-style).",
+    "ppl": "Push / pull / legs (Reddit PPL-style).",
+}
+CARDIO_FINISHER = {"exercise": "Cardio finisher: treadmill incline walk, bike or elliptical (steady, no stopping)",
+                   "pattern": "cardio", "sets": 1, "reps": "20 minutes", "rest_s": 0}
 
 
 PROGRAM_BASIS = {
@@ -211,7 +254,7 @@ FOCUS_EXTRAS = {
     "chest": {"gym": ["Incline dumbbell press", "Cable fly"], "home": ["Dumbbell floor press", "Dumbbell fly"],
               "bodyweight": ["Push-up", "Incline push-up"]},
 }
-FOCUS_LABELS = {"core": "core", "shoulders": "shoulders", "arms": "arms", "back": "back & posture", "legs": "legs",
+FOCUS_LABELS = {"waist": "belly & love handles", "core": "core", "shoulders": "shoulders", "arms": "arms", "back": "back & posture", "legs": "legs",
                 "glutes": "glutes", "chest": "chest", "cardio": "stamina", "flexibility": "flexibility"}
 # Movement patterns / words to leave out for a sore or injured area, and safer swaps.
 INJURY_AVOID = {
@@ -265,6 +308,10 @@ PHOTO = {
     "Dumbbell hip thrust": "~Barbell Hip Thrust", "Single-leg glute bridge": "Single Leg Glute Bridge",
     "Cable fly": "Flat Bench Cable Flyes", "Dumbbell fly": "Dumbbell Flyes",
     "Stretch: hips, hamstrings, chest and shoulders": "~Cat Stretch",
+    "Cable woodchop": "Standing Cable Wood Chop", "Pallof press": "Pallof Press", "Band Pallof press": "Pallof Press",
+    "Russian twist": "Russian Twist", "Bicycle crunch": "Air Bike", "Reverse crunch": "Reverse Crunch",
+    "Mountain climbers": "Mountain Climbers",
+    "Cardio finisher: treadmill incline walk, bike or elliptical (steady, no stopping)": "~Walking, Treadmill",
 }
 
 
@@ -301,12 +348,126 @@ def _week_note(week: int, weeks: int, goal: str) -> str:
     return "Add a rep to each set, or add load once you hit the top of the rep range."
 
 
+def _pick(slot: str, have: set[str], experience: str, age: int, main: bool, used_day: set, usage: dict,
+          injuries: list[str]) -> tuple[str, str] | None:
+    """One exercise for a slot that isn't already in today's workout, rotating through the options over the week."""
+    if slot.startswith("f:"):
+        area = slot[2:]
+        pool, pattern = [n for n, needs in FOCUS_CATALOG.get(area, []) if needs <= have], "focus_" + area
+    else:
+        pool, pattern = ranked(slot, have, experience, age, main), slot
+    pool = [n for n in pool if n not in used_day and not _avoid(n, pattern, injuries)]
+    if not pool:
+        return None
+    i = usage.get(slot, 0)
+    usage[slot] = i + 1
+    return pool[i % len(pool)], pattern
+
+
+def _styled_plan(goal, days_per_week, weeks, have, experience, include_cardio, focus_areas, injuries,
+                 session_minutes, age, bmi, style) -> dict:
+    days_per_week = min(6, max(2, days_per_week))
+    if style == "body_part":
+        keys, templates = list(BODY_PART_SPLITS[days_per_week]), BODY_PART_DAYS
+        if {"arms", "shoulders"} & set(focus_areas) and "shoulders_abs" in keys and "arms_abs" not in keys:
+            keys[keys.index("shoulders_abs")] = "shoulders_arms"  # a whole day for shoulders and arms
+    else:
+        keys, templates = NAMED_SPLITS[style][days_per_week], DAY_TEMPLATES
+    upper_days = {"chest_tri", "back_bi", "push", "pull", "shoulders_abs", "arms_abs", "shoulders_arms",
+                  "upper_a", "upper_b", "full_a", "full_b", "full_c"}
+    priority = [a for a in ("arms", "shoulders") if a in focus_areas]
+    scheme = GOAL_SCHEME.get(goal, GOAL_SCHEME["general"])
+    set_adj = EXPERIENCE_SET_ADJUST.get(experience, 0) - (1 if age >= 60 else 0)
+    finisher = goal == "fat_loss" or "waist" in focus_areas or "cardio" in focus_areas
+    n_abs = 2 if "waist" in focus_areas else 1
+    prio = {"arms", "shoulders"} & set(focus_areas)
+    fin_min = 0 if not finisher else 15 if prio and session_minutes <= 60 else 20
+    max_ex = max(3, min(7, (session_minutes - fin_min - 5 - 3 * n_abs) // 7))
+    usage: dict = {}
+    training_days = []
+    for weekday, key in zip(SCHEDULE[days_per_week], keys):
+        title, slots = templates[key]
+        slots = list(slots)
+        # priority areas (arms / shoulders): one extra move on every upper-body day
+        if key in upper_days:
+            for a in priority:
+                if key != "shoulders_arms":
+                    slots.insert(min(len(slots), 3), "f:" + a)
+        # belly & love handles: every day finishes with an oblique and a lower-ab move
+        if "waist" in focus_areas:
+            for extra in ("oblique", "lower_abs"):
+                if extra not in slots:
+                    slots.append(extra)
+        exercises, used = [], set()
+        for i, slot in enumerate(slots):
+            got = _pick(slot, have, experience, age, i < 2, used, usage, injuries)
+            if not got:
+                continue
+            name, pattern = got
+            used.add(name)
+            is_main = i < 2 and slot in MAIN_PATTERNS
+            sets, reps, rest = scheme["main" if is_main else "accessory"]
+            if pattern in ("core", "oblique", "lower_abs") or pattern.startswith("focus_waist"):
+                sets, reps, rest = 3, "12-15 each side" if any(w in name.lower() for w in ("chop", "pallof", "twist", "bicycle")) else "12-15", 45
+            if any(w in name.lower() for w in ("plank", "hold", "carry", "crawl")):
+                reps = "30-45s"
+            exercises.append({"exercise": name, "pattern": pattern, "sets": max(2, sets + set_adj), "reps": reps, "rest_s": rest})
+        # fit the session: ab moves are quick (~4 min) and always stay; trim lifts, a repeated muscle first
+        lifts = lambda: [j for j, e in enumerate(exercises) if e["pattern"] not in ("oblique", "lower_abs", "core")]
+        while len(lifts()) > max_ex:
+            js = [j for j in lifts() if j >= 2]
+            if not js:
+                break
+            pats = [exercises[j]["pattern"] for j in lifts()]
+            dup = [j for j in js if pats.count(exercises[j]["pattern"]) > 1]
+            keep = lambda j: exercises[j]["pattern"] in {"focus_" + a for a in priority} | {
+                {"arms": "biceps", "shoulders": "v_push"}[a] for a in priority} | ({"triceps"} if "arms" in priority else set())
+            js = [j for j in js if not keep(j)] or js
+            dup = [j for j in js if pats.count(exercises[j]["pattern"]) > 1]
+            extra = [j for j in js if exercises[j]["pattern"].startswith("focus_")]
+            exercises.pop((dup or extra or js)[-1])
+        if finisher:
+            exercises.append(dict(CARDIO_FINISHER, reps=f"{fin_min} minutes" if session_minutes > 45 else "15 minutes"))
+        training_days.append({"weekday": weekday, "type": "strength", "title": title, "minutes": session_minutes, "exercises": exercises})
+    days = list(training_days)
+    if include_cardio:
+        rest_days = [d for d in WEEKDAYS if d not in SCHEDULE[days_per_week] and d != "Sun"]
+        sessions = CARDIO.get(goal, CARDIO["general"])
+        n_cardio = 2 if goal == "fat_loss" else 1
+        for weekday, session in zip(rest_days, (sessions * 3)[:n_cardio]):
+            days.append({"weekday": weekday, "type": "cardio", "title": session["name"], "zone": session["zone"],
+                         "minutes": min(session["minutes"], max(20, session_minutes)), "exercises": []})
+    days.sort(key=lambda d: WEEKDAYS.index(d["weekday"]))
+    progression = [{"week": w, "note": _week_note(w, weeks, goal)} for w in range(1, weeks + 1)]
+    notes = [f"Program basis: {SPLIT_BASIS[style]} Sets and reps follow NSCA/ACSM ranges for your goal."]
+    if "waist" in focus_areas:
+        notes.append("Belly & love handles: fat can't be burned from one spot, so the plan combines a calorie deficit, "
+                     "a cardio finisher every lifting day and 2 cardio days (to burn overall fat, which comes off the waist too) "
+                     "with oblique and lower-ab work every session (to tighten the waist underneath).")
+    if priority:
+        notes.append("Arms & shoulders are a priority: a full shoulders & arms day plus an extra arm or shoulder move "
+                     "on every upper-body day, so they're trained 2-3 times a week (what most muscle-building programs use "
+                     "for a lagging area). Bigger, rounder delts and arms show much more as body fat drops.")
+    if bmi >= 30:
+        notes.append("Cardio is low-impact (incline walk, bike, elliptical) to protect knees and ankles.")
+    progression[0]["note"] = " ".join(notes) + " " + progression[0]["note"]
+    kit = ("full gym" if {"barbell", "machines", "cable"} <= have else "gym" if have & {"cable", "machines", "barbell"}
+           else "home" if have else "no equipment")
+    label = {"body_part": "muscle-group split", "full_body": "full body", "upper_lower": "upper/lower", "ppl": "push/pull/legs"}[style]
+    name = f"{goal.replace('_', ' ').title()} · {label} · {days_per_week} days/week · {kit}"
+    return {"name": name, "goal": goal, "weeks": weeks, "days": days, "progression": progression}
+
+
 def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
                   equipment: str = "gym", experience: str = "intermediate",
                   include_cardio: bool = True, focus_areas: list[str] | None = None,
                   injuries: list[str] | None = None, session_minutes: int = 60,
-                  equipment_list: list[str] | None = None, age: int = 35, sex: str = "male", bmi: float = 24) -> dict:
+                  equipment_list: list[str] | None = None, age: int = 35, sex: str = "male", bmi: float = 24,
+                  split_style: str = "auto") -> dict:
     have = equipment_set(equipment, equipment_list)
+    if split_style in ("body_part", "full_body", "upper_lower", "ppl"):
+        return _styled_plan(goal, days_per_week, weeks, have, experience, include_cardio, focus_areas or [],
+                            [i for i in (injuries or []) if i != "none"], session_minutes, age, bmi, split_style)
     focus_areas, injuries = focus_areas or [], [i for i in (injuries or []) if i != "none"]
     # roughly 8-10 minutes per exercise including rest; the warm-up takes the rest
     max_ex = max(3, min(8, (session_minutes - 5) // 8))

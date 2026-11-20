@@ -49,7 +49,7 @@ def _get_or_create(db: Session, model, **defaults):
 def get_profile(db: Session) -> Profile:
     p = _get_or_create(db, Profile, allergies=[])
     # columns added after a profile was created start out empty in the database
-    for k, v in (("focus_areas", []), ("injuries", []), ("equipment_list", []), ("allergies", []), ("session_minutes", 60),
+    for k, v in (("focus_areas", []), ("injuries", []), ("equipment_list", []), ("split_style", "auto"), ("allergies", []), ("session_minutes", 60),
                  ("muscle_goal", ""), ("details_done", False)):
         if getattr(p, k, None) is None:
             setattr(p, k, v)

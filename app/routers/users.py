@@ -76,7 +76,7 @@ def _select(response: Response, request: Request, uid: int):
 
 ACTIVITY_LABEL = {"sedentary": "mostly sitting", "light": "lightly active", "moderate": "moderately active",
                   "active": "very active", "very_active": "extremely active"}
-AREAS = {"core", "shoulders", "arms", "back", "legs", "glutes", "chest", "cardio", "flexibility"}
+AREAS = {"waist", "core", "shoulders", "arms", "back", "legs", "glutes", "chest", "cardio", "flexibility"}
 INJURIES = {"none", "knees", "lower_back", "shoulders", "wrists", "neck"}
 
 
@@ -98,6 +98,7 @@ class Details(BaseModel):
     experience: str = Field(pattern="^(beginner|intermediate|advanced)$")
     equipment: str = Field("gym", pattern="^(gym|home|bodyweight)$")
     equipment_list: list[str]  # exactly what the person can use; [] = no equipment
+    split_style: str = Field(pattern="^(auto|body_part|full_body|upper_lower|ppl)$")
     injuries: list[str] = Field(min_length=1)
     diet_type: str = Field(pattern="^(omnivore|vegetarian|vegan|pescatarian)$")
     allergies: list[str] = []
@@ -125,6 +126,7 @@ def person_args(p) -> dict:
     from app.services import nutrition
     h = (p.height_cm or 170) / 100
     return {"equipment_list": p.equipment_list or None, "age": nutrition.age_on(p.birth_year),
+            "split_style": getattr(p, "split_style", None) or "auto",
             "sex": p.sex, "bmi": p.weight_kg / (h * h)}
 
 
@@ -146,6 +148,7 @@ def apply_details(udb, d: Details) -> list[str]:
     p.training_days, p.session_minutes = max(1, d.training_days), d.session_minutes
     p.experience, p.equipment, p.diet_type, p.allergies = d.experience, d.equipment, d.diet_type, d.allergies
     p.equipment_list = list(d.equipment_list)
+    p.split_style = d.split_style
     p.setup_done = p.details_done = True
     g.target_weight_kg = d.target_weight_kg if d.weight_goal != "maintain" else None
     g.calorie_target = g.protein_target_g = g.carbs_target_g = g.fat_target_g = None  # worked out exactly from the answers

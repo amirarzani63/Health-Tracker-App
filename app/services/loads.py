@@ -57,7 +57,8 @@ RATIOS = {
     "Dumbbell curl": (0.12, "db", "upper"), "Hammer curl": (0.13, "db", "upper"), "Dumbbell hammer curl": (0.13, "db", "upper"),
     "Cable pushdown": (0.3, "stack", "upper"), "Rope triceps pushdown (cable)": (0.25, "stack", "upper"),
     "Skull crusher": (0.3, "bar", "upper"), "Overhead dumbbell extension": (0.2, "db1", "upper"),
-    "Cable crunch": (0.4, "stack", "upper"),
+    "Cable crunch": (0.4, "stack", "upper"), "Cable woodchop": (0.15, "stack", "upper"),
+    "Pallof press": (0.12, "stack", "upper"),
     "Farmer's carry": (0.35, "db", "lower"), "Suitcase carry": (0.35, "db1", "lower"),
 }
 EXPERIENCE = {"beginner": 0.6, "intermediate": 1.0, "advanced": 1.25}
@@ -83,7 +84,8 @@ def suggest(profile, exercise: str, plan_goal: str = "general", today: date | No
     age = nutrition.age_on(profile.birth_year, today)
     kg = share * body * sex * _age_factor(age) * EXPERIENCE.get(profile.experience, 0.8) * GOAL.get(plan_goal, 1.0)
     step = STEP[kind]
-    kg = max(MIN[kind], round(kg / step) * step)
+    floor = 10.0 if exercise in ("EZ-bar curl", "Skull crusher") else MIN[kind]  # EZ bar weighs ~10 kg
+    kg = max(floor, round(kg / step) * step)
     return {"kg": kg, "lb": round(kg * 2.2046 / (5 if kind == "stack" else 2.5)) * (5 if kind == "stack" else 2.5),
             "per": LABEL[kind]}
 

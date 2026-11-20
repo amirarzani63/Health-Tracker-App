@@ -56,3 +56,20 @@ def test_equipment_age_and_experience_shape_the_plan():
     mains = [e["exercise"] for d in older["days"] for e in d["exercises"][:2]]
     assert "Barbell back squat" not in mains and "Conventional deadlift" not in mains
     assert "Program basis" in older["progression"][0]["note"] and "60+" in older["progression"][0]["note"]
+
+
+def test_muscle_group_split_with_waist_arms_and_shoulders_priority():
+    kit = ["dumbbells", "bench", "cable", "pullup", "cardio"]
+    p = generate_plan(goal="fat_loss", days_per_week=4, experience="intermediate", equipment_list=kit,
+                      focus_areas=["waist", "arms", "shoulders"], session_minutes=60, split_style="body_part")
+    lifting = [d for d in p["days"] if d["type"] == "strength"]
+    assert [d["title"] for d in lifting] == ["Chest & triceps", "Back & biceps", "Legs & glutes", "Shoulders & arms"]
+    for d in lifting:
+        pats = [e["pattern"] for e in d["exercises"]]
+        assert "oblique" in pats and "lower_abs" in pats  # belly & love handles every session
+        assert pats[-1] == "cardio"                       # fat-burning finisher
+        assert len({e["exercise"] for e in d["exercises"]}) == len(d["exercises"])
+    upper = [e for d in lifting if d["title"] != "Legs & glutes" for e in d["exercises"]]
+    assert sum(e["pattern"] in ("biceps", "triceps", "focus_arms") for e in upper) >= 4
+    assert sum(e["pattern"] in ("v_push", "focus_shoulders") for e in upper) >= 4
+    assert "spot" in p["progression"][0]["note"] and "Arms & shoulders" in p["progression"][0]["note"]

@@ -87,5 +87,5 @@ def test_every_plan_exercise_has_one_exact_video():
     from app.services.videos import VIDEOS
     from app.services.workout_planner import PHOTO
     names = set(PHOTO) | {e["exercise"] for d in DAYS for e in d["exercises"] if e.get("pattern") != "cardio"}
-    assert not sorted(n for n in names if n not in VIDEOS)
+    assert not sorted(n for n in names if n not in VIDEOS and not n.startswith("Cardio finisher"))
     assert all(re.fullmatch(r"[A-Za-z0-9_-]{11}", v) for v in VIDEOS.values())

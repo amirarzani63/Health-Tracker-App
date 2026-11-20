@@ -5,6 +5,9 @@ shown with YouTube's free privacy-enhanced player (youtube-nocookie.com): no acc
 """
 
 VIDEOS = {
+    'Cable woodchop': "PCQCwP1Xy0g", 'Pallof press': "SsQWYNxlYsQ", 'Band Pallof press': "iBDXkpKDRy8",
+    'Russian twist': "tAmsTZD9tjc", 'Bicycle crunch': "VaL7XWK3MVE", 'Reverse crunch': "XY8KzdDcMFg",
+    'Mountain climbers': "re3dtmzGCOc",
     'Dumbbell bench press (flat bench)': "5Y3VZsLb1Ys",
     'Seated cable row (cable station)': "OeLb503NZHk",
     'Seated dumbbell shoulder press (bench upright)': "fuQpuu--bMI",

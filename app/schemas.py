@@ -37,6 +37,7 @@ class ProfileIn(BaseModel):
     focus_areas: list[str] = []
     injuries: list[str] = []
     equipment_list: list[str] = []
+    split_style: str = "auto"
 
 
 class ProfileOut(ProfileIn, ORM):

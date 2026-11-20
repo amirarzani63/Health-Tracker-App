@@ -1949,6 +1949,7 @@ async function fillMyProfile() {
       f.target_weight_kg.value = g.target_weight_kg ?? ""; f.goal_weeks.value = p.goal_weeks ?? "";
       f.muscle_goal.value = p.muscle_goal || ""; f.training_days.value = String(p.training_days);
       f.session_minutes.value = String(p.session_minutes);
+      if (p.split_style && p.split_style !== "auto") f.split_style.value = p.split_style;
       const tick = (grp, vals) => $$(`[data-group="${grp}"] input`).forEach((c) => { c.checked = vals.includes(c.value); });
       tick("focus_areas", p.focus_areas || []); tick("injuries", (p.injuries || []).length ? p.injuries : ["none"]);
       const kit = (p.equipment_list || []).length ? p.equipment_list : p.equipment === "bodyweight" ? [] : null;
@@ -1984,7 +1985,7 @@ $("#whoAddForm").addEventListener("submit", async (e) => {
   const picked = (grp) => $$(`[data-group="${grp}"] input:checked`, f).map((c) => c.value);
   // nothing is guessed: point at the first unanswered question
   const need = ["name", "sex", "birth_year", "height_cm", "weight_kg", "activity_level", "weight_goal", "muscle_goal",
-    "training_days", "session_minutes", "experience", "diet_type"];
+    "training_days", "session_minutes", "experience", "split_style", "diet_type"];
   if (el.weight_goal.value && el.weight_goal.value !== "maintain") need.push("target_weight_kg", "goal_weeks");
   const miss = need.find((k) => !String(el[k].value).trim());
   if (miss) { el[miss].scrollIntoView({ block: "center" }); el[miss].focus(); toast("Please answer every question.", true); return; }
@@ -1998,7 +1999,7 @@ $("#whoAddForm").addEventListener("submit", async (e) => {
     goal_weeks: el.weight_goal.value === "maintain" ? null : Number(el.goal_weeks.value),
     muscle_goal: el.muscle_goal.value, focus_areas: picked("focus_areas"), training_days: Number(el.training_days.value),
     session_minutes: Number(el.session_minutes.value), experience: el.experience.value,
-    equipment_list: picked("equipment_list"),
+    equipment_list: picked("equipment_list"), split_style: el.split_style.value,
     injuries: picked("injuries"), diet_type: el.diet_type.value,
     allergies: el.allergies.value.split(",").map((x) => x.trim()).filter(Boolean),
     rebuild_plan: f.dataset.mode === "edit" ? el.rebuild_plan.checked : true,

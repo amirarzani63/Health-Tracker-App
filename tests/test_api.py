@@ -198,7 +198,7 @@ def test_exercise_picker(client):
 SARA = {"name": "Sara", "sex": "female", "birth_year": 1990, "height_cm": 165, "weight_kg": 70,
         "activity_level": "light", "weight_goal": "lose", "target_weight_kg": 64, "goal_weeks": 12,
         "muscle_goal": "tone", "focus_areas": ["core", "shoulders"], "training_days": 3, "session_minutes": 45,
-        "experience": "beginner", "equipment": "home", "equipment_list": ["dumbbells", "bench"], "injuries": ["knees"], "diet_type": "vegetarian"}
+        "experience": "beginner", "equipment": "home", "equipment_list": ["dumbbells", "bench"], "split_style": "auto", "injuries": ["knees"], "diet_type": "vegetarian"}
 
 
 def test_people_have_separate_data(client):
