@@ -31,9 +31,15 @@ class ProfileIn(BaseModel):
     training_days: int = Field(4, ge=1, le=7)
     equipment: Equipment = "gym"
     units: Literal["metric", "imperial"] = "metric"
+    session_minutes: int = Field(60, ge=10, le=240)
+    goal_weeks: int | None = Field(None, ge=1, le=104)
+    muscle_goal: str = ""
+    focus_areas: list[str] = []
+    injuries: list[str] = []
 
 
 class ProfileOut(ProfileIn, ORM):
+    details_done: bool = False
     setup_done: bool = False
 
 

@@ -195,13 +195,17 @@ def test_exercise_picker(client):
     assert "Goblet Squat" in r["plan_exercises"]["Legs"]
 
 
+SARA = {"name": "Sara", "sex": "female", "birth_year": 1990, "height_cm": 165, "weight_kg": 70,
+        "activity_level": "light", "weight_goal": "lose", "target_weight_kg": 64, "goal_weeks": 12,
+        "muscle_goal": "tone", "focus_areas": ["core", "shoulders"], "training_days": 3, "session_minutes": 45,
+        "experience": "beginner", "equipment": "home", "injuries": ["knees"], "diet_type": "vegetarian"}
+
+
 def test_people_have_separate_data(client):
     r = client.get("/api/users").json()
     assert [u["id"] for u in r["users"]] == [1]
     client.post("/api/weights", json={"day": "2026-11-19", "weight_kg": 105.5})
-    new = client.post("/api/users", json={"name": "Sara", "sex": "female", "birth_year": 1990, "height_cm": 165,
-                                          "weight_kg": 70, "target_weight_kg": 64, "focus": "lose_weight",
-                                          "equipment": "home", "diet_type": "vegetarian"}).json()
+    new = client.post("/api/users", json=SARA).json()
     assert new["id"] == 2
     # the new person is now selected and sees only their own data and targets
     p = client.get("/api/profile").json()
@@ -213,3 +217,25 @@ def test_people_have_separate_data(client):
     assert client.get("/api/profile").json()["name"] != "Sara"
     assert len(client.get("/api/users").json()["users"]) == 2
     assert client.post("/api/users/select", json={"id": 99}).status_code == 404
+
+
+
+def test_new_person_targets_are_worked_out_exactly(client):
+    from datetime import date
+    r = client.post("/api/users", json=SARA).json()
+    age = date.today().year - 1990
+    bmr = 10 * 70 + 6.25 * 165 - 5 * age - 161
+    workouts = 5.0 * 3.5 * 70 / 200 * 45 * 3 / 7  # 3 × 45 min a week
+    want = bmr * 1.3 + workouts - 6 * 7700 / (12 * 7)  # light everyday life; lose 6 kg in 12 weeks
+    t = client.get(f"/api/dashboard?day={date.today()}").json()["targets"]
+    assert abs(t["calories"] - want) < 1
+    assert any("× 1.3 " in line for line in r["summary"])
+    active = client.get("/api/plans/active").json()
+    strength = [d for d in active["days"] if d["type"] == "strength"]
+    names = [e["exercise"].lower() for d in strength for e in d["exercises"]]
+    assert any("plank" in n or "dead bug" in n for n in names) and any("lateral" in n or "rear-delt" in n for n in names)
+    assert not any("lunge" in n or "split squat" in n for n in names)  # knees
+    # missing answers are refused, nothing is guessed
+    bad = {k: v for k, v in SARA.items() if k != "activity_level"}
+    assert client.post("/api/users", json=bad).status_code == 422
+    assert client.post("/api/users", json={**SARA, "goal_weeks": None}).status_code == 422

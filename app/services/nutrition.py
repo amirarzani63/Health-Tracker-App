@@ -17,7 +17,42 @@ ACTIVITY_MULTIPLIERS = {
     "very_active": 1.9,
 }
 
+# Questionnaire profiles: everyday activity WITHOUT workouts (non-exercise), then the planned workouts are added on top.
+DAILY_LIFE = {"sedentary": 1.2, "light": 1.3, "moderate": 1.4, "active": 1.55, "very_active": 1.7}
+WORKOUT_MET = 5.0  # mixed strength training with short cardio, moderate effort
+
+
+def workout_kcal_per_day(profile) -> float:
+    """Average daily calories from the planned workouts (days × minutes), spread over the week."""
+    days, mins = getattr(profile, "training_days", 0) or 0, getattr(profile, "session_minutes", 0) or 0
+    return WORKOUT_MET * 3.5 * profile.weight_kg / 200 * mins * days / 7
+
+
 GOAL_ADJUST = {"lose": -500, "maintain": 0, "gain": 300}
+KCAL_PER_KG = 7700  # energy in 1 kg of body fat
+
+
+def goal_adjust(profile, goals) -> tuple[float, str]:
+    """Daily calories to add (+) or remove (-) to reach the goal weight in the chosen number of weeks.
+
+    Safe limits: lose at most 1% of body weight (and 1,000 kcal) a day's worth per week; gain at most +500/day.
+    Returns (adjustment, note).
+    """
+    target = goals.target_weight_kg if goals is not None else None
+    weeks = getattr(profile, "goal_weeks", None)
+    if not target or not weeks or profile.goal == "maintain":
+        return float(GOAL_ADJUST.get(profile.goal, 0)) if not getattr(profile, "details_done", False) else 0.0, ""
+    change = target - profile.weight_kg
+    daily = change * KCAL_PER_KG / (weeks * 7)
+    note = ""
+    if daily < 0:
+        cap = max(-1000.0, -profile.weight_kg * 0.01 * KCAL_PER_KG / 7)
+        if daily < cap:
+            daily, note = cap, "capped at a safe rate of loss"
+    else:
+        if daily > 500:
+            daily, note = 500.0, "capped at a safe rate of gain"
+    return daily, note
 # grams of protein per kg body weight
 PROTEIN_PER_KG = {"lose": 2.0, "maintain": 1.6, "gain": 1.8}
 FAT_SHARE = 0.27  # fraction of calories from fat
@@ -64,16 +99,21 @@ def compute_targets(profile, garmin_active_calories: float | None = None,
         tdee = (base + garmin_active_calories) * 1.1
         source = "garmin"
     else:
-        tdee = bmr * ACTIVITY_MULTIPLIERS.get(profile.activity_level, 1.55)
+        if getattr(profile, "details_done", False):
+            tdee = bmr * DAILY_LIFE.get(profile.activity_level, 1.2) + workout_kcal_per_day(profile)
+        else:
+            tdee = bmr * ACTIVITY_MULTIPLIERS.get(profile.activity_level, 1.55)
         source = "estimate"
 
     floor = 1500 if profile.sex == "male" else 1200
-    calories = max(floor, tdee + GOAL_ADJUST.get(profile.goal, 0))
+    adjust, _ = goal_adjust(profile, goals)
+    calories = max(floor, tdee + adjust)
     g = goals
     if g is not None and g.calorie_target:
         calories, source = float(g.calorie_target), "goal"
     protein = (g.protein_target_g if g is not None and g.protein_target_g is not None
-               else PROTEIN_PER_KG.get(profile.goal, 1.6) * protein_reference_weight(profile))
+               else max(PROTEIN_PER_KG.get(profile.goal, 1.6),
+                        1.8 if getattr(profile, "muscle_goal", "") in ("build", "strength") else 0) * protein_reference_weight(profile))
     fat = g.fat_target_g if g is not None and g.fat_target_g is not None else calories * FAT_SHARE / 9
     carbs = (g.carbs_target_g if g is not None and g.carbs_target_g is not None
              else max(0.0, (calories - protein * 4 - fat * 9) / 4))

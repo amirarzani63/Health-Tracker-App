@@ -26,6 +26,13 @@ class Profile(Base):
     equipment: Mapped[str] = mapped_column(String(20), default="gym")  # gym | home | bodyweight
     setup_done: Mapped[bool] = mapped_column(Boolean, default=False)
     units: Mapped[str] = mapped_column(String(10), default="metric")  # metric | imperial (display only)
+    # asked in the "About you" questionnaire (no guessing)
+    session_minutes: Mapped[int] = mapped_column(Integer, default=60)
+    goal_weeks: Mapped[int | None] = mapped_column(Integer, nullable=True)  # weeks to reach the goal weight
+    muscle_goal: Mapped[str] = mapped_column(String(20), default="")  # tone | build | strength | none
+    focus_areas: Mapped[list] = mapped_column(JSON, default=list)  # core, shoulders, arms, ...
+    injuries: Mapped[list] = mapped_column(JSON, default=list)  # knees, lower_back, shoulders, wrists, neck
+    details_done: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class WeightEntry(Base):

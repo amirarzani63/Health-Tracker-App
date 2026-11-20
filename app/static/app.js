@@ -1778,69 +1778,100 @@ async function loadWho(openIfUnchosen = true) {
   $("#whoBtn .who-dot").textContent = me.name.slice(0, 1).toUpperCase();
   $("#whoList").innerHTML = r.users.map((u) => `<button type="button" class="who-item${u.current ? " on" : ""}" data-who="${u.id}">
     <span class="who-dot" style="background:${esc(u.color)}">${esc(u.name.slice(0, 1).toUpperCase())}</span><span>${esc(u.name)}</span>${u.current ? `<span class="small muted">· now</span>` : ""}</button>`).join("");
-  if (openIfUnchosen && r.users.length > 1 && !r.chosen) $("#whoDialog").showModal();
+  if (openIfUnchosen && r.users.length > 1 && !r.chosen) { $("#whoDialog").showModal(); return; }
+  // profiles made before the full questionnaire: ask the missing questions (once per visit)
+  try {
+    const p = await api("/api/profile");
+    if (openIfUnchosen && !p.details_done && !sessionStorage.getItem("askedDetails")) {
+      sessionStorage.setItem("askedDetails", "1");
+      $("#whoDialog").showModal(); $("#whoEditBtn").click();
+    }
+  } catch {}
 }
 $("#whoBtn").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); $("#whoDialog").showModal(); });
 $("#whoClose").addEventListener("click", () => $("#whoDialog").close());
-const FOCUS_OF = { lose: "lose_weight", gain: "build_muscle", maintain: "stay_healthy" };
-const GOAL_OF = { lose_weight: "lose", build_muscle: "gain" };
 function openWhoForm(mode) {
   const f = $("#whoAddForm");
   f.dataset.mode = mode; f.reset();
+  $$("[data-group] input", f).forEach((c) => { c.checked = false; });
   $("#whoFormTitle").textContent = mode === "edit" ? "My profile" : "Add a person";
   $("#whoFormNote").textContent = mode === "edit"
-    ? "Fix anything that's wrong. Your calories, protein and water targets update automatically when you save."
-    : "Their calories, protein, water and workout plan are worked out from these answers.";
+    ? "Check every answer. Your calories, protein and targets are worked out exactly from them when you save."
+    : "Answer everything: calories, protein and the workout plan are worked out exactly from these answers. Nothing is guessed.";
   $("#whoSubmit").textContent = mode === "edit" ? "Save changes" : "Create profile";
-  $(".who-pick").classList.add("hidden"); f.classList.remove("hidden");
+  $("#whoRebuild").classList.toggle("hidden", mode !== "edit");
+  $(".who-pick").classList.add("hidden"); $("#whoResult").classList.add("hidden"); f.classList.remove("hidden");
+  syncWeightGoal();
 }
+function syncWeightGoal() {
+  const f = $("#whoAddForm"), keep = f.elements.weight_goal.value === "maintain" || !f.elements.weight_goal.value;
+  $(".wg-more", f).classList.toggle("hidden", keep);
+}
+$("#whoAddForm").elements.weight_goal.addEventListener("change", syncWeightGoal);
+$("#whoAddForm").addEventListener("change", (e) => {  // "None" and real injuries can't both be ticked
+  const g = e.target.closest('[data-group="injuries"]');
+  if (!g || !e.target.checked) return;
+  $$("input", g).forEach((c) => { if ((e.target.value === "none") !== (c.value === "none")) c.checked = false; });
+});
 $("#whoAddBtn").addEventListener("click", () => { openWhoForm("add"); $("#whoAddForm").elements.name.focus(); });
 $("#whoEditBtn").addEventListener("click", async () => {
   openWhoForm("edit");
   const f = $("#whoAddForm").elements;
   try {
     const [p, g] = await Promise.all([api("/api/profile"), api("/api/goals")]);
+    const r1 = (v) => Math.round(v * 10) / 10;
     f.name.value = p.name || ""; f.sex.value = p.sex; f.birth_year.value = p.birth_year;
-    f.height_cm.value = Math.round(p.height_cm * 10) / 10; f.weight_kg.value = Math.round(p.weight_kg * 10) / 10;
-    f.focus.value = FOCUS_OF[p.goal] || "stay_healthy"; f.target_weight_kg.value = g.target_weight_kg ?? "";
+    f.height_cm.value = r1(p.height_cm); f.weight_kg.value = r1(p.weight_kg);
     f.experience.value = p.experience; f.equipment.value = p.equipment; f.diet_type.value = p.diet_type;
+    f.allergies.value = (p.allergies || []).join(", ");
+    if (p.details_done) {  // answers given in the questionnaire before; older profiles must answer them now
+      f.activity_level.value = p.activity_level; f.weight_goal.value = p.goal;
+      f.target_weight_kg.value = g.target_weight_kg ?? ""; f.goal_weeks.value = p.goal_weeks ?? "";
+      f.muscle_goal.value = p.muscle_goal || ""; f.training_days.value = String(p.training_days);
+      f.session_minutes.value = String(p.session_minutes);
+      const tick = (grp, vals) => $$(`[data-group="${grp}"] input`).forEach((c) => { c.checked = vals.includes(c.value); });
+      tick("focus_areas", p.focus_areas || []); tick("injuries", (p.injuries || []).length ? p.injuries : ["none"]);
+    } else {
+      $("#whoFormNote").textContent = "A few new questions need answering so your targets are exact (they're left blank on purpose).";
+    }
+    syncWeightGoal();
   } catch (err) { toast(err.message, true); }
 });
 $("#whoAddBack").addEventListener("click", () => { $("#whoAddForm").classList.add("hidden"); $(".who-pick").classList.remove("hidden"); });
-$("#whoList").addEventListener("click", async (e) => {
-  const b = e.target.closest("[data-who]");
-  if (!b) return;
-  try {
-    await api("/api/users/select", { method: "POST", body: { id: Number(b.dataset.who) } });
-    try { localStorage.setItem("who", b.dataset.who); } catch {}
-    location.hash = ""; location.reload();
-  } catch (err) { toast(err.message, true); }
-});
+$("#whoDone").addEventListener("click", () => { location.hash = ""; location.reload(); });
 $("#whoAddForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const f = e.target, btn = $("button[type=submit]", f), body = formData(f);
-  for (const k of ["birth_year", "height_cm", "weight_kg"]) body[k] = Number(body[k]);
-  body.target_weight_kg = body.target_weight_kg ? Number(body.target_weight_kg) : null;
-  if (f.dataset.mode === "edit") {
-    btn.disabled = true; btn.textContent = "Saving…";
-    try {
-      const [p, g] = await Promise.all([api("/api/profile"), api("/api/goals")]);
-      await api("/api/profile", { method: "PUT", body: { ...p, name: body.name, sex: body.sex, birth_year: body.birth_year,
-        height_cm: body.height_cm, weight_kg: body.weight_kg, goal: GOAL_OF[body.focus] || "maintain",
-        experience: body.experience, equipment: body.equipment, diet_type: body.diet_type } });
-      const { saved, ...goals } = g;
-      await api("/api/goals", { method: "PUT", body: { ...goals, target_weight_kg: body.target_weight_kg } });
-      toast("Profile saved ✓");
-      location.reload();
-    } catch (err) { toast(err.message, true); btn.disabled = false; btn.textContent = "Save changes"; }
-    return;
-  }
-  btn.disabled = true; btn.textContent = "Setting up their plan…";
+  const f = e.target, el = f.elements, btn = $("#whoSubmit");
+  const picked = (grp) => $$(`[data-group="${grp}"] input:checked`, f).map((c) => c.value);
+  // nothing is guessed: point at the first unanswered question
+  const need = ["name", "sex", "birth_year", "height_cm", "weight_kg", "activity_level", "weight_goal", "muscle_goal",
+    "training_days", "session_minutes", "experience", "equipment", "diet_type"];
+  if (el.weight_goal.value && el.weight_goal.value !== "maintain") need.push("target_weight_kg", "goal_weeks");
+  const miss = need.find((k) => !String(el[k].value).trim());
+  if (miss) { el[miss].scrollIntoView({ block: "center" }); el[miss].focus(); toast("Please answer every question.", true); return; }
+  if (!picked("injuries").length) { $('[data-group="injuries"]', f).scrollIntoView({ block: "center" }); toast("Tick your injuries, or “None”.", true); return; }
+  const body = {
+    name: el.name.value.trim(), sex: el.sex.value, birth_year: Number(el.birth_year.value),
+    height_cm: Number(el.height_cm.value), weight_kg: Number(el.weight_kg.value), activity_level: el.activity_level.value,
+    weight_goal: el.weight_goal.value,
+    target_weight_kg: el.weight_goal.value === "maintain" ? null : Number(el.target_weight_kg.value),
+    goal_weeks: el.weight_goal.value === "maintain" ? null : Number(el.goal_weeks.value),
+    muscle_goal: el.muscle_goal.value, focus_areas: picked("focus_areas"), training_days: Number(el.training_days.value),
+    session_minutes: Number(el.session_minutes.value), experience: el.experience.value, equipment: el.equipment.value,
+    injuries: picked("injuries"), diet_type: el.diet_type.value,
+    allergies: el.allergies.value.split(",").map((x) => x.trim()).filter(Boolean),
+    rebuild_plan: f.dataset.mode === "edit" ? el.rebuild_plan.checked : true,
+  };
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Working it out…";
   try {
-    const r = await api("/api/users", { method: "POST", body });
+    const r = await api(f.dataset.mode === "edit" ? "/api/users/me" : "/api/users", { method: f.dataset.mode === "edit" ? "PUT" : "POST", body });
     try { localStorage.setItem("who", String(r.id)); } catch {}
-    location.hash = ""; location.reload();
-  } catch (err) { toast(err.message, true); btn.disabled = false; btn.textContent = "Create profile"; }
+    f.classList.add("hidden");
+    $("#whoResult .who-maths").innerHTML = r.summary.map((x) => `<li>${esc(x)}</li>`).join("");
+    $("#whoResult").classList.remove("hidden");
+    $("#whoDialog").scrollTop = 0;
+  } catch (err) { toast(err.message, true); } finally { btn.disabled = false; btn.textContent = label; }
 });
 loadWho();
 

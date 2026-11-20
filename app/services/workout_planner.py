@@ -94,6 +94,62 @@ CARDIO = {
 }
 
 
+# Extra exercises for the areas a person wants to work on (added to every strength day, by equipment).
+FOCUS_EXTRAS = {
+    "core": {"gym": ["Cable crunch", "Hanging knee raise", "Plank"], "home": ["Dead bug", "Plank", "Side plank"],
+             "bodyweight": ["Plank", "Dead bug", "Side plank"]},
+    "shoulders": {"gym": ["Dumbbell lateral raise", "Face pull (cable with rope)", "Seated dumbbell shoulder press"],
+                  "home": ["Dumbbell lateral raise", "Dumbbell rear-delt fly", "Arnold press"],
+                  "bodyweight": ["Pike push-up", "Prone Y-T raise", "Wall slide"]},
+    "arms": {"gym": ["Cable curl", "Rope triceps pushdown (cable)"], "home": ["Hammer curl", "Overhead dumbbell extension"],
+             "bodyweight": ["Diamond push-up", "Bench dip"]},
+    "back": {"gym": ["Face pull (cable with rope)", "Back extension", "Seated cable row"],
+             "home": ["Dumbbell rear-delt fly", "Superman hold", "One-arm dumbbell row"],
+             "bodyweight": ["Superman hold", "Prone Y-T raise", "Inverted row (table)"]},
+    "legs": {"gym": ["Leg extension", "Leg curl", "Goblet squat"], "home": ["Goblet squat", "Dumbbell reverse lunge"],
+             "bodyweight": ["Bodyweight squat", "Reverse lunge"]},
+    "glutes": {"gym": ["Hip thrust", "Cable glute kickback"], "home": ["Dumbbell hip thrust", "Glute bridge"],
+               "bodyweight": ["Glute bridge", "Single-leg glute bridge"]},
+    "chest": {"gym": ["Incline dumbbell press", "Cable fly"], "home": ["Dumbbell floor press", "Dumbbell fly"],
+              "bodyweight": ["Push-up", "Incline push-up"]},
+}
+FOCUS_LABELS = {"core": "core", "shoulders": "shoulders", "arms": "arms", "back": "back & posture", "legs": "legs",
+                "glutes": "glutes", "chest": "chest", "cardio": "stamina", "flexibility": "flexibility"}
+# Movement patterns / words to leave out for a sore or injured area, and safer swaps.
+INJURY_AVOID = {
+    "knees": ({"lunge"}, ("lunge", "split squat", "step-up", "jump")),
+    "lower_back": ({"carry"}, ("deadlift", "barbell row", "back squat", "good morning", "back extension", "superman")),
+    "shoulders": ({"v_push"}, ("overhead", "shoulder press", "arnold", "pike", "handstand", "dip", "skull", "upright")),
+    "wrists": (set(), ("push-up", "plank", "handstand", "crawl", "skull")),
+    "neck": (set(), ("crunch", "handstand", "shrug")),
+}
+INJURY_SWAP = {
+    "squat": "Box squat to a bench (pain-free depth)", "hinge": "Glute bridge", "h_push": "Machine chest press",
+    "plank": "Dead bug", "push-up": "Dumbbell floor press", "crunch": "Dead bug",
+}
+
+
+def _avoid(exercise: str, pattern: str, injuries: list[str]) -> bool:
+    for inj in injuries:
+        pats, words = INJURY_AVOID.get(inj, (set(), ()))
+        if pattern in pats or any(w in exercise.lower() for w in words):
+            return True
+    return False
+
+
+def _safe(exercise: str, pattern: str, injuries: list[str], options: list[str]) -> str | None:
+    """The exercise, or a safe alternative for the person's injuries (None = leave it out)."""
+    if not _avoid(exercise, pattern, injuries):
+        return exercise
+    for alt in options:
+        if not _avoid(alt, pattern, injuries):
+            return alt
+    for key, alt in INJURY_SWAP.items():
+        if (key == pattern or key in exercise.lower()) and not _avoid(alt, pattern, injuries):
+            return alt
+    return None
+
+
 def _week_note(week: int, weeks: int, goal: str) -> str:
     if weeks >= 4 and week == weeks:
         return "Deload: cut sets roughly in half and use ~60% of usual loads. Let your Garmin recovery time come down."
@@ -108,7 +164,11 @@ def _week_note(week: int, weeks: int, goal: str) -> str:
 
 def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
                   equipment: str = "gym", experience: str = "intermediate",
-                  include_cardio: bool = True) -> dict:
+                  include_cardio: bool = True, focus_areas: list[str] | None = None,
+                  injuries: list[str] | None = None, session_minutes: int = 60) -> dict:
+    focus_areas, injuries = focus_areas or [], [i for i in (injuries or []) if i != "none"]
+    # roughly 8-10 minutes per exercise including rest; the warm-up takes the rest
+    max_ex = max(3, min(8, (session_minutes - 5) // 8))
     days_per_week = min(6, max(2, days_per_week))
     if experience == "beginner" and days_per_week > 4:
         days_per_week = 4  # beginners progress best on full-body / upper-lower
@@ -130,7 +190,9 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
             usage[pattern] = idx + 1
             is_main = i < 2 and pattern in MAIN_PATTERNS
             sets, reps, rest = scheme["main" if is_main else "accessory"]
-            exercise = options[idx % len(options)]
+            exercise = _safe(options[idx % len(options)], pattern, injuries, options)
+            if exercise is None:
+                continue
             if pattern == "carry" or any(w in exercise.lower() for w in ("plank", "hold", "crawl")):
                 reps = "30-45s"
             exercises.append({
@@ -140,16 +202,45 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
                 "reps": reps,
                 "rest_s": rest,
             })
-        training_days.append({"weekday": weekday, "type": "strength", "title": title, "exercises": exercises})
+        # the person's focus areas: one extra exercise each, rotating, most important first
+        extra_n = 0
+        for area in focus_areas:
+            pool = FOCUS_EXTRAS.get(area, {}).get(equipment, [])
+            for k in range(len(pool)):
+                ex = pool[(usage.get("focus:" + area, 0) + k) % len(pool)]
+                if _avoid(ex, "", injuries) or any(e["exercise"] == ex for e in exercises):
+                    continue
+                usage["focus:" + area] = usage.get("focus:" + area, 0) + k + 1
+                hold = any(w in ex.lower() for w in ("plank", "hold"))
+                exercises.insert(min(len(exercises), 2 + extra_n), {"exercise": ex, "pattern": "focus_" + area,
+                                  "sets": 3, "reps": "30-45s" if hold else "10-15", "rest_s": 60, "focus": area})
+                extra_n += 1
+                break
+        # fit the session length: drop the least important accessories first (never the focus work)
+        while len(exercises) > max_ex:
+            drop = next((i for i in range(len(exercises) - 1, -1, -1) if not exercises[i].get("focus")
+                         and exercises[i]["pattern"] not in MAIN_PATTERNS), None)
+            if drop is None:
+                drop = next((i for i in range(len(exercises) - 1, -1, -1) if not exercises[i].get("focus")), len(exercises) - 1)
+            exercises.pop(drop)
+        if focus_areas:
+            title += " + " + " & ".join(FOCUS_LABELS.get(a, a) for a in focus_areas[:2] if a in FOCUS_EXTRAS)
+        if "flexibility" in focus_areas:
+            exercises.append({"exercise": "Stretch: hips, hamstrings, chest and shoulders", "pattern": "mobility",
+                              "sets": 1, "reps": "8 minutes", "rest_s": 0, "focus": "flexibility"})
+        training_days.append({"weekday": weekday, "type": "strength", "title": title.replace(" + ", " + ", 1),
+                              "minutes": session_minutes, "exercises": exercises})
 
     days = list(training_days)
     if include_cardio:
         rest_days = [d for d in WEEKDAYS if d not in SCHEDULE[days_per_week] and d != "Sun"]
         sessions = CARDIO.get(goal, CARDIO["general"])
         n_cardio = 3 if goal == "endurance" else 2 if goal == "fat_loss" else 1
+        if "cardio" in focus_areas:
+            n_cardio += 1
         for weekday, session in zip(rest_days, (sessions * 3)[:n_cardio]):
             days.append({"weekday": weekday, "type": "cardio", "title": session["name"],
-                         "zone": session["zone"], "minutes": session["minutes"], "exercises": []})
+                         "zone": session["zone"], "minutes": min(session["minutes"], max(20, session_minutes)), "exercises": []})
     days.sort(key=lambda d: WEEKDAYS.index(d["weekday"]))
 
     progression = [{"week": w, "note": _week_note(w, weeks, goal)} for w in range(1, weeks + 1)]

@@ -531,33 +531,84 @@
     <button type="button" class="ghost" id="whoAddBtn">＋ Add a person</button>
     <button type="button" class="ghost" id="whoClose">Back</button>
   </div>
-  <form id="whoAddForm" class="form hidden">
+  <form id="whoAddForm" class="form hidden" novalidate>
     <h3 id="whoFormTitle">Add a person</h3>
-    <p class="small muted" id="whoFormNote">Their calories, protein, water and workout plan are worked out from these answers.</p>
-    <label>Name <input name="name" maxlength="60" required></label>
-    <div class="row">
-      <label>Sex <select name="sex"><option value="male">Male</option><option value="female">Female</option></select></label>
-      <label>Birth year <input name="birth_year" type="number" inputmode="numeric" min="1920" max="2020" required placeholder="e.g. 1990"></label>
-    </div>
-    <div class="row">
-      <label>Height (cm) <input name="height_cm" type="number" inputmode="decimal" min="100" max="250" step="0.1" required></label>
-      <label>Weight (kg) <input name="weight_kg" type="number" inputmode="decimal" min="30" max="350" step="0.1" required></label>
-    </div>
-    <label>Main goal <select name="focus">
-      <option value="lose_weight">Lose weight</option><option value="build_muscle">Build muscle</option>
-      <option value="get_stronger">Get stronger</option><option value="improve_cardio">Improve fitness / cardio</option>
-      <option value="stay_healthy" selected>Stay healthy</option></select></label>
-    <label>Goal weight (kg, optional) <input name="target_weight_kg" type="number" inputmode="decimal" min="30" max="350" step="0.1"></label>
-    <div class="row">
-      <label>Fitness level <select name="experience"><option value="beginner">Beginner</option><option value="intermediate">Some experience</option><option value="advanced">Very fit</option></select></label>
-      <label>Where they train <select name="equipment"><option value="gym">Gym</option><option value="home">Home (dumbbells)</option><option value="bodyweight">No equipment</option></select></label>
-    </div>
-    <label>How they eat <select name="diet_type"><option value="omnivore">No restrictions</option><option value="vegetarian">Vegetarian</option><option value="vegan">Vegan</option><option value="pescatarian">Pescatarian</option></select></label>
+    <p class="small muted" id="whoFormNote"></p>
+    <fieldset><legend>About you</legend>
+      <label>Name <input name="name" maxlength="60" required></label>
+      <div class="row">
+        <label>Sex <select name="sex" required><option value="" selected disabled>Choose…</option><option value="male">Male</option><option value="female">Female</option></select></label>
+        <label>Birth year <input name="birth_year" type="number" inputmode="numeric" min="1920" max="2020" required placeholder="e.g. 1990"></label>
+      </div>
+      <div class="row">
+        <label>Height (cm) <input name="height_cm" type="number" inputmode="decimal" min="100" max="250" step="0.1" required></label>
+        <label>Weight today (kg) <input name="weight_kg" type="number" inputmode="decimal" min="30" max="350" step="0.1" required></label>
+      </div>
+      <label>How active is a normal day, not counting workouts?
+        <select name="activity_level" required><option value="" selected disabled>Choose…</option>
+          <option value="sedentary">Mostly sitting (desk job, little walking)</option>
+          <option value="light">Light: some walking or standing (under ~7,000 steps)</option>
+          <option value="moderate">Moderate: on my feet a lot (~7,000–10,000 steps)</option>
+          <option value="active">Active: physical job or 10,000+ steps</option>
+          <option value="very_active">Very active: hard physical work all day</option>
+        </select></label>
+    </fieldset>
+    <fieldset><legend>Weight goal</legend>
+      <label>What do you want to do with your weight?
+        <select name="weight_goal" required><option value="" selected disabled>Choose…</option><option value="lose">Lose weight</option><option value="maintain">Keep my weight</option><option value="gain">Gain weight</option></select></label>
+      <div class="row wg-more">
+        <label>Goal weight (kg) <input name="target_weight_kg" type="number" inputmode="decimal" min="30" max="350" step="0.1"></label>
+        <label>In how many weeks? <input name="goal_weeks" type="number" inputmode="numeric" min="1" max="104" placeholder="e.g. 12"></label>
+      </div>
+    </fieldset>
+    <fieldset><legend>Muscle &amp; fitness goal</legend>
+      <label>What do you want from training?
+        <select name="muscle_goal" required><option value="" selected disabled>Choose…</option>
+          <option value="tone">Tone up and get firmer</option>
+          <option value="build">Build muscle size</option>
+          <option value="strength">Get stronger</option>
+          <option value="none">No muscle goal (just stay healthy)</option>
+        </select></label>
+      <span class="small">Areas to focus on (tick any):</span>
+      <div class="tickset" data-group="focus_areas">
+        <label><input type="checkbox" value="core"> Core / abs</label><label><input type="checkbox" value="shoulders"> Shoulders</label>
+        <label><input type="checkbox" value="arms"> Arms</label><label><input type="checkbox" value="back"> Back &amp; posture</label>
+        <label><input type="checkbox" value="chest"> Chest</label><label><input type="checkbox" value="legs"> Legs</label>
+        <label><input type="checkbox" value="glutes"> Glutes</label><label><input type="checkbox" value="cardio"> Stamina / cardio</label>
+        <label><input type="checkbox" value="flexibility"> Flexibility</label>
+      </div>
+    </fieldset>
+    <fieldset><legend>Training</legend>
+      <div class="row">
+        <label>Workout days a week <select name="training_days" required><option value="" selected disabled>Choose…</option><option value="0">None yet</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+        <label>Minutes per workout <select name="session_minutes" required><option value="" selected disabled>Choose…</option><option value="20">20</option><option value="30">30</option><option value="45">45</option><option value="60">60</option><option value="75">75</option><option value="90">90</option></select></label>
+      </div>
+      <div class="row">
+        <label>Fitness level <select name="experience" required><option value="" selected disabled>Choose…</option><option value="beginner">Beginner</option><option value="intermediate">Some experience</option><option value="advanced">Very fit</option></select></label>
+        <label>Where you train <select name="equipment" required><option value="" selected disabled>Choose…</option><option value="gym">Gym</option><option value="home">Home (dumbbells)</option><option value="bodyweight">No equipment</option></select></label>
+      </div>
+      <span class="small">Any pain or injuries to protect? (tick at least one)</span>
+      <div class="tickset" data-group="injuries">
+        <label><input type="checkbox" value="none"> None</label><label><input type="checkbox" value="knees"> Knees</label>
+        <label><input type="checkbox" value="lower_back"> Lower back</label><label><input type="checkbox" value="shoulders"> Shoulders</label>
+        <label><input type="checkbox" value="wrists"> Wrists</label><label><input type="checkbox" value="neck"> Neck</label>
+      </div>
+    </fieldset>
+    <fieldset><legend>Food</legend>
+      <label>How you eat <select name="diet_type" required><option value="" selected disabled>Choose…</option><option value="omnivore">No restrictions</option><option value="vegetarian">Vegetarian</option><option value="vegan">Vegan</option><option value="pescatarian">Pescatarian</option></select></label>
+      <label>Food allergies (optional, separate with commas) <input name="allergies" placeholder="e.g. peanuts, shellfish"></label>
+    </fieldset>
+    <label class="check hidden" id="whoRebuild"><input type="checkbox" name="rebuild_plan"> Rebuild my workout plan from these answers</label>
     <div class="row actions">
       <button type="submit" id="whoSubmit">Create profile</button>
       <button type="button" class="ghost" id="whoAddBack">Back</button>
     </div>
   </form>
+  <div id="whoResult" class="hidden">
+    <h3>Here's how your targets were worked out</h3>
+    <ul class="who-maths"></ul>
+    <button type="button" id="whoDone">Done</button>
+  </div>
 </dialog>
 
 <dialog id="weightDialog">

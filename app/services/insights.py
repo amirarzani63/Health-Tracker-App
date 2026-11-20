@@ -47,7 +47,13 @@ def _get_or_create(db: Session, model, **defaults):
 
 
 def get_profile(db: Session) -> Profile:
-    return _get_or_create(db, Profile, allergies=[])
+    p = _get_or_create(db, Profile, allergies=[])
+    # columns added after a profile was created start out empty in the database
+    for k, v in (("focus_areas", []), ("injuries", []), ("allergies", []), ("session_minutes", 60),
+                 ("muscle_goal", ""), ("details_done", False)):
+        if getattr(p, k, None) is None:
+            setattr(p, k, v)
+    return p
 
 
 def get_goals(db: Session) -> Goals:
