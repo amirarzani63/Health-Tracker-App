@@ -219,8 +219,9 @@
         <h3>Today's activity</h3>
         <p class="muted small">Type today's numbers here. They show on the Dashboard. You can change them any time.</p>
         <form id="stepsForm" class="daylog-row">
-          <label>👟 Steps walked today (type your total; it replaces what you saved before) <span class="muted small" id="stepsSub"></span>
-            <span class="daylog-in"><input name="steps" type="number" inputmode="numeric" min="0" max="200000" placeholder="e.g. 8500" required><button type="submit">Save</button></span></label>
+          <label>👟 Steps walked (type the day's total; it replaces what you saved before for that day) <span class="muted small" id="stepsSub"></span>
+            <span class="daylog-in"><input name="steps" type="number" inputmode="numeric" min="0" max="200000" placeholder="e.g. 8500" required><button type="submit">Save</button></span>
+            <span class="daylog-in small">For the day: <input name="day" type="date" aria-label="Day for these steps"></span></label>
         </form>
         <div class="daylog-row" id="cardioLogBox">
           <span class="cl-title">🏃 Cardio &amp; sports you did</span>
@@ -237,6 +238,7 @@
           <details class="small"><summary class="muted">Have a total from your watch? Type it instead</summary>
             <form id="burnForm" class="daylog-in" style="margin-top:6px">
               <input name="burned" type="number" inputmode="numeric" min="0" max="10000" placeholder="e.g. 3100" required><button type="submit">Save</button>
+              <input name="day" type="date" aria-label="Day">
             </form>
             <span class="muted" id="burnSub"></span>
           </details>

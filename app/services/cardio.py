@@ -169,5 +169,6 @@ def day_parts(profile, day: date, steps: float | None, cardio_rows: list, workou
     else:
         parts["movement"] = round(bmr * 0.1)
     parts["total"] = sum(v for k, v in parts.items() if k in ("resting", "digestion", "steps", "movement", "workouts", "cardio", "other"))
-    parts["exercise"] = parts["workouts"] + parts["cardio"] + parts["other"]
+    # everything you do (steps included) is "activity"; resting + digestion is your body's own burn
+    parts["exercise"] = parts["steps"] + parts["workouts"] + parts["cardio"] + parts["other"]
     return parts

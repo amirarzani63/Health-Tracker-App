@@ -349,3 +349,23 @@ def test_steps_and_every_exercise_add_up_in_the_burn(client):
     assert abs(bp["steps"] - 0.5 * 80 * (10000 - 3300) * 1.80 * 0.415 / 1000) < 1
     assert bp["cardio"] == round(5.0 * 3.5 * 80 / 200 * 30)
     assert d["burned"] == bp["total"] == bp["resting"] + bp["digestion"] + bp["steps"] + bp["workouts"] + bp["cardio"] + bp["other"]
+    assert bp["exercise"] == bp["steps"] + bp["workouts"] + bp["cardio"] + bp["other"]
+
+
+def test_past_days_count_steps_and_activity_everywhere(client):
+    """Yesterday's (or any past day's) steps and workouts show in the dashboard, the trends and the weekly review."""
+    from datetime import date, timedelta
+    client.put("/api/profile", json={**client.get("/api/profile").json(), "weight_kg": 90, "height_cm": 175, "sex": "male"})
+    for back in (1, 3, 6):
+        day = (date.today() - timedelta(days=back)).isoformat()
+        client.post("/api/steps", json={"day": day, "steps": 10000})
+        client.post("/api/cardio-log", json={"day": day, "activity": "tennis_singles", "minutes": 45})
+        d = client.get(f"/api/dashboard?day={day}").json()
+        bp = d["burn_parts"]
+        assert bp["steps_counted"] == 10000 and bp["steps"] > 300 and bp["cardio"] > 400
+        assert bp["exercise"] == bp["steps"] + bp["workouts"] + bp["cardio"] + bp["other"] > 700
+        assert d["burned"] == bp["total"]
+    trend = {r["day"]: r for r in client.get("/api/nutrition/trends?days=14").json()}
+    for back in (1, 3, 6):
+        r = trend[(date.today() - timedelta(days=back)).isoformat()]
+        assert r["burn_parts"]["exercise"] > 700 and r["burned"] == r["burn_parts"]["total"]

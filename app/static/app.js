@@ -306,7 +306,7 @@ function renderCluster(d) {
       <div class="g-main tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "eat", value: eaten, max: Math.max(target * 1.3, eaten * 1.05), target,
         label: "EATEN", unit: `of ${fmt(target)} kcal`, readout: fmt(eaten), ticks: 6, state: eatState })}</div>
       <div class="g-side tap" role="button" tabindex="0" data-goto="exercise" data-focus="#cardioAct" title="Log cardio">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
-        label: "BURNED", unit: burned == null ? "tap to log" : typedBurn ? "from your watch" : `body ${fmt(restKcal)} + exercise ${fmt(exKcal)}`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
+        label: "BURNED", unit: burned == null ? "tap to log" : typedBurn ? "from your watch" : `body ${fmt(restKcal)} + activity ${fmt(exKcal)}`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
         state: burned != null && t.tdee && burned >= t.tdee ? "good" : "" })}</div>
       <div class="g-side tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
         label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), ticks: 4, state: c.protein_g >= protGoal ? "good" : "" })}</div>
@@ -2104,6 +2104,7 @@ document.addEventListener("click", async (e) => {
 const today = () => isoDate(new Date());
 async function loadSteps() {
   try {
+    for (const f of ["#stepsForm", "#burnForm"]) { const d = $(f)?.elements.day; if (d) { d.max = today(); if (!d.value) d.value = today(); } }
     const [st, lg] = await Promise.all([api(`/api/steps?day=${today()}`), api(`/api/day-log?day=${today()}`)]);
     const f = (id, typed, garmin, unit) => {
       $(id).textContent = typed != null ? `· saved: ${fmt(typed, 2)} ${unit}` : garmin != null ? `· watch says ${fmt(garmin, 1)} ${unit}` : "";
@@ -2118,8 +2119,10 @@ function dayLogForm(id, url, key, msg) {
     e.preventDefault();
     const v = Number(e.target[key].value);
     try {
-      await api(url, { method: "POST", body: { day: today(), [key]: v } });
-      toast(msg(v));
+      const day = e.target.day?.value || today();
+      await api(url, { method: "POST", body: { day, [key]: v } });
+      toast(msg(v) + (day !== today() ? ` for ${shortDay(day)}` : ""));
+      if (state.view === "dashboard") loaders.dashboard();
       loadSteps();
     } catch (err) { toast(err.message, true); }
   });
