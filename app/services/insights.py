@@ -130,11 +130,14 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
     checked = checkins(db)
     from app.services import cardio as _cardio
     _profile = get_profile(db)
-    cardio_kcal = _cardio.logged(db, start, end)
-    # workouts marked done also burn calories (lifting counts, not only logged cardio)
+    cardio_rows = _cardio.rows_between(db, start, end)
     status = workout_status(db, end) if end >= start else {}
-    for day, kcal in _cardio.planned_workout_kcal(db, start, end, status, _profile).items():
-        cardio_kcal[day] = cardio_kcal.get(day, 0) + kcal
+    planned = _cardio.planned_workout_kcal(db, start, end, status, _profile)
+    other = defaultdict(float)  # workouts logged with their own calorie number
+    for day, items in acts.items():
+        other[day] += sum(a.calories or 0 for a in items if a.source == "manual")
+    cardio_kcal = {d: v for d in set(cardio_rows) | set(planned) | set(other)
+                   if (v := sum(r.calories for r in cardio_rows.get(d, [])) + (0 if other.get(d) else planned.get(d, 0)) + other.get(d, 0))}
 
     out = []
     d = start
@@ -143,8 +146,11 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
         s = stats.get(d)
         t = targets_for(db, d)
         lg = logs.get(d)
+        day_steps = typed[d] if d in typed else (s.steps if s else None)
+        parts = _cardio.day_parts(_profile, d, day_steps, cardio_rows.get(d, []),
+                                  0 if other.get(d) else planned.get(d, 0), other.get(d, 0))
         burned = ((lg.burned if lg and lg.burned else None) or (s.total_calories if s and s.total_calories else None)
-                  or (_cardio.resting_burn(_profile, d) + cardio_kcal.get(d, 0)))
+                  or parts["total"])
         day_acts = acts.get(d, [])
         out.append({
             "day": d.isoformat(),
@@ -154,6 +160,7 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
             "target_protein_g": round(t.protein_g),
             "burned": round(burned) if burned else None,
             "cardio_kcal": round(cardio_kcal.get(d, 0)),
+            "burn_parts": parts,
             "burn_source": "typed" if lg and lg.burned else "estimate",
             "net": round(i["calories"] - burned) if i and burned else None,
             "steps": typed[d] if d in typed else (s.steps if s else None),  # what the user typed last wins

@@ -333,3 +333,19 @@ def test_finished_strength_workout_counts_as_exercise_burn(client):
     expected = round(5.0 * 3.5 * 70 / 200 * mins)
     assert after["cardio_kcal"] - before["cardio_kcal"] == expected > 0
     assert after["burned"] - before["burned"] == expected
+
+
+def test_steps_and_every_exercise_add_up_in_the_burn(client):
+    from datetime import date
+    day = date.today().isoformat()
+    client.put("/api/profile", json={**client.get("/api/profile").json(), "weight_kg": 80, "height_cm": 180, "sex": "male"})
+    d0 = client.get(f"/api/dashboard?day={day}").json()["burn_parts"]
+    assert d0["movement"] > 0 and d0["steps"] == 0  # no steps logged: an estimate
+    client.post("/api/steps", json={"day": day, "steps": 10000})
+    client.post("/api/cardio-log", json={"day": day, "activity": "treadmill_walk", "minutes": 30})
+    d = client.get(f"/api/dashboard?day={day}").json()
+    bp = d["burn_parts"]
+    assert bp["steps_counted"] == 10000 - 30 * 110             # treadmill steps not counted twice
+    assert abs(bp["steps"] - 0.5 * 80 * (10000 - 3300) * 1.80 * 0.415 / 1000) < 1
+    assert bp["cardio"] == round(5.0 * 3.5 * 80 / 200 * 30)
+    assert d["burned"] == bp["total"] == bp["resting"] + bp["digestion"] + bp["steps"] + bp["workouts"] + bp["cardio"] + bp["other"]

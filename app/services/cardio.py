@@ -122,3 +122,52 @@ def planned_workout_kcal(db: Session, start: date, end: date, done: dict, profil
                 out[d] = round(per_min * (day.get("minutes") or 0))
         d += timedelta(days=1)
     return out
+
+
+# ---- the whole day's burn, part by part -------------------------------------------------------
+WALKING = {"walk": 110, "treadmill_walk_flat": 115, "treadmill_walk": 110, "run": 160, "treadmill_run": 160,
+           "snowshoeing": 100}  # steps per minute counted by a phone/watch during these activities
+TEF = 0.10  # digesting food uses ~10% of the day's energy (thermic effect of food)
+
+
+def stride_m(profile) -> float:
+    """Walking stride from height (~41.5% of height for men, 41.3% for women)."""
+    return (profile.height_cm or 170) * (0.413 if profile.sex == "female" else 0.415) / 100
+
+
+def steps_kcal(profile, steps: float) -> float:
+    """Net calories from walking: ACSM walking equation, 0.1 ml O2 per kg per metre = 0.5 kcal per kg per km."""
+    return 0.5 * profile.weight_kg * steps * stride_m(profile) / 1000
+
+
+def rows_between(db: Session, start: date, end: date) -> dict[date, list]:
+    out: dict[date, list] = {}
+    for r in db.scalars(select(CardioLog).where(CardioLog.day >= start, CardioLog.day <= end)):
+        out.setdefault(r.day, []).append(r)
+    return out
+
+
+def day_parts(profile, day: date, steps: float | None, cardio_rows: list, workout_kcal: float, other_kcal: float) -> dict:
+    """Every part of the day's calorie burn.
+
+    resting  = BMR (Mifflin-St Jeor): breathing, heartbeat, organs
+    digestion = 10% thermic effect of food
+    steps    = net cost of the steps walked (minus steps already counted inside logged walks/runs)
+    movement = when no steps are logged: a light-activity allowance (BMR x 0.1) instead
+    workouts = planned workouts marked done (weights at ~5 METs)
+    cardio   = cardio and sports logged, by activity and minutes (Compendium METs)
+    other    = workouts logged with their own calorie number
+    """
+    bmr = nutrition.bmr_mifflin(profile.sex, profile.weight_kg, profile.height_cm, nutrition.age_on(profile.birth_year, day))
+    cardio_kcal = sum(r.calories for r in cardio_rows)
+    parts = {"resting": round(bmr), "digestion": round(bmr * TEF), "steps": 0, "movement": 0,
+             "workouts": round(workout_kcal), "cardio": round(cardio_kcal), "other": round(other_kcal)}
+    if steps:
+        in_cardio = sum(WALKING.get(r.activity, 0) * r.minutes for r in cardio_rows)
+        parts["steps"] = round(steps_kcal(profile, max(0, steps - in_cardio)))
+        parts["steps_counted"] = int(max(0, steps - in_cardio))
+    else:
+        parts["movement"] = round(bmr * 0.1)
+    parts["total"] = sum(v for k, v in parts.items() if k in ("resting", "digestion", "steps", "movement", "workouts", "cardio", "other"))
+    parts["exercise"] = parts["workouts"] + parts["cardio"] + parts["other"]
+    return parts

@@ -173,6 +173,28 @@ function show(view, focusSel) {
 }
 
 // ================================================================ TODAY (dashboard)
+// every part of the day's burn, one row each
+function burnRows(bp, eaten, burned) {
+  if (!bp) return "";
+  const max = Math.max(eaten, burned, 1);
+  const row = (label, v, sub) => `<div class="vs-row"><span>${label}${sub ? `<small class="muted"> ${sub}</small>` : ""}</span>
+    <div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (v / max) * 100)}%"></div></div><b>${fmt(v)}</b></div>`;
+  return [
+    row("Resting", bp.resting),
+    row("Digestion", bp.digestion),
+    bp.steps_counted != null ? row("Steps", bp.steps, `${fmt(bp.steps_counted)}`) : row("Daily movement", bp.movement, "estimate"),
+    row("Workouts", bp.workouts),
+    row("Cardio & sports", bp.cardio),
+    bp.other ? row("Other logged", bp.other) : "",
+  ].join("");
+}
+function burnHint(bp) {
+  if (!bp) return "";
+  return `Resting = what your body uses just to stay alive (from age, height, weight). Digestion = ~10% of energy used to process food.
+    ${bp.steps_counted != null ? `Steps = your steps × your stride (from height) × your weight (walking ≈ 0.5 kcal per kg per km); steps inside logged walks/runs aren't counted twice.`
+      : `Daily movement is an estimate: log today's steps (tap Steps) for an exact number.`}
+    Workouts = planned workouts marked done ✓. Cardio & sports = everything logged in Workouts, by activity and minutes.`;
+}
 function tile(label, value, unit, goal, sub, opts = {}) {
   const pct = goal && value != null ? Math.min(100, (value / goal) * 100) : 0;
   const cls = opts.over ? "over" : pct >= 100 ? "done" : "";
@@ -268,7 +290,7 @@ function renderCluster(d) {
   const burnGoal = Math.max(t.tdee || 0, burned || 0, 2000);
   const protGoal = t.protein_g || 1;
   const net = burned != null ? Math.round(eaten - burned) : null;
-  const typedBurn = d.burn_source === "typed", exKcal = Math.round(d.cardio_kcal || 0), restKcal = burned != null ? Math.round(burned - exKcal) : 0;
+  const typedBurn = d.burn_source === "typed", bp = d.burn_parts || {}, exKcal = Math.round(bp.exercise ?? d.cardio_kcal ?? 0), restKcal = burned != null ? Math.round(burned - exKcal) : 0;
   const steps = g.steps.value || 0;
   const eatState = eaten > target ? "bad" : "good";
   const lights = [
@@ -284,7 +306,7 @@ function renderCluster(d) {
       <div class="g-main tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "eat", value: eaten, max: Math.max(target * 1.3, eaten * 1.05), target,
         label: "EATEN", unit: `of ${fmt(target)} kcal`, readout: fmt(eaten), ticks: 6, state: eatState })}</div>
       <div class="g-side tap" role="button" tabindex="0" data-goto="exercise" data-focus="#cardioAct" title="Log cardio">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
-        label: "BURNED", unit: burned == null ? "tap to log" : typedBurn ? "from your watch" : `rest ${fmt(restKcal)} + exercise ${fmt(exKcal)}`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
+        label: "BURNED", unit: burned == null ? "tap to log" : typedBurn ? "from your watch" : `body ${fmt(restKcal)} + exercise ${fmt(exKcal)}`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
         state: burned != null && t.tdee && burned >= t.tdee ? "good" : "" })}</div>
       <div class="g-side tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
         label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), ticks: 4, state: c.protein_g >= protGoal ? "good" : "" })}</div>
@@ -302,10 +324,9 @@ function renderCluster(d) {
         ${burned == null ? `<span class="ibox-big">–</span><span class="ibox-hint">Tap to log the calories your watch says you burned today. Then you'll see if you ate less than you burned.</span>` : `
         <div class="vs-row"><span>Eaten</span><div class="ibar"><div class="ibar-fill eat" style="width:${Math.min(100, (eaten / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(eaten)}</b></div>
         ${typedBurn ? `<div class="vs-row"><span>Burned</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (burned / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(burned)}</b></div>` : `
-        <div class="vs-row"><span>Resting</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (restKcal / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(restKcal)}</b></div>
-        <div class="vs-row"><span>Exercise</span><div class="ibar"><div class="ibar-fill burn" style="width:${Math.min(100, (exKcal / Math.max(eaten, burned)) * 100)}%"></div></div><b>${fmt(exKcal)}</b></div>`}
+        ${burnRows(d.burn_parts, eaten, burned)}`}
         ${eaten > 0 ? `<span class="ibox-big ${net <= 0 ? "good" : "bad"}">${net <= 0 ? `You burned ${fmt(-net)} more than you ate` : `You ate ${fmt(net)} more than you burned`}</span>` : `<span class="ibox-big">Nothing eaten logged yet</span>`}
-        <span class="ibox-hint">${d.burn_source === "typed" ? "Burned = the total you typed from your watch." : `Resting = what your body uses just to stay alive (breathing, heartbeat, keeping warm), worked out from your age, height and weight. Exercise = workouts you marked done ✓ (weights count too) + cardio and sports you logged${exKcal ? "" : " (nothing yet: tick today's workout as done, or log cardio)"}.`}</span>
+        <span class="ibox-hint">${d.burn_source === "typed" ? "Burned = the total you typed from your watch." : burnHint(d.burn_parts)}</span>
         <span class="ibox-hint">${net <= 0 ? "Good: burning more than you eat is what makes you lose weight." : "To lose weight, you need to burn more than you eat."}</span>`}
       </div>
       <div class="ibox tap" role="button" tabindex="0" data-quick="steps">
@@ -2244,7 +2265,7 @@ function renderCardioLog(r, listEl, burnEl) {
   listEl.innerHTML = r.items.map((x) => `<li><span class="cl-act">${cardioThumb(x.activity)}${esc(x.label)} · ${x.minutes} min</span>
     <span><b>${fmt(x.calories)} kcal</b> <button type="button" class="icon" data-cl-del="${x.id}" aria-label="Delete">✕</button></span></li>`).join("")
     || `<li class="muted small">Nothing logged yet.</li>`;
-  if (burnEl) burnEl.innerHTML = `Calories burned today ≈ <b>${fmt(r.resting)}</b> (your body at rest) + <b>${fmt(r.total_calories)}</b> (cardio) = <b>${fmt(r.resting + r.total_calories)}</b>`;
+  if (burnEl) burnEl.innerHTML = `Cardio &amp; sports today: <b>${fmt(r.total_calories)} kcal</b>. They're added to your burn along with your steps and finished workouts (see the full breakdown on the Dashboard).`;
 }
 async function loadCardioLog() {
   if (!$("#cardioAct").options.length) $("#cardioAct").innerHTML = cardioOptions();

@@ -36,6 +36,7 @@ def dashboard(day: date | None = None, db: Session = Depends(get_db)):
         "consumed": {k: round(v) for k, v in consumed.items()},
         "burned": trend[-1]["burned"],
         "cardio_kcal": trend[-1]["cardio_kcal"],
+        "burn_parts": trend[-1].get("burn_parts"),
         "burn_source": trend[-1]["burn_source"],
         "active_calories": round(stats.active_calories) if stats and stats.active_calories else None,
         "stats": {c.name: getattr(stats, c.name) for c in DailyStats.__table__.columns} if stats else None,
