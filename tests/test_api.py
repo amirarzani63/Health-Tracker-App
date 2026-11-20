@@ -256,3 +256,11 @@ def test_people_picker_can_switch():
     from app.paths import STATIC
     js = (STATIC / "app.js").read_text()
     assert '$("#whoList").addEventListener("click"' in js and '"/api/users/select"' in js
+
+
+def test_person_can_be_chosen_by_header(client):
+    client.post("/api/users", json=SARA)
+    client.cookies.clear()
+    assert client.get("/api/profile", headers={"X-HT-User": "2"}).json()["name"] == "Sara"
+    assert client.get("/api/profile", headers={"X-HT-User": "1"}).json()["name"] != "Sara"
+    assert client.get("/api/profile", headers={"X-HT-User": "99"}).json()["name"] != "Sara"  # unknown -> profile 1

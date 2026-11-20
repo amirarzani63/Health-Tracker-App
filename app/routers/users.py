@@ -66,7 +66,7 @@ def list_users(request: Request):
         _ensure_schemes(db)
         users = db.scalars(select(AppUser).order_by(AppUser.id)).all()
         return {"users": [_out(u, cur) for u in users], "current": cur,
-                "chosen": USER_COOKIE in request.cookies, "schemes": SCHEMES}
+                "chosen": USER_COOKIE in request.cookies or bool(request.headers.get("x-ht-user")), "schemes": SCHEMES}
 
 
 def _select(response: Response, request: Request, uid: int):

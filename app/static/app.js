@@ -12,6 +12,7 @@ const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v
 const numOrNull = (v) => (v === "" || v == null ? null : Number(v));
 const shortDay = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
 // per-person browser settings: keys are prefixed with the chosen person's id
+const WHO_SET = (() => { try { return !!localStorage.getItem("who"); } catch { return false; } })();
 const WHO = (() => { try { return localStorage.getItem("who") || "1"; } catch { return "1"; } })();
 const store = {
   get(k) { try { return localStorage.getItem(WHO === "1" ? k : `u${WHO}:${k}`); } catch { return null; } },
@@ -20,7 +21,7 @@ const store = {
 
 async function api(path, opts = {}) {
   const res = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(WHO_SET ? { "X-HT-User": WHO } : {}) },
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
@@ -689,7 +690,7 @@ $("#aiForm").addEventListener("submit", async (e) => {
   btn.disabled = true;
   btn.textContent = "Counting…";
   try {
-    const res = await fetch("/api/foods/analyze", { method: "POST", body: fd });
+    const res = await fetch("/api/foods/analyze", { method: "POST", body: fd, headers: WHO_SET ? { "X-HT-User": WHO } : {} });
     if (res.status === 401) { location.href = "/login"; return; }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Analysis failed");

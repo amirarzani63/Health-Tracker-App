@@ -84,7 +84,8 @@ def create_user_tables(uid: int):
 def request_user(request: Request) -> int:
     from app.models import AppUser
 
-    raw = request.cookies.get(USER_COOKIE, "1")
+    # the phone says who is selected on every request (header); the cookie is the fallback
+    raw = request.headers.get("x-ht-user") or request.cookies.get(USER_COOKIE, "1")
     uid = int(raw) if raw.isdigit() else 1
     if uid != 1:
         with SessionLocal() as db:
