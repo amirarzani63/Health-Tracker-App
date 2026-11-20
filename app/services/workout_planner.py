@@ -35,6 +35,19 @@ EXERCISES = {
     "carry": {"gym": ["Farmer's carry"], "home": ["Suitcase carry"], "bodyweight": ["Bear crawl"]},
 }
 
+# Beginners at a full gym: machine and dumbbell versions that are easy to learn safely without a coach.
+BEGINNER_GYM = {
+    "squat": ["Goblet squat", "Leg press"],
+    "hinge": ["Dumbbell Romanian deadlift", "Back extension"],
+    "h_push": ["Machine chest press", "Dumbbell bench press"],
+    "v_push": ["Seated dumbbell shoulder press", "Dumbbell shoulder press"],
+    "h_pull": ["Seated cable row", "One-arm dumbbell row"],
+    "v_pull": ["Lat pulldown"],
+    "lunge": ["Step-up", "Dumbbell reverse lunge"],
+    "biceps": ["Dumbbell curl", "Cable curl"],
+    "triceps": ["Cable pushdown", "Overhead dumbbell extension"],
+}
+
 DAY_TEMPLATES = {
     "full_a": ("Full Body A", ["squat", "h_push", "h_pull", "hinge", "core"]),
     "full_b": ("Full Body B", ["hinge", "v_push", "v_pull", "lunge", "core"]),
@@ -217,6 +230,7 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
     if experience == "beginner" and days_per_week == 4:
         split = ["full_a", "full_b", "full_a", "full_c"]
 
+    beginner_gym = experience == "beginner" and equipment == "gym"
     scheme = GOAL_SCHEME.get(goal, GOAL_SCHEME["general"])
     set_adj = EXPERIENCE_SET_ADJUST.get(experience, 0)
     usage: dict[str, int] = {}
@@ -226,7 +240,7 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
         title, patterns = DAY_TEMPLATES[key]
         exercises = []
         for i, pattern in enumerate(patterns):
-            options = EXERCISES[pattern][equipment]
+            options = (BEGINNER_GYM.get(pattern) if beginner_gym else None) or EXERCISES[pattern][equipment]
             idx = usage.get(pattern, 0)
             usage[pattern] = idx + 1
             is_main = i < 2 and pattern in MAIN_PATTERNS
@@ -285,6 +299,9 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
     days.sort(key=lambda d: WEEKDAYS.index(d["weekday"]))
 
     progression = [{"week": w, "note": _week_note(w, weeks, goal)} for w in range(1, weeks + 1)]
+    if beginner_gym and weeks >= 4:
+        progression[-2]["note"] += (" Moves feeling easy with good form? Next plan can use barbell versions "
+                                    "(squat, bench press, deadlift): set your fitness level to 'Some experience' in About me.")
     name = f"{goal.replace('_', ' ').title()} · {days_per_week} days/week · {equipment}"
     return {"name": name, "goal": goal, "weeks": weeks, "days": days, "progression": progression}
 

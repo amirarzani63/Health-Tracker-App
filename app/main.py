@@ -69,6 +69,13 @@ async def lifespan(app: FastAPI):
                 log.info("Removed Garmin data and sign-in")
     except Exception:
         log.exception("Removing Garmin data failed")
+    try:
+        from app.routers.users import refresh_beginner_plans
+
+        if n := refresh_beginner_plans():
+            log.info("Beginner plans switched to machine/dumbbell exercises: %s", n)
+    except Exception:
+        log.exception("Refreshing beginner plans failed")
     if not auth.enabled():
         log.warning("APP_PASSWORD is not set: the app is open to anyone who can reach it. "
                     "Set APP_PASSWORD before putting it on the internet.")

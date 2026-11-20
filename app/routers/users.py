@@ -286,3 +286,33 @@ def rename_user(uid: int, data: Rename):
         u.name = data.name.strip()
         db.commit()
         return {"id": u.id, "name": u.name}
+
+
+def refresh_beginner_plans() -> int:
+    """One-time update: generated plans for beginners at a full gym switch to machine/dumbbell versions.
+
+    Hand-made plans (like the 13-week building-gym plan) are never touched. Returns how many were rebuilt.
+    """
+    from app.models import StoredSecret, WorkoutPlan
+    from app.services.workout_planner import generate_plan
+
+    marker, done = "plans:beginner-gym-v1", 0
+    with SessionLocal() as db:
+        ids = [u.id for u in db.scalars(select(AppUser)).all()] or [1]
+    for uid in ids:
+        with session_for(uid) as udb:
+            if udb.get(StoredSecret, marker):
+                continue
+            p = insights.get_profile(udb)
+            plan = udb.scalar(select(WorkoutPlan).where(WorkoutPlan.active).order_by(WorkoutPlan.created_at.desc()))
+            if plan and p.details_done and p.experience == "beginner" and p.equipment == "gym" and "days/week" in plan.name:
+                new = generate_plan(goal=plan.goal, days_per_week=min(6, max(2, p.training_days)), weeks=plan.weeks,
+                                    equipment="gym", experience="beginner",
+                                    include_cardio=any(d.get("type") == "cardio" for d in plan.days),
+                                    focus_areas=p.focus_areas or [], injuries=p.injuries or [],
+                                    session_minutes=p.session_minutes or 60)
+                plan.days, plan.progression = new["days"], new["progression"]
+                done += 1
+            udb.add(StoredSecret(key=marker, value=date.today().isoformat()))
+            udb.commit()
+    return done

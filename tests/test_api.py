@@ -274,3 +274,12 @@ def test_sports_can_be_logged_on_any_day_and_count_as_burn(client):
     r = client.get("/api/cardio-log?day=2026-11-10").json()
     assert r["total_minutes"] == 300
     assert client.post("/api/cardio-log", json={"day": "2026-11-10", "activity": "made_up", "minutes": 10}).status_code == 422
+
+
+def test_beginner_at_full_gym_starts_with_machines_and_dumbbells(client):
+    from app.routers.users import refresh_beginner_plans
+    client.post("/api/users", json={**SARA, "equipment": "gym", "injuries": ["none"]})
+    names = [e["exercise"] for d in client.get("/api/plans/active").json()["days"] for e in d["exercises"]]
+    assert names and not any("barbell" in n.lower() or n in ("Front squat", "Conventional deadlift") for n in names)
+    refresh_beginner_plans()
+    assert refresh_beginner_plans() == 0  # runs only once per person
