@@ -67,3 +67,15 @@ def test_muscles_and_endpoint(lib, client):
     assert exlib.match("zzqx blorp") is None
     r = client.post("/api/exlib/match", json={"names": ["Push Up"]}).json()
     assert r["available"] and r["items"]["Push Up"]["primary"] == ["chest"]
+
+
+def test_every_generated_plan_exercise_has_the_right_photo():
+    from app.services.exlib import match
+    from app.services.workout_planner import EXERCISES, FOCUS_EXTRAS, INJURY_SWAP, PHOTO
+    names = {n for d in (EXERCISES, FOCUS_EXTRAS) for v in d.values() for lst in v.values() for n in lst}
+    names |= set(INJURY_SWAP.values())
+    missing = sorted(n for n in names if n not in PHOTO)
+    assert not missing, missing
+    for n in names:
+        m = match(n)
+        assert m and m["images"] and m["name"] == PHOTO[n].lstrip("~"), n

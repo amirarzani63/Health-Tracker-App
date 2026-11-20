@@ -183,6 +183,10 @@ def _by_name(target: str) -> dict | None:
 
 @lru_cache(maxsize=4096)
 def match(name: str) -> dict | None:
+    from app.services.workout_planner import PHOTO  # exact photos for everything a generated plan can contain
+
+    if name in PHOTO and (it := _by_name(PHOTO[name].lstrip("~"))):
+        return {k: v for k, v in it.items() if k != "words"} | {"score": 1.0} | ({"similar": True} if PHOTO[name].startswith("~") else {})
     same = next((i for i in library()["items"] if i["name"].lower() == name.lower().strip() and i["images"]), None)
     if same:  # the library's own name: no guessing needed
         return {k: v for k, v in same.items() if k != "words"} | {"score": 1.0}

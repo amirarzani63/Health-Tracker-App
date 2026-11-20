@@ -1359,3 +1359,7 @@ body.dlg-open { overflow: hidden; }
 .cl-add .cl-day { grid-column: 1 / -1; order: 3; }
 .cl-icon { font-size: 40px; text-align: center; }
 .cl-emoji { display: grid; place-items: center; font-size: 22px; }
+
+.exbtns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.vid-link { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--accent); color: var(--accent-strong); font-weight: 600; font-size: 14px; text-decoration: none; }
+.vid-li { list-style: none; margin: 10px 0 0 -18px; }

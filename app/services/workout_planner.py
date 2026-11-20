@@ -129,6 +129,47 @@ INJURY_SWAP = {
 }
 
 
+# The exact photo (and step-by-step instructions) for every exercise a generated plan can contain.
+# "~" = no photo of that exact exercise exists, so a photo of the closest movement is shown.
+PHOTO = {
+    "Barbell back squat": "Barbell Squat", "Front squat": "Front Barbell Squat", "Leg press": "Leg Press",
+    "Goblet squat": "Goblet Squat", "Dumbbell split squat": "Split Squat with Dumbbells",
+    "Bodyweight squat": "Bodyweight Squat", "Bulgarian split squat": "~Split Squat with Dumbbells",
+    "Box squat to a bench (pain-free depth)": "Box Squat",
+    "Romanian deadlift": "Romanian Deadlift", "Conventional deadlift": "Barbell Deadlift", "Hip thrust": "Barbell Hip Thrust",
+    "Dumbbell Romanian deadlift": "Romanian Deadlift", "Single-leg RDL": "Kettlebell One-Legged Deadlift",
+    "Glute bridge": "Butt Lift (Bridge)", "Single-leg hip hinge": "~Kettlebell One-Legged Deadlift",
+    "Barbell bench press": "Barbell Bench Press - Medium Grip", "Incline dumbbell press": "Incline Dumbbell Press",
+    "Machine chest press": "Leverage Chest Press", "Dumbbell floor press": "Dumbbell Floor Press",
+    "Dumbbell bench press": "Dumbbell Bench Press", "Push-up": "Pushups", "Decline push-up": "Decline Push-Up",
+    "Incline push-up": "Incline Push-Up", "Overhead barbell press": "Barbell Shoulder Press",
+    "Seated dumbbell shoulder press": "Dumbbell Shoulder Press", "Dumbbell shoulder press": "Dumbbell Shoulder Press",
+    "Arnold press": "Arnold Dumbbell Press", "Pike push-up": "~Handstand Push-Ups", "Handstand hold (wall)": "~Handstand Push-Ups",
+    "Barbell row": "Bent Over Barbell Row", "Seated cable row": "Seated Cable Rows", "Chest-supported row": "Lying Cambered Barbell Row",
+    "One-arm dumbbell row": "One-Arm Dumbbell Row", "Band row": "~Seated Cable Rows", "Inverted row (table)": "Inverted Row",
+    "Towel door row": "~Inverted Row with Straps", "Pull-up": "Pullups", "Lat pulldown": "Wide-Grip Lat Pulldown",
+    "Band lat pulldown": "~Wide-Grip Lat Pulldown", "Pull-up (doorway bar)": "Pullups", "Pull-up / negative": "Pullups",
+    "Superman pull": "~Superman", "Walking lunge": "Dumbbell Lunges", "Step-up": "Dumbbell Step Ups",
+    "Dumbbell reverse lunge": "Dumbbell Rear Lunge", "Reverse lunge": "Dumbbell Rear Lunge", "Lateral lunge": "~Dumbbell Lunges",
+    "Standing calf raise": "Standing Calf Raises", "Single-leg calf raise": "Standing Dumbbell Calf Raise",
+    "EZ-bar curl": "EZ-Bar Curl", "Cable curl": "Standing Biceps Cable Curl", "Dumbbell curl": "Dumbbell Bicep Curl",
+    "Hammer curl": "Hammer Curls", "Chin-up hold": "Chin-Up", "Towel curl": "~Dumbbell Bicep Curl",
+    "Cable pushdown": "Triceps Pushdown", "Skull crusher": "EZ-Bar Skullcrusher",
+    "Overhead dumbbell extension": "Standing Dumbbell Triceps Extension", "Bench dip": "Bench Dips",
+    "Diamond push-up": "Close-Grip Push-Up off of a Dumbbell", "Rope triceps pushdown (cable)": "Triceps Pushdown - Rope Attachment",
+    "Cable crunch": "Cable Crunch", "Hanging knee raise": "Hanging Leg Raise", "Dead bug": "Dead Bug", "Plank": "Plank",
+    "Hollow hold": "~Flat Bench Lying Leg Raise", "Side plank": "Side Bridge", "Farmer's carry": "Farmer's Walk",
+    "Suitcase carry": "~Farmer's Walk", "Bear crawl": "~Plank",
+    "Dumbbell lateral raise": "Side Lateral Raise", "Face pull (cable with rope)": "Face Pull",
+    "Dumbbell rear-delt fly": "Seated Bent-Over Rear Delt Raise", "Prone Y-T raise": "~Lying Rear Delt Raise",
+    "Wall slide": "~Front Raise And Pullover", "Back extension": "Hyperextensions (Back Extensions)", "Superman hold": "Superman",
+    "Leg extension": "Leg Extensions", "Leg curl": "Seated Leg Curl", "Cable glute kickback": "One-Legged Cable Kickback",
+    "Dumbbell hip thrust": "~Barbell Hip Thrust", "Single-leg glute bridge": "Single Leg Glute Bridge",
+    "Cable fly": "Flat Bench Cable Flyes", "Dumbbell fly": "Dumbbell Flyes",
+    "Stretch: hips, hamstrings, chest and shoulders": "~Cat Stretch",
+}
+
+
 def _avoid(exercise: str, pattern: str, injuries: list[str]) -> bool:
     for inj in injuries:
         pats, words = INJURY_AVOID.get(inj, (set(), ()))

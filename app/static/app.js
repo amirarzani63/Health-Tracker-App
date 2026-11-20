@@ -744,7 +744,8 @@ async function openExercise(name, part) {
   $("#exMuscles").innerHTML = (info.primaryNames.length
     ? `<span class="mtag prim">Main: ${info.primaryNames.map(esc).join(", ")}</span>` : `<span class="mtag">General movement</span>`)
     + (info.secondaryNames.length ? `<span class="mtag sec">Also: ${info.secondaryNames.map(esc).join(", ")}</span>` : "");
-  $("#exCues").innerHTML = info.cues.map((c) => `<li>${esc(c)}</li>`).join("");
+  $("#exCues").innerHTML = info.cues.map((c) => `<li>${esc(c)}</li>`).join("")
+    + `<li class="vid-li"><a class="vid-link" href="${videoUrl(name)}" target="_blank" rel="noopener">▶ Watch a video of this exercise</a></li>`;
   $("#exDialog").showModal();
 }
 $("#exClose").onclick = () => $("#exDialog").close();
@@ -945,6 +946,8 @@ function sessionTitle(s) {
 }
 const dayName = (wd) => DAY_LONG[wd] || wd;
 
+// a free YouTube search for a demonstration (just a link: no account, API or cost)
+const videoUrl = (name) => "https://www.youtube.com/results?search_query=" + encodeURIComponent(`how to do ${name.replace(/\s*\(.*?\)/g, "")} exercise proper form`);
 function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
   return `<div class="exlist${compact ? " compact" : ""}">
     ${title ? `<h3 class="poster-title">${esc(title)}</h3>` : ""}${sub ? `<p class="poster-sub">${sub}</p>` : ""}
@@ -955,7 +958,8 @@ function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
         ${x.rest_s ? `<div><dt>Rest between rounds</dt><dd>${x.rest_s} sec</dd></div>` : ""}</dl>`}
       <div class="exmus"></div>
       <ol class="exsteps"${x.howto ? ' data-own="1"' : ""}>${(x.howto || []).map((h) => `<li>${esc(h)}</li>`).join("")}</ol>
-      <button class="ghost small" data-ex="${esc(x.photo || x.exercise)}">How to do it</button>
+      <div class="exbtns"><button class="ghost small" data-ex="${esc(x.photo || x.exercise)}">How to do it</button>
+      ${x.pattern === "cardio" ? "" : `<a class="vid-link" href="${videoUrl(x.exercise)}" target="_blank" rel="noopener">▶ Watch a video</a>`}</div>
     </article>`).join("")}</div>`;
 }
 async function hydratePosters(root = document) {
