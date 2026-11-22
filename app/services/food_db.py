@@ -95,6 +95,19 @@ def _plural_variants(word: str) -> set[str]:
     return out
 
 
+def match_len(text: str, db: Session | None = None) -> int:
+    """Length of the longest food name found in the phrase (0 = none)."""
+    text = " " + re.sub(r"[^\w%&' ]+|_", " ", text.lower().replace("\u200c", " ")) + " "
+    best = 0
+    for food in all_foods(db):
+        for n in food.names:
+            if len(n) > best:
+                last = n.split()[-1]
+                if any(f" {n[: len(n) - len(last)] + v} " in text for v in _plural_variants(last)):
+                    best = len(n)
+    return best
+
+
 def match(text: str, db: Session | None = None) -> Food | None:
     """Best food for a phrase: the longest name found in it (custom foods win ties)."""
     text = " " + re.sub(r"[^\w%&' ]+|_", " ", text.lower().replace("\u200c", " ")) + " "  # keeps Farsi letters

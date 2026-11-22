@@ -212,10 +212,20 @@ class FoodAnalyzer:
             raise FoodAIError("Type what you ate, e.g. \"2 eggs, toast and a banana\".", 400)
         items, unknown = [], []
         meal_hint = spoken_meal(description) or meal_hint
-        for chunk in _SPLIT.split(description):
-            chunk = clean_chunk(chunk)
-            if not chunk:
-                continue
+        chunks = [c for c in (clean_chunk(c) for c in _SPLIT.split(description)) if c]
+        # voice typing adds commas mid-name ("a bowl of salad, olivier"): join neighbours that form a longer dish name
+        merged, i = [], 0
+        while i < len(chunks):
+            cur = chunks[i]
+            while i + 1 < len(chunks):
+                both = f"{cur} {chunks[i + 1]}"
+                if food_db.match_len(both, db) > max(food_db.match_len(cur, db), food_db.match_len(chunks[i + 1], db)):
+                    cur, i = both, i + 1
+                else:
+                    break
+            merged.append(cur)
+            i += 1
+        for chunk in merged:
             item = parse_item(chunk, db)
             (items.append(item) if item else unknown.append(chunk.strip()))
         notes = "Check the portions and adjust any numbers before adding."

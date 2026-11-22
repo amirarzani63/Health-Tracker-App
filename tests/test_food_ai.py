@@ -123,3 +123,11 @@ def test_everyday_portions_and_farsi_names():
     assert svc.analyze("a big plate of mirza ghasemi")["items"][0]["portion"].startswith("1 big plate")
     assert svc.analyze("میرزا قاسمی")["items"]
     assert round(svc.analyze("a handful of almonds")["items"][0]["calories"]) > 100
+
+
+def test_voice_commas_inside_a_dish_name_are_joined():
+    items = svc.analyze("One bowl of salad, Olivier.")["items"]
+    assert len(items) == 1 and round(items[0]["calories"]) == 665
+    items = svc.analyze("a plate of kashk, bademjan, and a doogh")["items"]
+    assert [round(i["calories"]) for i in items] == [420, 90]
+    assert len(svc.analyze("rice, chicken breast, salad")["items"]) == 3   # real separate foods stay separate
