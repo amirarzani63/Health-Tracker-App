@@ -105,3 +105,9 @@ def test_spoken_meals_are_understood():
     assert [round(i["calories"]) for i in out["items"]][:2] == [144, 205]
     assert svc.analyze("this morning I had two eggs", meal_hint="snack")["meal_guess"] == "breakfast"
     assert svc.analyze("tonight I ate 14 sauteed shrimp", meal_hint="snack")["meal_guess"] == "dinner"
+
+
+def test_persian_dishes_and_last_night():
+    out = svc.analyze("last night I had a cup of kashk bademjan and a cup of salad olivier", meal_hint="snack")
+    assert out["meal_guess"] == "dinner" and out["day_offset"] == -1
+    assert [round(i["calories"]) for i in out["items"]] == [280, 380]

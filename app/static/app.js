@@ -717,7 +717,10 @@ $("#aiForm").addEventListener("submit", async (e) => {
     if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Analysis failed");
     ai.items = data.items.map((i) => ({ ...i, keep: true }));
     $("#aiMeal").value = data.meal_guess;
-    $("#aiNotes").textContent = data.notes || "";
+    // "last night" / "yesterday": log to the day before (when looking at today)
+    ai.day = data.day_offset === -1 && state.day === today() ? isoDate(new Date(Date.now() - 864e5)) : state.day;
+    $("#aiNotes").dataset.day = ai.day;
+    $("#aiNotes").textContent = (ai.day !== today() ? `Logging to ${shortDay(ai.day)}. ` : "") + (data.notes || "");
     renderAiItems();
     $("#aiResult").classList.remove("hidden");
   } catch (err) {
@@ -730,12 +733,12 @@ $("#aiForm").addEventListener("submit", async (e) => {
 $("#aiLog").addEventListener("click", (e) => withBusy(e.target, async () => {
   const meal = $("#aiMeal").value;
   const items = ai.items.filter((i) => i.keep && i.name.trim()).map((i) => ({
-    day: state.day, meal, servings: 1,
+    day: ai.day || state.day, meal, servings: 1,
     name: (i.portion ? `${i.name.trim()} (${i.portion.trim()})` : i.name.trim()).slice(0, 200),
     ...Object.fromEntries(AI_NUMS.map((k) => [k, Number(i[k]) || 0])),
   }));
   await api("/api/foods/bulk", { method: "POST", body: { items } });
-  toast(`Logged ${items.length} item${items.length === 1 ? "" : "s"} to ${meal}`);
+  toast(`Logged ${items.length} item${items.length === 1 ? "" : "s"} to ${meal}${(ai.day || state.day) !== today() ? `, ${shortDay(ai.day || state.day)}` : ""}`);
   resetAi();
   loaders.diet();
 }));

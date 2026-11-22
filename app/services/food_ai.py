@@ -123,16 +123,22 @@ def parse_item(chunk: str, db: Session | None = None) -> dict[str, Any] | None:
 # Spoken meals ("for lunch I had 4 meatballs and then a coffee"): find the meal, drop the filler words.
 _MEAL_WORDS = re.compile(r"\b(?:for|at|this|my)?\s*(breakfast|brunch|lunch|dinner|supper|snack)\b", re.I)
 _FILLER = re.compile(r"^\s*(?:(?:and|then|also|plus|so|um+|uh+|okay|ok|well|today|this morning|tonight|"
-                     r"i(?:'ve| have)? (?:had|ate|eaten|drank|drunk)|i also had|i just had|we had|had|ate|drank|"
+                     r"i(?:'ve| have)? (?:had|ate|eaten|drank|drunk)|last night|yesterday(?: evening| morning)?|i also had|i just had|we had|had|ate|drank|"
                      r"some|about|around|roughly|like|for (?:breakfast|brunch|lunch|dinner|supper|snack)|"
                      r"(?:breakfast|brunch|lunch|dinner|supper|snack) was)\b[\s,:]*)+", re.I)
 _MEAL_MAP = {"brunch": "breakfast", "supper": "dinner"}
+_YESTERDAY = re.compile(r"\b(yesterday|last night)\b", re.I)
+
+
+def spoken_day_offset(text: str) -> int:
+    """-1 when the person says it was yesterday / last night, else 0 (today or the day being viewed)."""
+    return -1 if _YESTERDAY.search(text or "") else 0
 
 
 def spoken_meal(text: str) -> str | None:
     if re.search(r"\bthis morning\b", text or "", re.I) and not _MEAL_WORDS.search(text or ""):
         return "breakfast"
-    if re.search(r"\btonight\b", text or "", re.I) and not _MEAL_WORDS.search(text or ""):
+    if re.search(r"\b(tonight|last night|yesterday evening)\b", text or "", re.I) and not _MEAL_WORDS.search(text or ""):
         return "dinner"
     m = _MEAL_WORDS.search(text or "")
     return _MEAL_MAP.get(m.group(1).lower(), m.group(1).lower()) if m else None
@@ -162,7 +168,8 @@ class FoodAnalyzer:
                      "the counter will know them next time. ") + notes
         keys = ("calories", "protein_g", "carbs_g", "fat_g", "fiber_g")
         totals = {k: round(sum(i[k] for i in items), 1) for k in keys}
-        return {"items": items, "totals": totals, "meal_guess": meal_hint or "snack", "notes": notes}
+        return {"items": items, "totals": totals, "meal_guess": meal_hint or "snack", "notes": notes,
+                "day_offset": spoken_day_offset(description)}
 
 
 food_analyzer = FoodAnalyzer()
