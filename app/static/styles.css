@@ -1415,3 +1415,20 @@ button.vid-link { background: none; cursor: pointer; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body { touch-action: manipulation; }
 input, select, textarea { font-size: 16px !important; }
+
+/* No sideways scrolling anywhere except the top tabs: long text wraps onto the next line */
+html, body { overflow-x: hidden; max-width: 100%; }
+main, main * , dialog, dialog * { max-width: 100%; }
+p, li, span, td, th, label, h1, h2, h3, h4, dd, dt, b, small, summary, button { overflow-wrap: break-word; word-break: normal; }
+.table-wrap { overflow-x: visible; }
+table { width: 100%; table-layout: auto; }
+th, td, #weeklyTable th, #weeklyTable td, .plan-day td:last-child { white-space: normal; }
+.week .move { flex-wrap: wrap; white-space: normal; }
+.dlg-bar h3 { white-space: normal; overflow: visible; text-overflow: clip; }
+.chip .value { white-space: normal; overflow: visible; text-overflow: clip; }
+dialog, .guide-list, .ex-dialog { overflow-x: hidden; }
+#tabs { overflow-x: auto; }               /* the one place that may scroll sideways */
+@media (max-width: 700px) {
+  #weeklyTable { font-size: 13px; }
+  #weeklyTable th, #weeklyTable td { padding: 6px 3px; }
+}
