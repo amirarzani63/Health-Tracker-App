@@ -677,12 +677,15 @@ function renderAiItems() {
     <td><input data-k="portion" value="${esc(U.food(it.portion))}" aria-label="Portion"></td>
     ${AI_NUMS.map((k) => `<td><input type="number" min="0" step="1" data-k="${k}" value="${Math.round(it[k] ?? 0)}" aria-label="${k}"></td>`).join("")}
     <td><span class="conf ${it.confidence}" title="How sure the estimate is">${it.confidence}</span></td></tr>
-    ${it.ingredients?.length ? `<tr class="ing-row"><td></td><td colspan="8"><details><summary>What's in it (${esc(it.portion)})</summary>
-      <p class="ing-total"><b>Whole portion: ${fmt(it.calories)} kcal</b> · protein ${fmt(it.protein_g, 1)} g · carbs ${fmt(it.carbs_g, 1)} g · fat ${fmt(it.fat_g, 1)} g</p>
-      <ul class="ing-list">${it.ingredients.map((g) => `<li><b>${esc(g.name)}</b>: ${fmt(g.grams)} g → ${fmt(g.calories)} kcal · P ${fmt(g.protein_g, 1)} · C ${fmt(g.carbs_g, 1)} · F ${fmt(g.fat_g, 1)}</li>`).join("")}</ul>
-      <p class="muted small">Ingredient values: USDA FoodData Central. Amounts are a typical home recipe scaled to your portion. If yours is different (e.g. less oil), adjust the numbers above.</p>
-      </details></td></tr>` : ""}`).join("")
+`).join("")
     || `<tr><td colspan="9" class="muted">No foods recognised.</td></tr>`;
+  // what's in each dish: total first, then every ingredient for this portion (outside the table so phones show it)
+  $("#aiIngredients").innerHTML = ai.items.filter((it) => it.ingredients?.length).map((it) => `<section class="ing-card">
+      <h4>${esc(it.name)} <span class="muted small">(${esc(it.portion)})</span></h4>
+      <p class="ing-total"><b>Total: ${fmt(it.calories)} kcal</b> · protein ${fmt(it.protein_g, 1)} g · carbs ${fmt(it.carbs_g, 1)} g · fat ${fmt(it.fat_g, 1)} g</p>
+      <ul class="ing-list">${it.ingredients.map((g) => `<li><b>${esc(g.name)}</b>: ${fmt(g.grams)} g → ${fmt(g.calories)} kcal · P ${fmt(g.protein_g, 1)} · C ${fmt(g.carbs_g, 1)} · F ${fmt(g.fat_g, 1)}</li>`).join("")}</ul>
+    </section>`).join("")
+    + (ai.items.some((it) => it.ingredients?.length) ? `<p class="muted small">Ingredient values: USDA FoodData Central. Amounts are a typical home recipe scaled to your portion.</p>` : "");
   updateAiTotals();
 }
 function updateAiTotals() {

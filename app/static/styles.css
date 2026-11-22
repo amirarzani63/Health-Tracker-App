@@ -1396,3 +1396,6 @@ button.vid-link { background: none; cursor: pointer; }
 .ing-list { margin: 4px 0 6px; padding-left: 18px; display: grid; gap: 3px; font-size: 14px; }
 .ing-row details { position: sticky; left: 0; max-width: calc(100vw - 72px); white-space: normal; }
 .ing-row td { white-space: normal; }
+
+.ing-card { margin: 10px 0; padding: 10px 12px; border: 1px solid var(--accent); border-radius: 12px; background: var(--inset); }
+.ing-card h4 { margin: 0 0 4px; }
