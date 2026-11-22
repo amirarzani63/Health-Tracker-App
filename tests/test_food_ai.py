@@ -110,14 +110,14 @@ def test_spoken_meals_are_understood():
 def test_persian_dishes_and_last_night():
     out = svc.analyze("last night I had a cup of kashk bademjan and a cup of salad olivier", meal_hint="snack")
     assert out["meal_guess"] == "dinner" and out["day_offset"] == -1
-    assert [round(i["calories"]) for i in out["items"]] == [280, 380]
+    assert [round(i["calories"]) for i in out["items"]] == [280, 365]
 
 
 def test_everyday_portions_and_farsi_names():
     out = svc.analyze("1 plate of kashk bademjan and half a plate of salad olivier", meal_hint="dinner")
-    assert [round(i["calories"]) for i in out["items"]] == [420, 285]   # plate ~300 g of dishes measured per cup
+    assert [round(i["calories"]) for i in out["items"]] == [420, 274]   # plate ~300 g of dishes measured per cup
     fa = svc.analyze("یک بشقاب کشک بادمجان و نصف بشقاب سالاد الویه", meal_hint="dinner")
-    assert [round(i["calories"]) for i in fa["items"]] == [420, 285]
+    assert [round(i["calories"]) for i in fa["items"]] == [420, 274]
     kb = svc.analyze("۲ سیخ کباب کوبیده و یک دوغ", meal_hint="dinner")["items"]
     assert kb[0]["portion"] == "2 skewers" and len(kb) == 2
     assert svc.analyze("a big plate of mirza ghasemi")["items"][0]["portion"].startswith("1 big plate")
@@ -127,7 +127,7 @@ def test_everyday_portions_and_farsi_names():
 
 def test_voice_commas_inside_a_dish_name_are_joined():
     items = svc.analyze("One bowl of salad, Olivier.")["items"]
-    assert len(items) == 1 and round(items[0]["calories"]) == 665
+    assert len(items) == 1 and round(items[0]["calories"]) == 639
     items = svc.analyze("a plate of kashk, bademjan, and a doogh")["items"]
     assert [round(i["calories"]) for i in items] == [420, 90]
     assert len(svc.analyze("rice, chicken breast, salad")["items"]) == 3   # real separate foods stay separate

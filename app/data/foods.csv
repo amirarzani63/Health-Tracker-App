@@ -448,12 +448,16 @@ ash anar|pomegranate soup|آش انار,1 cup (240 g),240,220,9,32,7,5,meat
 ash jo|barley soup|آش جو|سوپ جو|soup jo,1 cup (240 g),240,190,8,28,5,5,dairy
 haleem|halim|حلیم,1 cup (240 g),240,320,20,38,10,4,meat gluten
 kaleh pacheh|کله پاچه|kale pache,1 bowl (350 g),350,550,40,4,42,0,meat
+# Kashk bademjan, homemade: matches home recipes (SparkPeople, Cup of Yum: ~120-175 kcal/100 g)
 kashk bademjan|kashke bademjan|kashk e bademjan|kashk o bademjan|kashke bademjoon|kashk bademjoon|eggplant kashk dip|کشک بادمجان|کشک بادمجون|کشک و بادمجان,1 cup (200 g),200,280,7,16,22,6,dairy nuts
+# Restaurant kashk bademjan: published restaurant value (Moby Dick House of Kabob, 173 g = 600 kcal, 63 g fat)
+restaurant kashk bademjan|kashk bademjan restaurant|kashk bademjan takeout|kashk bademjan from restaurant,1 serving (173 g),173,600,4,8,62,4,dairy nuts
 borani esfenaj|spinach yogurt dip|بورانی اسفناج|بورانی,1 cup (200 g),200,170,10,12,9,3,dairy
 yogurt cucumber dip,1 cup (220 g),220,150,9,14,7,1,dairy
 mast o musir|yogurt shallot dip|ماست موسیر|ماست و موسیر,1 cup (220 g),220,160,9,12,9,1,dairy
 kotlet|persian cutlet|کتلت|cotlet,1 cutlet (80 g),80,210,10,12,14,1,meat egg
-olivieh|olivier salad|salad olivier|salad olivieh|salade olivier|olivier|olivie|russian potato salad|سالاد الویه|الویه|olvieh|alvieh,1 cup (200 g),200,380,14,22,27,3,egg meat
+# Salad olivier: average of FatSecret (172 kcal/100 g) and Arise (194 kcal/100 g)
+olivieh|olivier salad|salad olivier|salad olivieh|salade olivier|olivier|olivie|russian potato salad|سالاد الویه|الویه|olvieh|alvieh,1 cup (200 g),200,365,13,23,24,3,egg meat
 kookoo sibzamini|potato kuku|کوکو سیب زمینی,1 piece (100 g),100,220,7,18,14,2,egg
 salad olivieh sandwich|olivieh sandwich,1 sandwich,250,620,20,58,34,4,egg meat gluten
 sangak bread,1 piece (100 g),100,260,9,52,1.5,4,gluten
