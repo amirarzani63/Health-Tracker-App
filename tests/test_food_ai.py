@@ -97,3 +97,11 @@ def test_every_food_is_measured_in_one_logical_unit():
         if m and m.group(2) not in ("g", "ml") and m.group(1) != "1":
             bad.append(r[1])
     assert not bad, bad
+
+
+def test_spoken_meals_are_understood():
+    out = svc.analyze("for lunch I had 4 turkey meatballs, a cup of rice and then a salad", meal_hint="snack")
+    assert out["meal_guess"] == "lunch"
+    assert [round(i["calories"]) for i in out["items"]][:2] == [144, 205]
+    assert svc.analyze("this morning I had two eggs", meal_hint="snack")["meal_guess"] == "breakfast"
+    assert svc.analyze("tonight I ate 14 sauteed shrimp", meal_hint="snack")["meal_guess"] == "dinner"

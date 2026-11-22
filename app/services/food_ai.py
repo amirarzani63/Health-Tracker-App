@@ -120,6 +120,28 @@ def parse_item(chunk: str, db: Session | None = None) -> dict[str, Any] | None:
     }
 
 
+# Spoken meals ("for lunch I had 4 meatballs and then a coffee"): find the meal, drop the filler words.
+_MEAL_WORDS = re.compile(r"\b(?:for|at|this|my)?\s*(breakfast|brunch|lunch|dinner|supper|snack)\b", re.I)
+_FILLER = re.compile(r"^\s*(?:(?:and|then|also|plus|so|um+|uh+|okay|ok|well|today|this morning|tonight|"
+                     r"i(?:'ve| have)? (?:had|ate|eaten|drank|drunk)|i also had|i just had|we had|had|ate|drank|"
+                     r"some|about|around|roughly|like|for (?:breakfast|brunch|lunch|dinner|supper|snack)|"
+                     r"(?:breakfast|brunch|lunch|dinner|supper|snack) was)\b[\s,:]*)+", re.I)
+_MEAL_MAP = {"brunch": "breakfast", "supper": "dinner"}
+
+
+def spoken_meal(text: str) -> str | None:
+    if re.search(r"\bthis morning\b", text or "", re.I) and not _MEAL_WORDS.search(text or ""):
+        return "breakfast"
+    if re.search(r"\btonight\b", text or "", re.I) and not _MEAL_WORDS.search(text or ""):
+        return "dinner"
+    m = _MEAL_WORDS.search(text or "")
+    return _MEAL_MAP.get(m.group(1).lower(), m.group(1).lower()) if m else None
+
+
+def clean_chunk(chunk: str) -> str:
+    return _FILLER.sub("", chunk).strip(" .!,")
+
+
 class FoodAnalyzer:
     def analyze(self, description: str = "", images=None, meal_hint: str | None = None,
                 db: Session | None = None) -> dict[str, Any]:
@@ -127,8 +149,10 @@ class FoodAnalyzer:
         if not description:
             raise FoodAIError("Type what you ate, e.g. \"2 eggs, toast and a banana\".", 400)
         items, unknown = [], []
+        meal_hint = spoken_meal(description) or meal_hint
         for chunk in _SPLIT.split(description):
-            if not chunk.strip(" .!"):
+            chunk = clean_chunk(chunk)
+            if not chunk:
                 continue
             item = parse_item(chunk, db)
             (items.append(item) if item else unknown.append(chunk.strip()))

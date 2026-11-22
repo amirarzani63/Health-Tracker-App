@@ -1386,3 +1386,6 @@ button.vid-link { background: none; cursor: pointer; }
 #whoAddForm .place:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-soft); background: var(--accent-soft); }
 .place .pi { font-size: 24px; }
 .eq-fine summary { cursor: pointer; margin: 4px 0; }
+
+.voice-btn.listening { background: var(--bad) !important; color: #fff; animation: neonpulse 1.2s ease-in-out infinite; }
+#aiCard { border-width: 2px; }

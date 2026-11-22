@@ -724,7 +724,7 @@ $("#aiForm").addEventListener("submit", async (e) => {
     toast(err.message, true);
   } finally {
     btn.disabled = false;
-    btn.textContent = "Estimate calories";
+    btn.textContent = "Find the foods";
   }
 });
 $("#aiLog").addEventListener("click", (e) => withBusy(e.target, async () => {
@@ -740,6 +740,38 @@ $("#aiLog").addEventListener("click", (e) => withBusy(e.target, async () => {
   loaders.diet();
 }));
 $("#aiDiscard").addEventListener("click", resetAi);
+
+// ---- voice: speak the meal, it's written into the box and the foods are found automatically.
+// Uses the phone's own speech recognition (Safari / Chrome), free, nothing extra to install.
+(() => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = $("#voiceBtn"), box = $("#aiForm").elements.description;
+  if (!SR) { btn.classList.add("hidden"); $("#voiceHint").classList.remove("hidden"); return; }
+  let rec = null;
+  btn.addEventListener("click", () => {
+    if (rec) { rec.stop(); return; }
+    rec = new SR();
+    rec.lang = navigator.language || "en-US";
+    rec.interimResults = true;
+    rec.continuous = false;
+    const before = box.value.trim();
+    let heard = "";
+    rec.onresult = (e) => {
+      heard = [...e.results].map((r) => r[0].transcript).join(" ");
+      box.value = (before ? before + ", " : "") + heard;
+    };
+    rec.onerror = (e) => {
+      toast(e.error === "not-allowed" ? "Allow the microphone for this app, or use the 🎙️ on your keyboard." : "Didn't catch that, try again.", true);
+      $("#voiceHint").classList.remove("hidden");
+    };
+    rec.onend = () => {
+      rec = null; btn.classList.remove("listening"); btn.textContent = "🎤 Speak";
+      if (heard.trim()) $("#aiForm").requestSubmit();  // find the foods straight away
+    };
+    btn.classList.add("listening"); btn.textContent = "● Listening… tap to stop";
+    rec.start();
+  });
+})();
 
 // ================================================================ WORKOUTS
 // ---------------------------------------------------------------- exercise demo pop-up + guide
