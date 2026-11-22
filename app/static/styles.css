@@ -1399,3 +1399,14 @@ button.vid-link { background: none; cursor: pointer; }
 
 .ing-card { margin: 10px 0; padding: 10px 12px; border: 1px solid var(--accent); border-radius: 12px; background: var(--inset); }
 .ing-card h4 { margin: 0 0 4px; }
+
+.ai-items { display: grid; gap: 10px; margin: 8px 0; }
+.ai-item { border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: grid; gap: 8px; background: var(--card); }
+.ai-head { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; }
+.ai-keep input { width: 22px; height: 22px; margin: 0; }
+.ai-name { font-weight: 700; min-width: 0; }
+.ai-portion { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.ai-nums { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.ai-nums label { display: grid; gap: 3px; font-size: 11px; color: var(--muted); min-width: 0; }
+.ai-nums input { min-width: 0; width: 100%; padding: 6px 4px; text-align: center; }
+.ai-item .ing-card { margin: 0; }

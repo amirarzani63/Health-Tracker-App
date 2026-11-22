@@ -671,21 +671,19 @@ const ai = { items: [] };
 
 const AI_NUMS = ["calories", "protein_g", "carbs_g", "fat_g", "fiber_g"];
 function renderAiItems() {
-  $("#aiItems").innerHTML = ai.items.map((it, i) => `<tr data-i="${i}">
-    <td><input type="checkbox" data-k="keep" ${it.keep ? "checked" : ""} aria-label="Include"></td>
-    <td><input data-k="name" value="${esc(it.name)}" aria-label="Food"></td>
-    <td><input data-k="portion" value="${esc(U.food(it.portion))}" aria-label="Portion"></td>
-    ${AI_NUMS.map((k) => `<td><input type="number" min="0" step="1" data-k="${k}" value="${Math.round(it[k] ?? 0)}" aria-label="${k}"></td>`).join("")}
-    <td><span class="conf ${it.confidence}" title="How sure the estimate is">${it.confidence}</span></td></tr>
-`).join("")
-    || `<tr><td colspan="9" class="muted">No foods recognised.</td></tr>`;
-  // what's in each dish: total first, then every ingredient for this portion (outside the table so phones show it)
-  $("#aiIngredients").innerHTML = ai.items.filter((it) => it.ingredients?.length).map((it) => `<section class="ing-card">
-      <h4>${esc(it.name)} <span class="muted small">(${esc(it.portion)})</span></h4>
-      <p class="ing-total"><b>Total: ${fmt(it.calories)} kcal</b> · protein ${fmt(it.protein_g, 1)} g · carbs ${fmt(it.carbs_g, 1)} g · fat ${fmt(it.fat_g, 1)} g</p>
-      <ul class="ing-list">${it.ingredients.map((g) => `<li><b>${esc(g.name)}</b>: ${fmt(g.grams)} g → ${fmt(g.calories)} kcal · P ${fmt(g.protein_g, 1)} · C ${fmt(g.carbs_g, 1)} · F ${fmt(g.fat_g, 1)}</li>`).join("")}</ul>
-    </section>`).join("")
-    + (ai.items.some((it) => it.ingredients?.length) ? `<p class="muted small">Ingredient values: USDA FoodData Central. Amounts are a typical home recipe scaled to your portion.</p>` : "");
+  // one block per food found: its numbers, then (for dishes) every ingredient right underneath
+  const lbl = { calories: "kcal", protein_g: "Protein g", carbs_g: "Carbs g", fat_g: "Fat g", fiber_g: "Fibre g" };
+  $("#aiItems").innerHTML = ai.items.map((it, i) => `<section class="ai-item" data-i="${i}">
+      <div class="ai-head"><label class="ai-keep"><input type="checkbox" data-k="keep" ${it.keep ? "checked" : ""} aria-label="Include"></label>
+        <input class="ai-name" data-k="name" value="${esc(it.name)}" aria-label="Food">
+        <span class="conf ${it.confidence}" title="How sure the estimate is">${it.confidence}</span></div>
+      <label class="ai-portion">Portion <input data-k="portion" value="${esc(U.food(it.portion))}"></label>
+      <div class="ai-nums">${AI_NUMS.map((k) => `<label>${lbl[k]}<input type="number" min="0" step="1" data-k="${k}" value="${Math.round(it[k] ?? 0)}"></label>`).join("")}</div>
+      ${it.ingredients?.length ? `<div class="ing-card">
+        <p class="ing-total"><b>What's in it · total ${fmt(it.calories)} kcal</b> · protein ${fmt(it.protein_g, 1)} g · carbs ${fmt(it.carbs_g, 1)} g · fat ${fmt(it.fat_g, 1)} g</p>
+        <ul class="ing-list">${it.ingredients.map((g) => `<li><b>${esc(g.name)}</b>: ${fmt(g.grams)} g → ${fmt(g.calories)} kcal · P ${fmt(g.protein_g, 1)} · C ${fmt(g.carbs_g, 1)} · F ${fmt(g.fat_g, 1)}</li>`).join("")}</ul>
+        <p class="muted small">USDA values per ingredient; amounts are a typical home recipe scaled to your portion.</p></div>` : ""}
+    </section>`).join("") || `<p class="muted">No foods recognised.</p>`;
   updateAiTotals();
 }
 function updateAiTotals() {
@@ -695,7 +693,7 @@ function updateAiTotals() {
   $("#aiLog").disabled = kept.length === 0;
 }
 $("#aiItems").addEventListener("input", (e) => {
-  const row = e.target.closest("tr[data-i]");
+  const row = e.target.closest("[data-i]");
   if (!row) return;
   const item = ai.items[row.dataset.i];
   const k = e.target.dataset.k;
