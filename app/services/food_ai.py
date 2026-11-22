@@ -24,7 +24,7 @@ _UNITS = {"g": 1, "gr": 1, "gram": 1, "grams": 1, "kg": 1000, "ml": 1, "l": 1000
           "servings": None, "bowl": None, "bowls": None, "glass": None, "glasses": None,
           "can": None, "cans": None, "scoop": None, "scoops": None, "handful": None, "bar": None}
 
-_SPLIT = re.compile(r",|;|\n|\+|\band\b|\bwith\b|\bplus\b|&", re.I)
+_SPLIT = re.compile(r",|،|;|\n|\+|\band\b|\bwith\b|\bplus\b|&|\sو\s|\sبا\s", re.I)
 _QTY = re.compile(r"^\s*(\d+(?:[.,]\d+)?(?:\s*/\s*\d+)?|\d+\s+\d/\d)\s*([a-z]+)?\b", re.I)
 
 ALLOWED_IMAGE_TYPES: set[str] = set()
@@ -69,8 +69,61 @@ def _per_unit_from_label(label: str, grams: float, unit: str) -> float | None:
     return grams / _number(m.group(1))
 
 
+# ---- everyday portions (no scales needed): "a plate of kashk bademjan", "half a bowl of ash", "2 spoons of rice"
+_FA_DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789")
+_FA_WORDS = {"یک": "1", "یه": "1", "دو": "2", "سه": "3", "چهار": "4", "پنج": "5", "شش": "6", "نیم": "0.5", "نصف": "0.5",
+             "بشقاب": "plate", "کاسه": "bowl", "قاشق": "spoon", "لیوان": "glass", "تکه": "piece", "تیکه": "piece",
+             "سیخ": "skewer", "کفگیر": "ladle", "مشت": "handful", "پرس": "serving", "عدد": "piece", "فنجان": "cup",
+             "استکان": "glass", "برش": "slice", "کوچک": "small", "بزرگ": "large"}
+_WORD_NUM = {"a": "1", "an": "1", "one": "1", "two": "2", "three": "3", "four": "4", "five": "5", "six": "6",
+             "seven": "7", "eight": "8", "nine": "9", "ten": "10", "half a": "0.5", "half an": "0.5", "half of a": "0.5",
+             "half": "0.5", "a half": "0.5", "quarter of a": "0.25", "a quarter": "0.25", "couple of": "2", "a couple of": "2",
+             "a few": "3", "one and a half": "1.5", "a plate and a half of": "1.5 plate of"}
+# grams in one everyday portion of a home-cooked dish
+HOUSEHOLD_G = {"plate": 300, "bowl": 350, "ladle": 120, "spoon": 15, "spoonful": 15, "handful": 30, "mug": 300,
+               "glass": 250, "cup": 240, "skewer": None, "piece": None, "slice": None, "serving": None, "portion": None,
+               "pack": None, "tub": None}
+_SIZE = {"small": 0.7, "little": 0.7, "half": 0.5, "big": 1.4, "large": 1.4, "full": 1.0, "heaping": 1.3, "huge": 1.8}
+_HOUSE = re.compile(r"^\s*(\d+(?:\.\d+)?)\s+(?:(small|little|big|large|full|heaping|huge)\s+)?"
+                    r"(plate|bowl|ladle|spoonful|spoon|handful|mug|glass|cup|skewer|piece|slice|serving|portion|pack|tub)"
+                    r"(?:s|es|fuls)?\b(?:\s+of)?\s+", re.I)
+
+
+def normalize_amount(text: str) -> str:
+    """Farsi digits/words and English number words at the start -> digits, so amounts are read the same way."""
+    text = text.translate(_FA_DIGITS).replace("\u200c", " ")
+    for fa, en in _FA_WORDS.items():
+        text = re.sub(rf"(^|\s){fa}(?=\s|$)", rf"\g<1>{en}", text)
+    low = text.lower().strip()
+    for w in sorted(_WORD_NUM, key=len, reverse=True):
+        if low.startswith(w + " "):
+            return _WORD_NUM[w] + low[len(w):]
+    return low
+
+
+def household(text: str, food) -> tuple[float, str] | None:
+    """(factor, portion label) for an everyday measure like "1 plate of", "0.5 bowl", "2 large spoons"."""
+    m = _HOUSE.match(text)
+    if not m:
+        return None
+    qty, size, unit = float(m.group(1)), (m.group(2) or "").lower(), m.group(3).lower()
+    mult = _SIZE.get(size, 1.0)
+    label = food.unit.lower()
+    label_unit = re.search(r"\b(plate|bowl|skewer|piece|slice|serving|portion|cup|glass|wrap|tbsp|tub|pack)s?\b", label)
+    shown = f"{qty:g} {size + ' ' if size else ''}{unit}{'s' if qty > 1 else ''}"
+    if label_unit and label_unit.group(1) == unit:          # the food is already measured this way
+        return qty * mult, shown
+    if unit == "spoon" and label_unit and label_unit.group(1) == "tbsp":
+        return qty * mult, shown
+    grams = HOUSEHOLD_G.get(unit)
+    if grams and food.grams:                                  # convert through the food's own weight
+        g = qty * mult * grams
+        return g / food.grams, f"{shown} (~{round(g)} g)"
+    return qty * mult, shown                                  # count of the food's own portion
+
+
 def parse_item(chunk: str, db: Session | None = None) -> dict[str, Any] | None:
-    text = chunk.lower().strip(" .!")
+    text = normalize_amount(chunk.strip(" .!"))
     if not text:
         return None
     food = food_db.match(text, db)
@@ -80,8 +133,11 @@ def parse_item(chunk: str, db: Session | None = None) -> dict[str, Any] | None:
     kcal, p, c, f, fib = food.calories, food.protein_g, food.carbs_g, food.fat_g, food.fiber_g
 
     factor, grams_given = 1.0, False
-    m = _QTY.match(text)
-    if m:
+    house = household(text, food)
+    m = None if house else _QTY.match(text)
+    if house:
+        factor = house[0]
+    elif m:
         qty = _number(m.group(1))
         unit = (m.group(2) or "").lower()
         per = _per_unit_from_label(unit_label, unit_g, unit)
@@ -110,7 +166,7 @@ def parse_item(chunk: str, db: Session | None = None) -> dict[str, Any] | None:
 
     name = chunk.strip(" .!")
     volume = bool(re.search(r"\b(ml|l|fl|floz|pints?|cups?)\b", text)) or re.search(r"\bml\b", unit_label)
-    portion = f"{round(factor * unit_g)} {'ml' if volume else 'g'}" if grams_given else (
+    portion = house[1] if house else f"{round(factor * unit_g)} {'ml' if volume else 'g'}" if grams_given else (
         unit_label if factor == 1 else f"{round(factor, 2):g} × {unit_label}")
     return {
         "name": name[:120], "portion": portion,

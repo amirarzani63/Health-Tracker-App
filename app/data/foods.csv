@@ -1,11 +1,11 @@
 names,unit,grams,kcal,protein,carbs,fat,fiber,tags
 # Eggs & dairy -------------------------------------------------------------
-egg|eggs|boiled egg|hard boiled egg|poached egg,1 large egg,50,72,6.3,0.4,4.8,0,egg
-fried egg|fried eggs,1 egg fried in oil,46,90,6.3,0.4,6.8,0,egg
+egg|eggs|boiled egg|hard boiled egg|poached egg|تخم مرغ|تخم‌مرغ,1 large egg,50,72,6.3,0.4,4.8,0,egg
+fried egg|fried eggs|نیمرو,1 egg fried in oil,46,90,6.3,0.4,6.8,0,egg
 scrambled eggs|scrambled egg,1 egg scrambled with milk & butter,61,100,6.7,1.3,7.5,0,egg dairy
 omelette|omelet,2-egg omelette,120,190,13,1.5,15,0,egg dairy
 egg white|egg whites,1 large egg white,33,17,3.6,0.2,0.1,0,egg
-whole milk|milk,1 cup (240 ml),240,149,7.7,11.7,7.9,0,dairy
+whole milk|milk|شیر|شیر پرچرب,1 cup (240 ml),240,149,7.7,11.7,7.9,0,dairy
 semi skimmed milk|2% milk|low fat milk,1 cup (240 ml),240,122,8,12,4.8,0,dairy
 skim milk|skimmed milk|fat free milk,1 cup (240 ml),240,83,8.3,12.2,0.2,0,dairy
 oat milk,1 cup (240 ml),240,120,3,16,5,2,gluten
@@ -15,13 +15,13 @@ chocolate milk,1 cup (240 ml),240,208,8,26,8.5,2,dairy
 kefir,1 cup (240 ml),240,104,9.2,11.6,2.4,0,dairy
 greek yogurt|greek yoghurt|plain greek yogurt,1 cup (200 g),200,146,20,7.8,3.8,0,dairy
 low fat greek yogurt|0% greek yogurt|fat free greek yogurt,1 cup (200 g),200,118,20.6,7.2,0.8,0,dairy
-yogurt|yoghurt|plain yogurt|natural yogurt,1 pot (150 g),150,92,5.2,7,4.9,0,dairy
+yogurt|yoghurt|plain yogurt|natural yogurt|ماست,1 pot (150 g),150,92,5.2,7,4.9,0,dairy
 fruit yogurt|flavoured yogurt|flavored yogurt,1 pot (150 g),150,150,6,25,2.5,0,dairy
 skyr,1 pot (150 g),150,95,16.5,6,0.3,0,dairy
-doogh|ayran|yogurt drink,1 glass (250 ml),250,90,4.5,6,5,0,dairy
+doogh|ayran|yogurt drink|دوغ|dough drink,1 glass (250 ml),250,90,4.5,6,5,0,dairy
 cottage cheese,1 cup (226 g),226,222,25,8.2,9.8,0,dairy
-cheese|cheddar|cheddar cheese,1 slice (28 g),28,113,7,0.4,9.3,0,dairy
-feta|feta cheese|white cheese|panir,28 g,28,75,4,1.2,6,0,dairy
+cheese|cheddar|cheddar cheese|پنیر زرد,1 slice (28 g),28,113,7,0.4,9.3,0,dairy
+feta|feta cheese|white cheese|panir|پنیر فتا|پنیر,28 g,28,75,4,1.2,6,0,dairy
 mozzarella,28 g,28,85,6.3,0.6,6.3,0,dairy
 halloumi,1 slice (30 g),30,95,6.5,0.6,7.5,0,dairy
 parmesan,1 tbsp grated (5 g),5,21,1.9,0.2,1.4,0,dairy
@@ -30,7 +30,7 @@ swiss cheese|emmental|gouda,1 slice (28 g),28,106,7.5,0.4,8.2,0,dairy
 string cheese|cheese stick,1 stick (28 g),28,80,7,1,6,0,dairy
 cream cheese,1 tbsp (15 g),15,51,0.9,0.8,5,0,dairy
 labneh,1 tbsp (15 g),15,27.5,1.25,0.75,2.25,0,dairy
-butter,1 tbsp (14 g),14,102,0.1,0,11.5,0,dairy
+butter|کره,1 tbsp (14 g),14,102,0.1,0,11.5,0,dairy
 ghee,1 tbsp (13 g),13,117,0,0,13,0,dairy
 cream|heavy cream|double cream,1 tbsp (15 ml),15,51,0.4,0.4,5.4,0,dairy
 sour cream,1 tbsp (15 g),15,29.5,0.35,0.7,2.9,0,dairy
@@ -39,7 +39,7 @@ whey|whey protein|protein shake|protein powder|scoop of protein,1 scoop (30 g),3
 casein|casein protein,1 scoop (33 g),33,120,24,3,1,0,dairy
 pea protein|vegan protein,1 scoop (30 g),30,120,24,2,2,1,
 # Meat ---------------------------------------------------------------------
-chicken breast|chicken|grilled chicken|chicken fillet,100 g cooked,100,165,31,0,3.6,0,meat
+chicken breast|chicken|grilled chicken|chicken fillet|سینه مرغ|مرغ,100 g cooked,100,165,31,0,3.6,0,meat
 chicken thigh|chicken thighs,100 g cooked,100,209,26,0,10.9,0,meat
 chicken wings|chicken wing|wings,1 wing (35 g meat),35,100,9,0,7,0,meat
 chicken drumstick|drumstick,1 drumstick (75 g),75,130,17,0,6.5,0,meat
@@ -67,10 +67,10 @@ hot dog|frankfurter,1 hot dog in bun,100,290,10,24,17,1,meat gluten
 meatballs|meatball,1 meatball (30 g),30,71.67,5,2,4.67,0.17,meat gluten
 liver,100 g cooked,100,175,27,4,4.5,0,meat
 beef jerky|jerky,1 bag (28 g),28,80,13,4,1,0,meat
-kebab|doner|doner kebab|shawarma,1 wrap,350,780,40,70,38,4,meat gluten
-koobideh|kabab koobideh|kofta|kofta kebab,1 skewer (100 g),100,260,18,3,19,0,meat
-joojeh kabab|chicken kebab|chicken skewer|shish tawook,1 skewer (150 g),150,250,40,2,9,0,meat
-barg kabab|lamb kebab|shish kebab,1 skewer (150 g),150,330,38,1,19,0,meat
+kebab|doner|doner kebab|shawarma|کباب,1 wrap,350,780,40,70,38,4,meat gluten
+koobideh|kabab koobideh|kofta|kofta kebab|کباب کوبیده|کوبیده|kubideh|koobide|kabob koobideh,1 skewer (100 g),100,260,18,3,19,0,meat
+joojeh kabab|chicken kebab|chicken skewer|shish tawook|جوجه کباب|جوجه|jujeh kabab|joojeh kabob|jooje kabab,1 skewer (150 g),150,250,40,2,9,0,meat
+barg kabab|lamb kebab|shish kebab|کباب برگ|برگ|kabab barg|kabob barg,1 skewer (150 g),150,330,38,1,19,0,meat
 gyro|gyros,1 wrap,300,600,28,50,32,3,meat gluten
 # Fish & seafood -----------------------------------------------------------
 salmon,100 g cooked,100,206,22,0,12,0,fish
@@ -95,7 +95,7 @@ seitan,100 g,100,120,24,4,1.5,1,gluten
 veggie burger|plant burger|beyond burger,1 patty,113,250,20,7,16,3,soy
 falafel,1 ball (17 g),17,56.67,2.33,5.33,3,1,
 # Bread & bakery -----------------------------------------------------------
-bread|toast|white bread|slice of bread,1 slice (32 g),32,80,3,15,1,0.8,gluten
+bread|toast|white bread|slice of bread|نان,1 slice (32 g),32,80,3,15,1,0.8,gluten
 whole wheat bread|wholemeal bread|brown bread|whole grain bread,1 slice (32 g),32,80,4,14,1.1,2,gluten
 sourdough,1 slice (50 g),50,130,5,25,0.8,1,gluten
 rye bread,1 slice (32 g),32,83,2.7,15.5,1.1,1.9,gluten
@@ -104,8 +104,8 @@ english muffin,1 muffin,57,134,4.4,26,1,2,gluten
 pita|pitta|pita bread,1 pita,60,165,5.5,33,0.7,1.3,gluten
 tortilla|wrap|flour tortilla,1 large tortilla,70,210,5.5,35,5,2,gluten
 corn tortilla,1 tortilla,26,57,1.5,12,0.7,1.6,
-lavash|lavash bread,1 sheet (60 g),60,165,5.5,33,0.7,1.3,gluten
-barbari|sangak|taftoon|flatbread,1 piece (100 g),100,275,9,55,1.5,2.5,gluten
+lavash|lavash bread|نان لواش|لواش,1 sheet (60 g),60,165,5.5,33,0.7,1.3,gluten
+barbari|sangak|taftoon|flatbread|نان بربری|بربری|barbari bread|نان سنگک|سنگک|نان تافتون|تافتون,1 piece (100 g),100,275,9,55,1.5,2.5,gluten
 naan,1 naan (90 g),90,262,8.7,45,5.1,2,gluten dairy
 chapati|roti,1 roti (40 g),40,120,3,18,3.7,2,gluten
 baguette|french bread,1 piece (60 g),60,163,6.5,32,1,1.3,gluten
@@ -134,10 +134,10 @@ breakfast burrito,1 burrito,250,550,25,45,30,3,egg dairy gluten
 avocado toast,1 slice,120,250,6,22,15,6,gluten
 egg mcmuffin|breakfast sandwich,1 sandwich,140,310,17,30,13,2,egg dairy gluten
 # Rice, grains & pasta -----------------------------------------------------
-rice|white rice|basmati|basmati rice|jasmine rice|polo|chelow|steamed rice,1 cup cooked (160 g),160,205,4.3,45,0.4,0.6,
+rice|white rice|basmati|basmati rice|jasmine rice|polo|chelow|steamed rice|برنج,1 cup cooked (160 g),160,205,4.3,45,0.4,0.6,
 brown rice,1 cup cooked (195 g),195,216,5,45,1.8,3.5,
 fried rice,1 cup (200 g),200,330,8,48,11,1.5,egg soy
-tahdig,1 piece (60 g),60,190,2.5,25,9,0.3,
+tahdig|ته دیگ|ته‌دیگ|tadig|tah dig,1 piece (60 g),60,190,2.5,25,9,0.3,
 sushi rice,1 cup cooked,160,240,4,52,0.5,0.5,
 pasta|spaghetti|penne|macaroni|fusilli,1 cup cooked (140 g),140,220,8.1,43,1.3,2.5,gluten
 whole wheat pasta|wholewheat pasta,1 cup cooked (140 g),140,174,7.5,37,0.8,6.3,gluten
@@ -150,17 +150,17 @@ bulgur,1 cup cooked (182 g),182,151,5.6,34,0.4,8.2,gluten
 barley,1 cup cooked (157 g),157,193,3.5,44,0.7,6,gluten
 polenta|grits,1 cup cooked (240 g),240,145,3.4,31,1,1.5,
 # Potatoes & starchy veg ---------------------------------------------------
-potato|potatoes|baked potato|boiled potatoes|jacket potato,1 medium (173 g),173,161,4.3,37,0.2,3.8,
+potato|potatoes|baked potato|boiled potatoes|jacket potato|سیب زمینی,1 medium (173 g),173,161,4.3,37,0.2,3.8,
 mashed potatoes|mash,1 cup (210 g),210,237,4,35,9,3,dairy
 roast potatoes,1 cup (150 g),150,220,3.5,33,8.5,3,
 sweet potato,1 medium (130 g),130,112,2,26,0.1,3.9,
-fries|chips|french fries,1 medium serving (117 g),117,365,4,48,17,4.4,
+fries|chips|french fries|سیب زمینی سرخ کرده,1 medium serving (117 g),117,365,4,48,17,4.4,
 sweet potato fries,1 serving (100 g),100,240,2,32,11,3.5,
 hash brown|hash browns,1 patty (60 g),60,150,1.5,15,9,1.5,
 # Legumes ------------------------------------------------------------------
 lentils|lentil|red lentils,1 cup cooked (198 g),198,230,18,40,0.8,15.6,
 dal|daal|dhal|lentil curry,1 cup (240 g),240,260,13,35,7.5,9,
-lentil soup|adasi,1 bowl (300 g),300,270,16,40,5,12,
+lentil soup|adasi|عدسی|سوپ عدس,1 bowl (300 g),300,270,16,40,5,12,
 chickpeas|garbanzo|garbanzo beans,1 cup cooked (164 g),164,269,14.5,45,4.2,12.5,
 hummus|houmous,1 tbsp (15 g),15,35,1,2,2.5,0.9,
 black beans|kidney beans|pinto beans|beans,1 cup cooked (172 g),172,227,15,41,0.9,15,
@@ -172,9 +172,9 @@ fava beans|broad beans,1 cup cooked (170 g),170,187,13,33,0.7,9,
 # Nuts & seeds -------------------------------------------------------------
 peanut butter,1 tbsp (16 g),16,94,3.6,3.5,8,0.8,nuts
 almond butter,1 tbsp (16 g),16,98,3.4,3,9,1.6,nuts
-almonds,1 handful (28 g),28,164,6,6.1,14.2,3.5,nuts
-walnuts,1 handful (28 g),28,185,4.3,3.9,18.5,1.9,nuts
-pistachios,1 handful (28 g),28,159,5.7,7.7,12.8,3,nuts
+almonds|بادام,1 handful (28 g),28,164,6,6.1,14.2,3.5,nuts
+walnuts|گردو,1 handful (28 g),28,185,4.3,3.9,18.5,1.9,nuts
+pistachios|پسته,1 handful (28 g),28,159,5.7,7.7,12.8,3,nuts
 cashews,1 handful (28 g),28,157,5.2,8.6,12.4,0.9,nuts
 peanuts,1 handful (28 g),28,161,7.3,4.6,14,2.4,nuts
 hazelnuts,1 handful (28 g),28,178,4.2,4.7,17,2.7,nuts
@@ -184,31 +184,31 @@ chia seeds|chia,1 tbsp (12 g),12,58,2,5,3.7,4.1,
 flaxseed|flax seeds|linseed,1 tbsp (10 g),10,55,1.9,3,4.3,2.8,
 tahini,1 tbsp (15 g),15,89,2.6,3.2,8,1.4,
 # Fruit --------------------------------------------------------------------
-banana|bananas,1 medium,118,105,1.3,27,0.4,3.1,
-apple|apples,1 medium,182,95,0.5,25,0.3,4.4,
-persimmon|persimmons|kaki|khormalu|japanese persimmon,1 medium (168 g),168,118,1,31,0.3,6,
-orange|oranges,1 medium,131,62,1.2,15.4,0.2,3.1,
+banana|bananas|موز,1 medium,118,105,1.3,27,0.4,3.1,
+apple|apples|سیب,1 medium,182,95,0.5,25,0.3,4.4,
+persimmon|persimmons|kaki|khormalu|japanese persimmon|خرمالو,1 medium (168 g),168,118,1,31,0.3,6,
+orange|oranges|پرتقال,1 medium,131,62,1.2,15.4,0.2,3.1,
 clementine|mandarin|tangerine|satsuma,1 fruit,74,35,0.6,9,0.1,1.3,
 pear|pears,1 medium,178,101,0.6,27,0.2,5.5,
 peach|nectarine,1 medium,150,59,1.4,14,0.4,2.3,
 plum|plums,1 plum,66,30,0.5,7.5,0.2,0.9,
 apricot|apricots,1 apricot,35,17,0.5,3.9,0.1,0.7,
 kiwi,1 kiwi,69,42,0.8,10,0.4,2.1,
-grapes,1 cup,151,104,1.1,27,0.2,1.4,
+grapes|انگور,1 cup,151,104,1.1,27,0.2,1.4,
 strawberries|strawberry,1 strawberry,12,4,0.1,0.9,0,0.2,
 blueberries,1 cup,148,84,1.1,21,0.5,3.6,
 raspberries|blackberries,1 cup,123,64,1.5,15,0.8,8,
 berries|mixed berries,1 cup,150,70,1,17,0.4,4,
 cherries|cherry,1 cherry (8 g),8,5,0.08,1.28,0.02,0.17,
-watermelon,1 cup diced,152,46,0.9,11.5,0.2,0.6,
-melon|cantaloupe|honeydew,1 cup diced,160,57,1.4,14,0.3,1.4,
+watermelon|هندوانه,1 cup diced,152,46,0.9,11.5,0.2,0.6,
+melon|cantaloupe|honeydew|خربزه|طالبی,1 cup diced,160,57,1.4,14,0.3,1.4,
 pineapple,1 cup chunks,165,82,0.9,22,0.2,2.3,
 mango,1 cup,165,99,1.4,25,0.6,2.6,
 papaya,1 cup,145,62,0.7,16,0.4,2.5,
-pomegranate,1 fruit seeds only (174 g),174,144,3,32,2,7,
-figs|fig,1 fresh fig,50,37,0.4,9.6,0.2,1.5,
+pomegranate|انار,1 fruit seeds only (174 g),174,144,3,32,2,7,
+figs|fig|انجیر,1 fresh fig,50,37,0.4,9.6,0.2,1.5,
 dried figs,1 fig (8 g),8.3,20.67,0.27,5.33,0.07,0.83,
-dates|date|medjool dates,1 date (24 g),24,66,0.4,18,0,1.6,
+dates|date|medjool dates|خرما,1 date (24 g),24,66,0.4,18,0,1.6,
 raisins,1 small box (40 g),40,120,1.2,32,0.2,1.5,
 dried apricots,1 piece (7 g),7,16.8,0.24,4.4,0.04,0.5,
 grapefruit,1/2 fruit,123,52,0.9,13,0.2,2,
@@ -216,7 +216,7 @@ lemon|lime,1 fruit,58,17,0.6,5.4,0.2,1.6,
 avocado,1 avocado,200,320,4,17,29.4,13.4,
 fruit salad,1 cup,150,75,1,19,0.3,2.5,
 # Vegetables ---------------------------------------------------------------
-salad|green salad|side salad|garden salad,1 bowl,150,35,2,6,0.4,2.5,
+salad|green salad|side salad|garden salad|سالاد,1 bowl,150,35,2,6,0.4,2.5,
 lettuce|mixed greens|leaves|rocket|arugula,1 bowl (85 g),85,15,1.2,2.8,0.2,1.5,
 spinach,1 cup raw (30 g),30,7,0.9,1.1,0.1,0.7,
 cooked spinach,1 cup (180 g),180,41,5.3,6.8,0.5,4.3,
@@ -224,9 +224,9 @@ kale,1 cup (67 g),67,33,2.9,6,0.6,2.6,
 broccoli,1 cup (91 g),91,31,2.5,6,0.3,2.4,
 cauliflower,1 cup (107 g),107,27,2.1,5.3,0.3,2.1,
 carrot|carrots,1 medium,61,25,0.6,6,0.1,1.7,
-tomato|tomatoes,1 medium,123,22,1.1,4.8,0.2,1.5,
+tomato|tomatoes|گوجه|گوجه فرنگی,1 medium,123,22,1.1,4.8,0.2,1.5,
 cherry tomatoes,1 cup (150 g),150,27,1.3,5.8,0.3,1.8,
-cucumber,1 cucumber,300,46,2,10.8,0.4,1.6,
+cucumber|خیار,1 cucumber,300,46,2,10.8,0.4,1.6,
 bell pepper|pepper|peppers,1 medium,120,30,1,7,0.3,2.5,
 onion|onions,1 medium,110,44,1.2,10,0.1,1.9,
 mushrooms|mushroom,1 cup (70 g),70,15,2.2,2.3,0.2,0.7,
@@ -241,36 +241,36 @@ beetroot|beets,1 cup (136 g),136,58,2.2,13,0.2,3.8,
 corn|sweetcorn|corn on the cob,1 cup (145 g),145,125,4.7,27,1.9,3,
 vegetables|veggies|mixed vegetables|stir fry vegetables|roasted vegetables,1 cup,150,60,3,12,0.3,4,
 pickles|pickle|gherkin,1 spear (35 g),35,4,0.2,0.8,0.1,0.4,
-olives,1 olive (4 g),4,4.6,0.03,0.25,0.43,0.13,
+olives|زیتون,1 olive (4 g),4,4.6,0.03,0.25,0.43,0.13,
 coleslaw,1 cup (190 g),190,300,2,26,22,3,egg
 # Soups & stews ------------------------------------------------------------
 soup|vegetable soup,1 bowl (300 ml),300,120,4,18,3.5,4,
-chicken soup|chicken noodle soup,1 bowl (300 ml),300,150,10,15,5,1.5,meat gluten
+chicken soup|chicken noodle soup|سوپ مرغ,1 bowl (300 ml),300,150,10,15,5,1.5,meat gluten
 tomato soup,1 bowl (300 ml),300,180,4,28,6,3,dairy
 cream of mushroom soup,1 bowl (300 ml),300,250,5,20,17,1.5,dairy gluten
 miso soup,1 bowl (240 ml),240,40,3,5,1.3,1,soy
-ash reshteh|ash,1 bowl (350 g),350,380,15,55,11,10,gluten dairy
+ash reshteh|ash|آش رشته|ash e reshteh|aash reshteh,1 bowl (350 g),350,380,15,55,11,10,gluten dairy
 chili|chili con carne,1 bowl (300 g),300,330,25,28,13,9,meat
 stew|beef stew,1 bowl (300 g),300,330,25,20,15,4,meat
-ghormeh sabzi,1 serving (300 g),300,380,25,18,22,7,meat
-gheymeh|khoresh gheymeh,1 serving (300 g),300,420,24,28,23,6,meat
-fesenjan|fesenjoon,1 serving (300 g),300,550,30,25,38,4,meat nuts
-khoresh bademjan|bademjan,1 serving (300 g),300,400,22,18,27,6,meat
-abgoosht|dizi,1 bowl (400 g),400,520,32,40,25,9,meat
+ghormeh sabzi|قورمه سبزی|قرمه سبزی|ghorme sabzi|qormeh sabzi|gormeh sabzi,1 serving (300 g),300,380,25,18,22,7,meat
+gheymeh|khoresh gheymeh|قیمه|خورش قیمه|gheimeh|qeymeh|gheyme,1 serving (300 g),300,420,24,28,23,6,meat
+fesenjan|fesenjoon|فسنجان|فسنجون|fesenjun,1 serving (300 g),300,550,30,25,38,4,meat nuts
+khoresh bademjan|bademjan|خورش بادمجان|خورش بادمجون,1 serving (300 g),300,400,22,18,27,6,meat
+abgoosht|dizi|آبگوشت|abgusht|ab goosht|دیزی,1 bowl (400 g),400,520,32,40,25,9,meat
 curry|chicken curry,1 cup (240 g),240,350,25,12,22,3,meat dairy
 butter chicken|tikka masala|chicken tikka masala,1 cup (240 g),240,420,28,14,28,2.5,meat dairy
 thai green curry|green curry|red curry,1 cup (240 g),240,390,22,12,28,2.5,meat
 vegetable curry|chana masala,1 cup (240 g),240,270,9,32,12,9,
 goulash,1 bowl (300 g),300,360,28,20,18,3,meat
 # Dishes & takeaway --------------------------------------------------------
-pizza|pizza slice,1 slice (107 g),107,285,12,36,10,2.5,gluten dairy
+pizza|pizza slice|پیتزا,1 slice (107 g),107,285,12,36,10,2.5,gluten dairy
 pepperoni pizza,1 slice (110 g),110,310,13,35,13,2.3,gluten dairy meat
 margherita pizza,1 slice (100 g),100,250,11,31,9,2,gluten dairy
-burger|hamburger,1 burger,215,540,30,40,28,2,meat gluten
+burger|hamburger|همبرگر,1 burger,215,540,30,40,28,2,meat gluten
 cheeseburger,1 burger,230,600,33,40,33,2,meat gluten dairy
 big mac,1 burger,219,563,26,45,33,3,meat gluten dairy
 chicken burger|chicken sandwich,1 burger,220,500,28,45,22,2,meat gluten
-sandwich,1 sandwich,200,400,20,40,16,3,gluten
+sandwich|ساندویچ,1 sandwich,200,400,20,40,16,3,gluten
 blt,1 sandwich,165,390,13,30,24,2,meat gluten
 club sandwich,1 sandwich,250,560,32,40,30,3,meat gluten egg
 grilled cheese|cheese toastie,1 sandwich,120,370,14,30,22,1.5,gluten dairy
@@ -310,16 +310,16 @@ chicken caesar salad|caesar salad,1 bowl,300,450,30,15,30,3,meat dairy egg glute
 greek salad,1 bowl,250,260,7,12,21,3.5,dairy
 tuna salad,1 bowl,250,320,28,8,19,3,fish egg
 chicken salad,1 bowl,300,350,35,10,19,4,meat
-salad shirazi|shirazi salad,1 bowl,200,70,2,12,2,2.5,
+salad shirazi|shirazi salad|سالاد شیرازی,1 bowl,200,70,2,12,2,2.5,
 tabbouleh,1 cup (160 g),160,180,3,15,13,4,gluten
 fattoush,1 bowl,200,200,4,22,11,4,gluten
-dolma|stuffed grape leaves,1 piece (20 g),20,35,0.6,3.6,2,0.6,
-kuku sabzi|kuku,1 slice (100 g),100,190,8,7,15,2,egg
-mirza ghasemi,1 cup (200 g),200,220,7,12,16,5,egg
-zereshk polo|zereshk polo ba morgh,1 plate (400 g),400,690,40,85,20,3,meat
-baghali polo|baghali polo ba mahicheh,1 plate (450 g),450,800,40,90,30,8,meat
-loobia polo|lubia polo,1 plate (350 g),350,560,24,75,17,5,meat
-adas polo,1 plate (350 g),350,540,16,90,13,10,
+dolma|stuffed grape leaves|دلمه|dolmeh,1 piece (20 g),20,35,0.6,3.6,2,0.6,
+kuku sabzi|kuku|کوکو سبزی|kookoo sabzi,1 slice (100 g),100,190,8,7,15,2,egg
+mirza ghasemi|میرزا قاسمی|mirza qasemi|mirzaghasemi|mirza ghassemi|mirza gasemi|mirza ghasemi dip,1 cup (200 g),200,220,7,12,16,5,egg
+zereshk polo|zereshk polo ba morgh|زرشک پلو|zereshk polow|زرشک پلو با مرغ,1 plate (400 g),400,690,40,85,20,3,meat
+baghali polo|baghali polo ba mahicheh|باقالی پلو|baghali polow|baqali polo,1 plate (450 g),450,800,40,90,30,8,meat
+loobia polo|lubia polo|لوبیا پلو,1 plate (350 g),350,560,24,75,17,5,meat
+adas polo|عدس پلو,1 plate (350 g),350,540,16,90,13,10,
 shakshuka,1 serving (2 eggs),300,300,15,18,19,4,egg
 baked salmon dinner|salmon with rice,1 plate,450,600,35,55,25,3,fish
 chicken and rice,1 plate (400 g),400,550,45,60,12,2,meat
@@ -346,13 +346,13 @@ cake|sponge cake,1 slice (80 g),80,300,3.5,40,14,1,gluten dairy egg
 cheesecake,1 slice (100 g),100,320,5.5,25,22,0.4,dairy gluten egg
 carrot cake,1 slice (100 g),100,380,4,45,21,1.3,gluten egg nuts
 pie|apple pie,1 slice (125 g),125,300,2.5,42,14,2,gluten
-baklava,1 piece (40 g),40,180,3,20,10,1,nuts gluten
-halva|halwa,1 piece (30 g),30,140,3.5,15,8,1,
-gaz|nougat,1 piece (15 g),15,60,1,11,1.5,0.2,nuts
-sohan,1 piece (20 g),20,100,1.5,12,5,0.3,nuts gluten
-zoolbia bamieh|zoolbia|bamieh,1 piece (25 g),25,110,1,15,5,0.2,gluten
-sholeh zard,1 bowl (200 g),200,330,4,65,6,1,
-faloodeh,1 cup (200 g),200,230,0.5,55,0.5,0.5,
+baklava|باقلوا|baghlava,1 piece (40 g),40,180,3,20,10,1,nuts gluten
+halva|halwa|حلوا,1 piece (30 g),30,140,3.5,15,8,1,
+gaz|nougat|گز,1 piece (15 g),15,60,1,11,1.5,0.2,nuts
+sohan|سوهان,1 piece (20 g),20,100,1.5,12,5,0.3,nuts gluten
+zoolbia bamieh|zoolbia|bamieh|زولبیا بامیه|زولبیا|بامیه,1 piece (25 g),25,110,1,15,5,0.2,gluten
+sholeh zard|شله زرد|shole zard,1 bowl (200 g),200,330,4,65,6,1,
+faloodeh|فالوده|paloodeh,1 cup (200 g),200,230,0.5,55,0.5,0.5,
 jelly|jello,1 cup (135 g),135,80,1.5,19,0,0,
 pudding|custard,1 cup (250 g),250,280,8,44,8,0,dairy
 rice pudding|sheer berenj,1 cup (250 g),250,300,8,50,7,0.6,dairy
@@ -374,14 +374,14 @@ gravy,1 cup (240 ml),240,120,4,12,6,0,gluten
 salad dressing|dressing|vinaigrette,1 tbsp,15,60,0.15,2,5.5,0,
 ranch|ranch dressing,1 tbsp,15,65,0.2,1,6.5,0,dairy egg
 caesar dressing,1 tbsp,15,80,0.5,0.5,8.5,0,dairy egg
-tzatziki|mast o khiar,1 tbsp (15 g),15,15,0.75,0.75,1,0,dairy
-honey,1 tbsp,21,64,0.1,17.3,0,0,
+tzatziki|mast o khiar|ماست و خیار|ماست خیار|mast khiar,1 tbsp (15 g),15,15,0.75,0.75,1,0,dairy
+honey|عسل,1 tbsp,21,64,0.1,17.3,0,0,
 maple syrup|syrup,1 tbsp,20,52,0,13.4,0,0,
-jam|jelly jam|marmalade,1 tbsp,20,56,0.1,13.8,0,0.2,
+jam|jelly jam|marmalade|مربا,1 tbsp,20,56,0.1,13.8,0,0.2,
 nutella|chocolate spread,1 tbsp (19 g),19,100,1.2,11,5.8,0.5,nuts dairy
 sugar,1 tsp,4,16,0,4,0,0,
 # Drinks -------------------------------------------------------------------
-coffee|black coffee|espresso|americano|filter coffee,1 cup,240,2,0.3,0,0,0,
+coffee|black coffee|espresso|americano|filter coffee|قهوه,1 cup,240,2,0.3,0,0,0,
 coffee with milk|white coffee,1 cup,250,30,1.5,2.5,1.5,0,dairy
 latte|flat white,1 medium (350 ml),350,190,10,15,10,0,dairy
 oat latte|oat milk latte,1 medium (350 ml),350,180,3,22,8,1.5,gluten
@@ -389,7 +389,7 @@ cappuccino,1 medium (350 ml),350,130,7,10,7,0,dairy
 mocha,1 medium (350 ml),350,290,10,38,11,2,dairy
 frappuccino|iced blended coffee,1 grande (470 ml),470,380,5,55,15,0,dairy
 iced coffee,1 medium,350,80,1,15,2,0,dairy
-tea|black tea|green tea|herbal tea|chai tea,1 cup,240,2,0,0.5,0,0,
+tea|black tea|green tea|herbal tea|chai tea|چای,1 cup,240,2,0,0.5,0,0,
 tea with milk|milk tea,1 cup,250,30,1.5,3,1.2,0,dairy
 chai latte,1 medium (350 ml),350,240,8,42,4.5,0,dairy
 hot chocolate,1 cup (240 ml),240,190,8,27,6,2,dairy
@@ -431,43 +431,43 @@ bulgur pilaf with tomato and peppers|tomato bulgur pilaf|bulgur pilaf,1 cup (185
 large green olives|green olives,1 large olive (5 g),5,7.5,0,0.25,0.75,0.25,
 shrimp with bulgur pilaf and olives|shrimp bulgur dinner,1 plate,400,525,42,45,22,11,fish gluten
 # Persian ----------------------------------------
-sabzi polo|herb rice,1 cup (160 g),160,290,5,48,8,2,
-albaloo polo|sour cherry rice,1 cup (170 g),170,330,5,60,8,1.5,
-shirin polo|sweet rice with orange peel,1 cup (170 g),170,350,5,62,9,1.5,nuts
-tahchin|tah chin|tachin,1 piece (200 g),200,420,20,48,16,1,egg dairy meat
-chelo|steamed persian rice,1 cup (160 g),160,280,5,50,6,0.6,
-kabab torsh|torsh kabab,1 skewer (150 g),150,360,30,6,24,1,meat nuts
-chenjeh kabab|chenjeh,1 skewer (150 g),150,330,36,2,20,0,meat
-kabab tabei|kabab tabei pan,1 patty (150 g),150,390,25,6,30,1,meat
-khoresh karafs|celery stew,1 cup (240 g),240,260,18,10,17,3,meat
-khoresh gheymeh bademjan|gheymeh bademjan,1 cup (240 g),240,320,18,20,19,6,meat
-khoresh aloo esfenaj|aloo esfenaj,1 cup (240 g),240,250,18,16,13,4,meat
-khoresh beh|quince stew,1 cup (240 g),240,290,18,24,14,4,meat
+sabzi polo|herb rice|سبزی پلو|sabzi polow,1 cup (160 g),160,290,5,48,8,2,
+albaloo polo|sour cherry rice|آلبالو پلو|albalu polo,1 cup (170 g),170,330,5,60,8,1.5,
+shirin polo|sweet rice with orange peel|شیرین پلو,1 cup (170 g),170,350,5,62,9,1.5,nuts
+tahchin|tah chin|tachin|ته چین|ته‌چین,1 piece (200 g),200,420,20,48,16,1,egg dairy meat
+chelo|steamed persian rice|چلو|برنج کته|kateh,1 cup (160 g),160,280,5,50,6,0.6,
+kabab torsh|torsh kabab|کباب ترش,1 skewer (150 g),150,360,30,6,24,1,meat nuts
+chenjeh kabab|chenjeh|کباب چنجه|چنجه,1 skewer (150 g),150,330,36,2,20,0,meat
+kabab tabei|kabab tabei pan|کباب تابه ای|کباب تابه‌ای,1 patty (150 g),150,390,25,6,30,1,meat
+khoresh karafs|celery stew|خورش کرفس,1 cup (240 g),240,260,18,10,17,3,meat
+khoresh gheymeh bademjan|gheymeh bademjan|قیمه بادمجان,1 cup (240 g),240,320,18,20,19,6,meat
+khoresh aloo esfenaj|aloo esfenaj|خورش آلو اسفناج|آلو اسفناج,1 cup (240 g),240,250,18,16,13,4,meat
+khoresh beh|quince stew|خورش به,1 cup (240 g),240,290,18,24,14,4,meat
 abgoosht dizi,1 bowl (400 g),400,520,32,40,26,9,meat
-ash anar|pomegranate soup,1 cup (240 g),240,220,9,32,7,5,meat
-ash jo|barley soup,1 cup (240 g),240,190,8,28,5,5,dairy
-haleem|halim,1 cup (240 g),240,320,20,38,10,4,meat gluten
-kaleh pacheh,1 bowl (350 g),350,550,40,4,42,0,meat
-kashk bademjan|kashke bademjan|kashk e bademjan|kashk o bademjan|kashke bademjoon|kashk bademjoon|eggplant kashk dip,1 cup (200 g),200,280,7,16,22,6,dairy nuts
-borani esfenaj|spinach yogurt dip,1 cup (200 g),200,170,10,12,9,3,dairy
+ash anar|pomegranate soup|آش انار,1 cup (240 g),240,220,9,32,7,5,meat
+ash jo|barley soup|آش جو|سوپ جو|soup jo,1 cup (240 g),240,190,8,28,5,5,dairy
+haleem|halim|حلیم,1 cup (240 g),240,320,20,38,10,4,meat gluten
+kaleh pacheh|کله پاچه|kale pache,1 bowl (350 g),350,550,40,4,42,0,meat
+kashk bademjan|kashke bademjan|kashk e bademjan|kashk o bademjan|kashke bademjoon|kashk bademjoon|eggplant kashk dip|کشک بادمجان|کشک بادمجون|کشک و بادمجان,1 cup (200 g),200,280,7,16,22,6,dairy nuts
+borani esfenaj|spinach yogurt dip|بورانی اسفناج|بورانی,1 cup (200 g),200,170,10,12,9,3,dairy
 yogurt cucumber dip,1 cup (220 g),220,150,9,14,7,1,dairy
-mast o musir|yogurt shallot dip,1 cup (220 g),220,160,9,12,9,1,dairy
-kotlet|persian cutlet,1 cutlet (80 g),80,210,10,12,14,1,meat egg
-olivieh|olivier salad|salad olivier|salad olivieh|salade olivier|olivier|olivie|russian potato salad,1 cup (200 g),200,380,14,22,27,3,egg meat
-kookoo sibzamini|potato kuku,1 piece (100 g),100,220,7,18,14,2,egg
+mast o musir|yogurt shallot dip|ماست موسیر|ماست و موسیر,1 cup (220 g),220,160,9,12,9,1,dairy
+kotlet|persian cutlet|کتلت|cotlet,1 cutlet (80 g),80,210,10,12,14,1,meat egg
+olivieh|olivier salad|salad olivier|salad olivieh|salade olivier|olivier|olivie|russian potato salad|سالاد الویه|الویه|olvieh|alvieh,1 cup (200 g),200,380,14,22,27,3,egg meat
+kookoo sibzamini|potato kuku|کوکو سیب زمینی,1 piece (100 g),100,220,7,18,14,2,egg
 salad olivieh sandwich|olivieh sandwich,1 sandwich,250,620,20,58,34,4,egg meat gluten
 sangak bread,1 piece (100 g),100,260,9,52,1.5,4,gluten
 taftun bread,1 piece (100 g),100,280,9,56,2,2.5,gluten
-nan berenji|rice cookie,1 cookie (15 g),15,70,1,9,3.5,0.2,egg
-koloocheh|koloocheh cookie,1 cookie (60 g),60,260,4,38,10,1.5,gluten nuts
-ghotab,1 piece (30 g),30,140,2,15,8,0.7,gluten nuts
-bastani sonnati|persian ice cream|saffron ice cream,1 cup (150 g),150,330,6,40,17,0.5,dairy nuts
-sharbat|persian syrup drink,1 glass (250 ml),250,100,0,25,0,0,
-chai nabat|tea with rock candy,1 cup with 1 piece nabat,240,40,0,10,0,0,
-sekanjabin|sekanjabin drink,1 glass (250 ml),250,110,0,27,0,0,
-ajil|persian nut mix,1 handful (30 g),30,170,5,9,13,2,nuts
-lavashak|fruit leather,1 sheet (20 g),20,60,0.3,15,0,1,
-noon khamei|cream puff,1 puff (40 g),40,140,2,14,9,0.2,gluten egg dairy
+nan berenji|rice cookie|نان برنجی,1 cookie (15 g),15,70,1,9,3.5,0.2,egg
+koloocheh|koloocheh cookie|کلوچه|kolompeh|کلمپه,1 cookie (60 g),60,260,4,38,10,1.5,gluten nuts
+ghotab|قطاب,1 piece (30 g),30,140,2,15,8,0.7,gluten nuts
+bastani sonnati|persian ice cream|saffron ice cream|بستنی سنتی|بستنی زعفرانی|bastani,1 cup (150 g),150,330,6,40,17,0.5,dairy nuts
+sharbat|persian syrup drink|شربت,1 glass (250 ml),250,100,0,25,0,0,
+chai nabat|tea with rock candy|چای نبات|chai o nabat,1 cup with 1 piece nabat,240,40,0,10,0,0,
+sekanjabin|sekanjabin drink|سکنجبین,1 glass (250 ml),250,110,0,27,0,0,
+ajil|persian nut mix|آجیل,1 handful (30 g),30,170,5,9,13,2,nuts
+lavashak|fruit leather|لواشک,1 sheet (20 g),20,60,0.3,15,0,1,
+noon khamei|cream puff|نان خامه ای|نان خامه‌ای|nan khamei,1 puff (40 g),40,140,2,14,9,0.2,gluten egg dairy
 # Turkish ----------------------------------------
 lahmacun|turkish pizza,1 piece (130 g),130,300,13,40,10,3,gluten meat
 pide|turkish pide,1 slice (100 g),100,260,11,30,10,1.5,gluten dairy meat
@@ -874,41 +874,41 @@ turkey meatballs|turkey meatball|homemade turkey meatballs|my turkey meatballs,1
 # From the label (Nov 2026): Oikos plain Greek yogurt 0% M.F., 1/2 cup (115 g) = 70 kcal, 13 g protein, 4 g carbs, 0 g fat
 oikos greek yogurt 0%|oikos plain greek yogurt|oikos 0% plain|oikos high protein plain|oikos greek yogurt,1 cup (230 g),230,140,26,8,0,0,dairy
 # Baked kuku sabzi muffins: typical recipe (6 eggs, 4 cups chopped herbs, 2 tbsp oil, 1/4 cup walnuts, 2 tbsp barberries, 1 tbsp flour) / 12 muffins
-kuku sabzi muffin|baked kuku sabzi|kuku sabzi baked|kookoo sabzi muffin|baked kookoo sabzi,1 muffin (60 g),60,80,4,3,6,1,egg nuts gluten
+kuku sabzi muffin|baked kuku sabzi|kuku sabzi baked|kookoo sabzi muffin|baked kookoo sabzi|کوکو سبزی پخته|کوکو سبزی فری|کوکو سبزی کاپ کیکی,1 muffin (60 g),60,80,4,3,6,1,egg nuts gluten
 # Persian restaurant plates, Toronto-style (Nov 2026): full plate = meat/stew + ~350 g buttered saffron rice + grilled tomato; estimates
-koobideh plate|kabab koobideh plate|chelo kabab koobideh|koobideh with rice,1 plate (2 skewers + rice),700,1150,51,116,54,3,meat
-joojeh kabab plate|joojeh plate|chicken kabob plate|joojeh breast plate,1 plate (1 skewer + rice),600,920,66,120,20,2,meat dairy
+koobideh plate|kabab koobideh plate|chelo kabab koobideh|koobideh with rice|چلو کباب کوبیده|چلوکباب کوبیده|چلو کباب,1 plate (2 skewers + rice),700,1150,51,116,54,3,meat
+joojeh kabab plate|joojeh plate|chicken kabob plate|joojeh breast plate|چلو جوجه کباب|جوجه کباب با برنج,1 plate (1 skewer + rice),600,920,66,120,20,2,meat dairy
 joojeh bone-in plate|bone-in joojeh plate|joojeh leg plate|chicken leg kabob plate,1 plate (1 skewer + rice),650,990,60,118,31,2,meat dairy
-barg plate|kabab barg plate|chelo kabab barg|filet kabob plate,1 plate (1 skewer + rice),600,980,61,118,29,2,meat dairy
-soltani plate|kabab soltani|soltani kabob,1 plate (barg + koobideh + rice),750,1260,81,120,51,3,meat dairy
-shishlik plate|shishlik|lamb chops kabob plate,1 plate (lamb chops + rice),700,1250,56,118,61,2,meat
+barg plate|kabab barg plate|chelo kabab barg|filet kabob plate|چلو کباب برگ,1 plate (1 skewer + rice),600,980,61,118,29,2,meat dairy
+soltani plate|kabab soltani|soltani kabob|کباب سلطانی|سلطانی|چلو کباب سلطانی,1 plate (barg + koobideh + rice),750,1260,81,120,51,3,meat dairy
+shishlik plate|shishlik|lamb chops kabob plate|شیشلیک,1 plate (lamb chops + rice),700,1250,56,118,61,2,meat
 chenjeh plate|chenjeh kabab plate|lamb kabob plate,1 plate (1 skewer + rice),650,1040,63,118,35,2,meat
 koobideh and joojeh combo|combo kabob plate|mix kabob plate|amiri kabob,1 plate (koobideh + joojeh + rice),750,1150,76,118,42,3,meat dairy
-salmon kabob plate|mahi kabob plate|salmon kabab,1 plate (salmon + rice),650,1090,61,116,42,2,fish dairy
-shrimp kabob plate|meygoo kabab|shrimp kabab,1 plate (shrimp + rice),600,840,53,116,18,2,fish dairy
-koobideh wrap|koobideh sandwich|kabob wrap,1 wrap,300,600,30,50,31,3,meat gluten
-joojeh wrap|chicken kabob wrap|joojeh sandwich,1 wrap,300,550,40,52,20,3,meat gluten dairy
-baghali polo with lamb shank|baghali polo ba mahiche|mahiche|lamb shank with rice,1 plate (lamb shank + rice),750,1190,60,120,52,8,meat dairy
-morasa polo with lamb shank|morasa polo|jeweled rice with lamb shank,1 plate (lamb shank + rice),750,1290,58,140,55,4,meat nuts dairy
+salmon kabob plate|mahi kabob plate|salmon kabab|کباب ماهی|کباب سالمون,1 plate (salmon + rice),650,1090,61,116,42,2,fish dairy
+shrimp kabob plate|meygoo kabab|shrimp kabab|کباب میگو,1 plate (shrimp + rice),600,840,53,116,18,2,fish dairy
+koobideh wrap|koobideh sandwich|kabob wrap|ساندویچ کوبیده|ساندویچ کباب,1 wrap,300,600,30,50,31,3,meat gluten
+joojeh wrap|chicken kabob wrap|joojeh sandwich|ساندویچ جوجه,1 wrap,300,550,40,52,20,3,meat gluten dairy
+baghali polo with lamb shank|baghali polo ba mahiche|mahiche|lamb shank with rice|باقالی پلو با ماهیچه|ماهیچه|mahicheh,1 plate (lamb shank + rice),750,1190,60,120,52,8,meat dairy
+morasa polo with lamb shank|morasa polo|jeweled rice with lamb shank|مرصع پلو|morassa polo,1 plate (lamb shank + rice),750,1290,58,140,55,4,meat nuts dairy
 zereshk polo with chicken|barberry rice with chicken,1 plate (chicken + rice),650,990,50,120,34,2,meat dairy
-albaloo polo ba morgh|sour cherry rice with chicken,1 plate (chicken + rice),650,1040,48,135,34,3,meat dairy
-ghormeh sabzi plate|ghormeh sabzi with rice|chelo khoresh ghormeh sabzi,1 plate (stew + rice),650,900,35,110,35,8,meat dairy
-gheymeh plate|gheymeh with rice|chelo khoresh gheymeh,1 plate (stew + rice),650,940,32,120,37,6,meat dairy
-fesenjan plate|fesenjan with rice|chelo khoresh fesenjan,1 plate (stew + rice),650,1100,38,125,50,4,meat nuts dairy
-khoresh bademjan plate|bademjan with rice|chelo khoresh bademjan,1 plate (stew + rice),650,950,32,115,40,6,meat dairy
-tahdig with stew|tahdig with ghormeh sabzi|tahdig with gheymeh|tahdig appetizer,1 serving (250 g),250,600,15,60,33,3,meat dairy
-makaroni|persian spaghetti|macaroni persian,1 cup (200 g),200,330,15,40,12,2,meat gluten
-makaroni tahdig|macaroni tahdig,1 serving (220 g),220,450,18,52,19,2,meat gluten
-koofteh tabrizi|kofta tabrizi|koofteh,1 koofteh with broth (350 g),350,600,35,45,31,3,meat egg nuts
+albaloo polo ba morgh|sour cherry rice with chicken|آلبالو پلو با مرغ,1 plate (chicken + rice),650,1040,48,135,34,3,meat dairy
+ghormeh sabzi plate|ghormeh sabzi with rice|chelo khoresh ghormeh sabzi|چلو خورش قورمه سبزی|چلو قورمه سبزی,1 plate (stew + rice),650,900,35,110,35,8,meat dairy
+gheymeh plate|gheymeh with rice|chelo khoresh gheymeh|چلو خورش قیمه|چلو قیمه,1 plate (stew + rice),650,940,32,120,37,6,meat dairy
+fesenjan plate|fesenjan with rice|chelo khoresh fesenjan|چلو فسنجان|چلو خورش فسنجان,1 plate (stew + rice),650,1100,38,125,50,4,meat nuts dairy
+khoresh bademjan plate|bademjan with rice|chelo khoresh bademjan|چلو خورش بادمجان,1 plate (stew + rice),650,950,32,115,40,6,meat dairy
+tahdig with stew|tahdig with ghormeh sabzi|tahdig with gheymeh|tahdig appetizer|ته دیگ با خورش|ته دیگ قورمه,1 serving (250 g),250,600,15,60,33,3,meat dairy
+makaroni|persian spaghetti|macaroni persian|ماکارونی,1 cup (200 g),200,330,15,40,12,2,meat gluten
+makaroni tahdig|macaroni tahdig|ته دیگ ماکارونی,1 serving (220 g),220,450,18,52,19,2,meat gluten
+koofteh tabrizi|kofta tabrizi|koofteh|کوفته تبریزی|کوفته,1 koofteh with broth (350 g),350,600,35,45,31,3,meat egg nuts
 chelo with butter|restaurant persian rice|saffron rice plate,1 plate (350 g),350,560,10,110,9,1.5,dairy
 grilled tomato|gojeh kababi,1 tomato,120,33,1,5,1,1.5,
-torshi|persian pickles,1 tbsp (15 g),15,5,0.1,1,0,0.3,
-sabzi khordan|herb platter|fresh herbs plate,1 plate (100 g),100,32,2,5,0.5,2.5,
-zeytoon parvardeh|marinated olives with walnut and pomegranate,1 tbsp (20 g),20,60,1,2,5.5,0.8,nuts
-naan o panir o gerdoo|persian breakfast plate|bread cheese walnut herbs,1 plate,180,450,16,40,25,3,gluten dairy nuts
+torshi|persian pickles|ترشی|ترشی لیته,1 tbsp (15 g),15,5,0.1,1,0,0.3,
+sabzi khordan|herb platter|fresh herbs plate|سبزی خوردن,1 plate (100 g),100,32,2,5,0.5,2.5,
+zeytoon parvardeh|marinated olives with walnut and pomegranate|زیتون پرورده,1 tbsp (20 g),20,60,1,2,5.5,0.8,nuts
+naan o panir o gerdoo|persian breakfast plate|bread cheese walnut herbs|نان و پنیر و گردو|نان پنیر سبزی|nan panir sabzi,1 plate,180,450,16,40,25,3,gluten dairy nuts
 persian lentil soup|adasi breakfast,1 cup (240 g),240,230,13,36,4,9,
-omlet gojeh|persian tomato omelette|omelette persian,1 plate (2 eggs),200,250,13,8,18,2,egg
-shir berenj|persian rice pudding|shir berenj with rose water,1 cup (200 g),200,260,7,42,7,0.5,dairy
-ranginak|date walnut dessert,1 piece (60 g),60,270,3,30,16,3,nuts gluten dairy
-cake yazdi|yazdi cupcake,1 cake (50 g),50,200,3,26,9.5,0.5,gluten egg dairy
-persian tea with sugar cubes|chai with ghand|tea with 2 sugar cubes,1 cup + 2 cubes,250,32,0,8,0,0,
+omlet gojeh|persian tomato omelette|omelette persian|املت گوجه|املت,1 plate (2 eggs),200,250,13,8,18,2,egg
+shir berenj|persian rice pudding|shir berenj with rose water|شیر برنج,1 cup (200 g),200,260,7,42,7,0.5,dairy
+ranginak|date walnut dessert|رنگینک,1 piece (60 g),60,270,3,30,16,3,nuts gluten dairy
+cake yazdi|yazdi cupcake|کیک یزدی,1 cake (50 g),50,200,3,26,9.5,0.5,gluten egg dairy
+persian tea with sugar cubes|chai with ghand|tea with 2 sugar cubes|چای با قند|چای و قند,1 cup + 2 cubes,250,32,0,8,0,0,
