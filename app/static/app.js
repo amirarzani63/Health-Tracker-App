@@ -753,16 +753,7 @@ $("#aiDiscard").addEventListener("click", resetAi);
   const btn = $("#voiceBtn"), box = $("#aiForm").elements.description, hint = $("#voiceHint");
   const iosApp = navigator.standalone === true || (/iPhone|iPad/.test(navigator.userAgent) && matchMedia("(display-mode: standalone)").matches);
   let keyboardMode = !SR || iosApp || store.get("voiceKeyboard") === "1";
-  let lang = store.get("voiceLang") || "en-US";
-  const langBtn = document.createElement("button");
-  langBtn.type = "button"; langBtn.className = "ghost small-btn"; langBtn.id = "voiceLang";
-  const showLang = () => { langBtn.textContent = lang === "fa-IR" ? "زبان: فارسی" : "Language: English"; };
-  showLang(); btn.after(langBtn);
-  langBtn.addEventListener("click", () => {
-    lang = lang === "fa-IR" ? "en-US" : "fa-IR"; store.set("voiceLang", lang); showLang();
-    box.dir = lang === "fa-IR" ? "rtl" : "auto";
-    if (keyboardMode) toast(lang === "fa-IR" ? "Switch your keyboard to Persian (🌐), then tap its 🎙️" : "Switch your keyboard to English (🌐), then tap its 🎙️");
-  });
+  const lang = "en-US";
 
   // keyboard dictation: when the text stops changing for 2 seconds, find the foods
   let typingTimer = null, viaVoice = false;
@@ -773,7 +764,7 @@ $("#aiDiscard").addEventListener("click", resetAi);
   });
   function useKeyboard(msg) {
     keyboardMode = true;
-    hint.innerHTML = `🎙️ <b>Tap the microphone on your keyboard</b> (bottom right, or hold 🌐 to pick Persian) and say what you ate. The foods appear as soon as you stop.`;
+    hint.innerHTML = `🎙️ <b>Tap the microphone on your keyboard</b> (bottom right) and say what you ate. The foods appear as soon as you stop.`;
     hint.classList.remove("hidden");
     viaVoice = true;
     box.focus();
@@ -801,7 +792,6 @@ $("#aiDiscard").addEventListener("click", resetAi);
         "no-speech": "I didn't hear anything. Tap 🎤 and start talking right away, close to the phone.",
         "audio-capture": "No microphone found. Using the keyboard microphone instead.",
         "network": "Voice needs an internet connection. Using the keyboard microphone instead.",
-        "language-not-supported": "Your phone can't do this language here. Using the keyboard microphone instead.",
       }[e.error];
       if (["not-allowed", "service-not-allowed", "audio-capture", "network", "language-not-supported"].includes(e.error)) {
         store.set("voiceKeyboard", "1");
