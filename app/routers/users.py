@@ -9,7 +9,7 @@ from sqlalchemy import select
 from app import auth
 from app.db import USER_COOKIE, SessionLocal, create_user_tables, request_user, session_for
 from app.models import AppUser, WeightEntry
-from app.services import insights
+from app.services import colors, insights
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 COLORS = ["#ff8a3d", "#3dbbff", "#39d98a", "#ff5c8a", "#b28cff", "#ffd23d"]
@@ -55,7 +55,7 @@ def _sex(uid: int) -> str:
 
 def _out(u: AppUser, current: int) -> dict:
     return {"id": u.id, "name": u.name, "color": u.color, "current": u.id == current, "sex": _sex(u.id),
-            "scheme": u.scheme or "orange"}
+            "scheme": u.scheme or "orange", "favorite_color": u.fav_color or ""}
 
 
 @router.get("")
@@ -83,6 +83,7 @@ INJURIES = {"none", "knees", "lower_back", "shoulders", "wrists", "neck"}
 class Details(BaseModel):
     """Everything needed to work out a person's targets and plan exactly. No defaults: all must be answered."""
     name: str = Field(min_length=1, max_length=60)
+    favorite_color: str | None = Field(None, max_length=40)  # their dashboard is themed in shades of it
     sex: str = Field(pattern="^(male|female)$")
     birth_year: int = Field(ge=1920, le=2020)
     height_cm: float = Field(ge=100, le=250)
@@ -117,6 +118,10 @@ class Details(BaseModel):
             raise HTTPException(422, "Unknown equipment.")
         have = set(self.equipment_list)
         self.equipment = "gym" if have & {"barbell", "machines", "cable"} else "home" if have else "bodyweight"
+        if self.favorite_color is not None:
+            if not self.favorite_color.strip():
+                raise HTTPException(422, "Please tell us your favourite colour.")
+            colors.resolve(self.favorite_color)
         if set(self.focus_areas) - AREAS or set(self.injuries) - INJURIES:
             raise HTTPException(422, "Unknown focus area or injury.")
 
@@ -230,6 +235,8 @@ def add_user(data: Details, request: Request, response: Response):
         _ensure_schemes(db)
         scheme = _free_scheme(db, "pink" if data.sex == "female" else "orange")
         u = AppUser(id=max(ids) + 1, name=data.name.strip(), color=SCHEMES[scheme], scheme=scheme)
+        if data.favorite_color:
+            _set_fav(u, data.favorite_color)
         db.add(u)
         db.commit()
         uid = u.id
@@ -252,8 +259,36 @@ def update_me(data: Details, request: Request):
         u = db.get(AppUser, uid)
         if u:
             u.name = data.name.strip()
+            if data.favorite_color:
+                _set_fav(u, data.favorite_color)
             db.commit()
     return {"id": uid, "summary": summary}
+
+
+def _set_fav(u, said: str) -> None:
+    """Theme this person's app in shades of their favourite colour."""
+    u.color, u.scheme, u.fav_color = colors.resolve(said), "custom", said.strip()[:40]
+
+
+class FavPick(BaseModel):
+    color: str = Field(min_length=1, max_length=40)
+
+
+@router.put("/me/favorite-color")
+def set_favorite(data: FavPick, request: Request):
+    uid = request_user(request)
+    with SessionLocal() as db:
+        _ensure_first(db)
+        u = db.get(AppUser, uid)
+        _set_fav(u, data.color)
+        db.commit()
+        return {"scheme": u.scheme, "color": u.color, "favorite_color": u.fav_color}
+
+
+@router.get("/color")
+def color_preview(name: str):
+    """What colour a word means, for the live preview while typing."""
+    return {"color": colors.resolve(name)}
 
 
 class SchemePick(BaseModel):
@@ -271,7 +306,7 @@ def set_scheme(data: SchemePick, request: Request):
         if taken:
             raise HTTPException(409, f"{taken.name} already uses that colour. Pick another.")
         u = db.get(AppUser, uid)
-        u.scheme, u.color = data.scheme, SCHEMES[data.scheme]
+        u.scheme, u.color, u.fav_color = data.scheme, SCHEMES[data.scheme], ""
         db.commit()
         return {"scheme": u.scheme}
 

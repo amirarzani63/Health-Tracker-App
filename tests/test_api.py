@@ -369,3 +369,30 @@ def test_past_days_count_steps_and_activity_everywhere(client):
     for back in (1, 3, 6):
         r = trend[(date.today() - timedelta(days=back)).isoformat()]
         assert r["burn_parts"]["exercise"] > 700 and r["burned"] == r["burn_parts"]["total"]
+
+
+def test_favourite_colour_themes_each_person(client):
+    # a new person says their favourite colour when answering the questions
+    client.post("/api/users", json={**SARA, "favorite_color": "Lavender"})
+    me = next(u for u in client.get("/api/users").json()["users"] if u["current"])
+    assert (me["scheme"], me["color"], me["favorite_color"]) == ("custom", "#b59cff", "Lavender")
+    # the first person can choose theirs too, from the same questionnaire
+    client.post("/api/users/select", json={"id": 1})
+    body = {**SARA, "name": "Amir", "sex": "male", "favorite_color": "dark red", "rebuild_plan": False}
+    assert client.put("/api/users/me", json=body).status_code == 200
+    users = {u["id"]: u for u in client.get("/api/users").json()["users"]}
+    assert users[1]["scheme"] == "custom" and users[1]["color"] == "#bf2c2c"
+    assert users[2]["color"] == "#b59cff"                     # Sara keeps hers
+    # two people may share a favourite colour; unknown words are explained, not guessed
+    assert client.put("/api/users/me/favorite-color", json={"color": "lavender"}).json()["color"] == "#b59cff"
+    assert client.put("/api/users/me", json={**body, "favorite_color": "blorple"}).status_code == 422
+    assert client.get("/api/users/color", params={"name": "#3fa"}).json()["color"] == "#33ffaa"
+    # picking a ready-made scheme in Settings replaces it
+    client.put("/api/users/me/scheme", json={"scheme": "gold"})
+    assert next(u for u in client.get("/api/users").json()["users"] if u["current"])["favorite_color"] == ""
+
+
+def test_colour_words():
+    from app.services.colors import resolve
+    assert resolve("Teal") == "#14b8a6" and resolve("light-blue") == "#6fcfff" and resolve("ocean blue") == "#3d7bff"
+    assert resolve("My favourite colour is purple") == "#9b5cff" and resolve("قرمز") == "#ff3b3b"

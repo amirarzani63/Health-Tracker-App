@@ -242,4 +242,5 @@ class AppUser(Base):
     name: Mapped[str] = mapped_column(String(60))
     color: Mapped[str] = mapped_column(String(10), default="#ff8a3d")
     scheme: Mapped[str] = mapped_column(String(20), default="")  # app colour scheme, one per person
+    fav_color: Mapped[str] = mapped_column(String(40), default="")  # favourite colour as the person said it
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)

@@ -1882,6 +1882,7 @@ function applyTheme(choice) {
   if (t === "light") document.documentElement.setAttribute("data-theme", "light");
   else document.documentElement.removeAttribute("data-theme");
   $('meta[name="theme-color"]')?.setAttribute("content", t === "light" ? "#f4f6fb" : "#050816");
+  if (window.curScheme) applyScheme(window.curScheme, window.curColor);
   $$("[data-theme-choice]").forEach((b) => b.classList.toggle("active", b.dataset.themeChoice === choice));
 }
 const savedTheme = () => store.get("theme") || "dark";
@@ -1930,12 +1931,15 @@ api("/api/profile").then((p) => {
 // each person has their own colour scheme
 const SCHEME_NAMES = { orange: "Orange & navy", pink: "Pink & plum", emerald: "Emerald & teal", violet: "Violet & indigo", red: "Red & charcoal", gold: "Gold & blue", sky: "Light blue", navy: "Navy", forest: "Dark green" };
 const SCHEME_BG = { orange: "#050816", pink: "#0e0618", emerald: "#03120f", violet: "#0b0820", red: "#120607", gold: "#080b14", sky: "#04101c", navy: "#020616", forest: "#030d07" };
-function applyScheme(scheme) {
+function applyScheme(scheme, color) {
   scheme = scheme || "orange";
+  window.curScheme = scheme; window.curColor = color;
   if (scheme === "orange") document.documentElement.removeAttribute("data-scheme");
   else document.documentElement.setAttribute("data-scheme", scheme);
-  try { localStorage.setItem("scheme", scheme); } catch {}
-  if (document.documentElement.getAttribute("data-theme") !== "light") $('meta[name="theme-color"]')?.setAttribute("content", SCHEME_BG[scheme] || "#050816");
+  window.favPalette?.apply(scheme === "custom" ? color : null);  // favourite colour: the whole theme in its shades
+  try { localStorage.setItem("scheme", scheme); if (scheme === "custom") localStorage.setItem("favColor", color); } catch {}
+  const bg = scheme === "custom" ? window.favPalette?.bg(color) : SCHEME_BG[scheme];
+  if (document.documentElement.getAttribute("data-theme") !== "light") $('meta[name="theme-color"]')?.setAttribute("content", bg || "#050816");
 }
 function renderSchemes(r) {
   const me = r.users.find((u) => u.current);
@@ -1961,7 +1965,7 @@ async function loadWho(openIfUnchosen = true) {
   try { localStorage.setItem("who", String(r.current)); } catch {}
   if (String(r.current) !== WHO) { location.reload(); return; }
   $("#whoBtn .who-name").textContent = me.name;
-  applyScheme(me.scheme);
+  applyScheme(me.scheme, me.color);
   $("#whoBtn .who-dot").style.background = me.color;
   renderSchemes(r);
   $("#whoBtn .who-dot").style.background = me.color;
@@ -2035,7 +2039,10 @@ async function fillMyProfile() {
   try {
     const [p, g] = await Promise.all([api("/api/profile"), api("/api/goals")]);
     const r1 = (v) => Math.round(v * 10) / 10;
-    f.name.value = p.name || ""; f.sex.value = p.sex; f.birth_year.value = p.birth_year;
+    f.name.value = p.name || "";
+    const meU = (await api("/api/users")).users.find((u) => u.current);
+    f.favorite_color.value = meU?.favorite_color || ""; favPreview(false);
+    f.sex.value = p.sex; f.birth_year.value = p.birth_year;
     f.height_cm.value = r1(p.height_cm); f.weight_kg.value = r1(p.weight_kg);
     f.experience.value = p.experience; f.diet_type.value = p.diet_type;
     f.allergies.value = (p.allergies || []).join(", ");
@@ -2060,6 +2067,20 @@ async function fillMyProfile() {
     syncWeightGoal();
   } catch (err) { toast(err.message, true); }
 }
+// favourite colour: show the theme while typing; it's saved with the rest of the answers
+let favTimer = null;
+async function favPreview(live = true) {
+  const el = $("#whoAddForm").elements.favorite_color, note = $("#favNote"), v = el.value.trim();
+  if (!v) { note.textContent = ""; return; }
+  try {
+    const r = await api("/api/users/color?name=" + encodeURIComponent(v));
+    $(".fav-pick").value = r.color;
+    note.innerHTML = `<span class="fav-dot" style="background:${esc(r.color)}"></span> Your app will use this colour once you save.`;
+    if (live && $("#whoAddForm").dataset.mode === "edit") applyScheme("custom", r.color);  // preview on your own app
+  } catch (err) { note.textContent = err.message; }
+}
+$("#whoAddForm").elements.favorite_color.addEventListener("input", () => { clearTimeout(favTimer); favTimer = setTimeout(favPreview, 400); });
+$(".fav-pick").addEventListener("input", (e) => { $("#whoAddForm").elements.favorite_color.value = e.target.value; favPreview(); });
 // the questionnaire lives in the "About me" tab (and in the people dialog when adding someone)
 function mountWhoForm(host) {
   const f = $("#whoAddForm"), r = $("#whoResult");
@@ -2079,7 +2100,7 @@ $("#whoAddForm").addEventListener("submit", async (e) => {
   const f = e.target, el = f.elements, btn = $("#whoSubmit");
   const picked = (grp) => $$(`[data-group="${grp}"] input:checked`, f).map((c) => c.value);
   // nothing is guessed: point at the first unanswered question
-  const need = ["name", "sex", "birth_year", "height_cm", "weight_kg", "activity_level", "weight_goal", "muscle_goal",
+  const need = ["name", "favorite_color", "sex", "birth_year", "height_cm", "weight_kg", "activity_level", "weight_goal", "muscle_goal",
     "training_days", "session_minutes", "experience", "split_style", "diet_type"];
   if (el.weight_goal.value && el.weight_goal.value !== "maintain") need.push("target_weight_kg", "goal_weeks");
   const miss = need.find((k) => !String(el[k].value).trim());
@@ -2087,7 +2108,7 @@ $("#whoAddForm").addEventListener("submit", async (e) => {
   if (!f.querySelector('[name="train_place"]:checked')) { $('.place-cards', f).scrollIntoView({ block: "center" }); toast("Choose where you train.", true); return; }
   if (!picked("injuries").length) { $('[data-group="injuries"]', f).scrollIntoView({ block: "center" }); toast("Tick your injuries, or “None”.", true); return; }
   const body = {
-    name: el.name.value.trim(), sex: el.sex.value, birth_year: Number(el.birth_year.value),
+    name: el.name.value.trim(), favorite_color: el.favorite_color.value.trim(), sex: el.sex.value, birth_year: Number(el.birth_year.value),
     height_cm: Number(el.height_cm.value), weight_kg: Number(el.weight_kg.value), activity_level: el.activity_level.value,
     weight_goal: el.weight_goal.value,
     target_weight_kg: el.weight_goal.value === "maintain" ? null : Number(el.target_weight_kg.value),
