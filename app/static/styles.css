@@ -1410,3 +1410,8 @@ button.vid-link { background: none; cursor: pointer; }
 .ai-nums label { display: grid; gap: 3px; font-size: 11px; color: var(--muted); min-width: 0; }
 .ai-nums input { min-width: 0; width: 100%; padding: 6px 4px; text-align: center; }
 .ai-item .ing-card { margin: 0; }
+
+/* iPhone: no automatic zoom when tapping a field (Safari zooms on text smaller than 16px), no double-tap zoom */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { touch-action: manipulation; }
+input, select, textarea { font-size: 16px !important; }
