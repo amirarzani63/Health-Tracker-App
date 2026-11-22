@@ -1,0 +1,30 @@
+{
+  "_about": "Home-style recipes. Each dish's nutrition is calculated from these ingredients (values in ingredients.csv). 'makes_g' = cooked weight of the whole batch; dishes without it are one plate exactly as listed.",
+  "kashk bademjan": {"makes": "1 batch (~4 cups)", "makes_g": 800, "ingredients": [
+    ["Eggplant (raw)", 1000], ["Olive / vegetable oil", 55], ["Onion", 200], ["Garlic", 20],
+    ["Kashk (liquid whey)", 120], ["Walnuts", 30], ["Dried mint", 4]]},
+  "olivieh": {"makes": "1 batch (~7 cups)", "makes_g": 1395, "ingredients": [
+    ["Potato (boiled)", 500], ["Eggs", 200], ["Chicken breast (cooked)", 250], ["Mayonnaise", 150],
+    ["Pickles (dill)", 120], ["Green peas (cooked)", 80], ["Carrot", 80], ["Lemon juice", 15]]},
+  "mirza ghasemi": {"makes": "1 batch (~4.5 cups)", "makes_g": 900, "ingredients": [
+    ["Eggplant (raw)", 1000], ["Garlic", 25], ["Tomato", 400], ["Eggs", 150], ["Olive / vegetable oil", 30]]},
+  "kuku sabzi": {"makes": "1 pan (fried, ~6 slices)", "makes_g": 650, "ingredients": [
+    ["Fresh herbs (parsley / cilantro / leek / fenugreek)", 400], ["Eggs", 300], ["Walnuts", 40],
+    ["Dried barberries", 15], ["Flour", 8], ["Olive / vegetable oil", 60]]},
+  "kuku sabzi muffin": {"makes": "12 baked muffins", "makes_g": 720, "ingredients": [
+    ["Fresh herbs (parsley / cilantro / leek / fenugreek)", 400], ["Eggs", 300], ["Olive / vegetable oil", 27],
+    ["Walnuts", 30], ["Dried barberries", 20], ["Flour", 8]]},
+  "ghormeh sabzi": {"makes": "1 pot (~6 cups)", "makes_g": 1440, "ingredients": [
+    ["Lamb / beef stew meat (cooked)", 500], ["Fresh herbs (parsley / cilantro / leek / fenugreek)", 500],
+    ["Kidney beans (cooked)", 250], ["Onion", 150], ["Olive / vegetable oil", 45]]},
+  "gheymeh": {"makes": "1 pot (~5.5 cups)", "makes_g": 1300, "ingredients": [
+    ["Lamb / beef stew meat (cooked)", 400], ["Yellow split peas (cooked)", 300], ["Onion", 150],
+    ["Tomato paste", 40], ["Olive / vegetable oil", 40], ["French fries (potato straws topping)", 150]]},
+  "koobideh plate": {"makes": "1 plate", "ingredients": [
+    ["Ground beef / lamb 80/20 (raw)", 250], ["Onion", 40], ["Basmati rice (cooked)", 350], ["Butter", 10], ["Tomato", 120]]},
+  "joojeh kabab plate": {"makes": "1 plate", "ingredients": [
+    ["Chicken breast (raw)", 250], ["Plain yogurt", 30], ["Olive / vegetable oil", 10], ["Onion", 30], ["Lemon juice", 10],
+    ["Basmati rice (cooked)", 350], ["Butter", 10], ["Tomato", 120]]},
+  "bulgur pilaf with tomato and peppers": {"makes": "1 pot (~4 cups)", "makes_g": 740, "ingredients": [
+    ["Bulgur (cooked)", 600], ["Bell pepper", 150], ["Onion", 100], ["Tomato paste", 30], ["Olive / vegetable oil", 30]]}
+}

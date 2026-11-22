@@ -173,6 +173,10 @@ def parse_item(chunk: str, db: Session | None = None) -> dict[str, Any] | None:
         "calories": round(kcal * factor, 1), "protein_g": round(p * factor, 1),
         "carbs_g": round(c * factor, 1), "fat_g": round(f * factor, 1), "fiber_g": round(fib * factor, 1),
         "confidence": "high" if grams_given else "medium",
+        # what's in it: every ingredient for THIS portion (dishes built from a recipe)
+        "ingredients": [{"name": n, "grams": round(g * factor), "calories": round(k * factor),
+                         "protein_g": round(p_ * factor, 1), "carbs_g": round(c_ * factor, 1), "fat_g": round(f_ * factor, 1)}
+                        for n, g, k, p_, c_, f_ in getattr(food, "recipe", ())],
     }
 
 

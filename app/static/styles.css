@@ -1389,3 +1389,10 @@ button.vid-link { background: none; cursor: pointer; }
 
 .voice-btn.listening { background: var(--bad) !important; color: #fff; animation: neonpulse 1.2s ease-in-out infinite; }
 #aiCard { border-width: 2px; }
+
+.ing-row td { padding-top: 0; border-top: none; }
+.ing-row summary { cursor: pointer; color: var(--accent-strong); font-size: 14px; }
+.ing-total { margin: 6px 0; font-size: 14px; }
+.ing-list { margin: 4px 0 6px; padding-left: 18px; display: grid; gap: 3px; font-size: 14px; }
+.ing-row details { position: sticky; left: 0; max-width: calc(100vw - 72px); white-space: normal; }
+.ing-row td { white-space: normal; }

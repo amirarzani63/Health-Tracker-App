@@ -676,7 +676,12 @@ function renderAiItems() {
     <td><input data-k="name" value="${esc(it.name)}" aria-label="Food"></td>
     <td><input data-k="portion" value="${esc(U.food(it.portion))}" aria-label="Portion"></td>
     ${AI_NUMS.map((k) => `<td><input type="number" min="0" step="1" data-k="${k}" value="${Math.round(it[k] ?? 0)}" aria-label="${k}"></td>`).join("")}
-    <td><span class="conf ${it.confidence}" title="How sure the estimate is">${it.confidence}</span></td></tr>`).join("")
+    <td><span class="conf ${it.confidence}" title="How sure the estimate is">${it.confidence}</span></td></tr>
+    ${it.ingredients?.length ? `<tr class="ing-row"><td></td><td colspan="8"><details><summary>What's in it (${esc(it.portion)})</summary>
+      <p class="ing-total"><b>Whole portion: ${fmt(it.calories)} kcal</b> · protein ${fmt(it.protein_g, 1)} g · carbs ${fmt(it.carbs_g, 1)} g · fat ${fmt(it.fat_g, 1)} g</p>
+      <ul class="ing-list">${it.ingredients.map((g) => `<li><b>${esc(g.name)}</b>: ${fmt(g.grams)} g → ${fmt(g.calories)} kcal · P ${fmt(g.protein_g, 1)} · C ${fmt(g.carbs_g, 1)} · F ${fmt(g.fat_g, 1)}</li>`).join("")}</ul>
+      <p class="muted small">Ingredient values: USDA FoodData Central. Amounts are a typical home recipe scaled to your portion. If yours is different (e.g. less oil), adjust the numbers above.</p>
+      </details></td></tr>` : ""}`).join("")
     || `<tr><td colspan="9" class="muted">No foods recognised.</td></tr>`;
   updateAiTotals();
 }

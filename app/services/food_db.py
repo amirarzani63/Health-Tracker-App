@@ -32,6 +32,7 @@ class Food:
     fiber_g: float
     tags: list[str] = field(default_factory=list)
     custom: bool = False
+    recipe: tuple = ()  # (ingredient, grams in ONE unit, kcal, protein, carbs, fat) when built from ingredients
 
     @property
     def name(self) -> str:
@@ -56,7 +57,44 @@ def builtin_foods() -> tuple[Food, ...]:
                 unit=r["unit"].strip(), grams=float(r["grams"]),
                 calories=float(r["kcal"]), protein_g=float(r["protein"]), carbs_g=float(r["carbs"]),
                 fat_g=float(r["fat"]), fiber_g=float(r["fiber"]), tags=(r["tags"] or "").split()))
+    _apply_recipes(foods)
     return tuple(foods)
+
+
+INGREDIENTS_PATH = CSV_PATH.parent / "ingredients.csv"
+RECIPES_PATH = CSV_PATH.parent / "recipes.json"
+
+
+def ingredients() -> dict[str, dict]:
+    with open(INGREDIENTS_PATH, newline="", encoding="utf-8") as fh:
+        rows = (line for line in fh if line.strip() and not line.startswith("#"))
+        return {r["name"]: {k: float(r[k]) for k in ("kcal", "protein", "carbs", "fat", "fiber")} for r in csv.DictReader(rows)}
+
+
+def recipes() -> dict:
+    import json
+    return {k: v for k, v in json.loads(RECIPES_PATH.read_text(encoding="utf-8")).items() if not k.startswith("_")}
+
+
+def _apply_recipes(foods: list) -> None:
+    """Dishes with a recipe get their nutrition calculated from the ingredients, scaled to one unit."""
+    ing, rec = ingredients(), recipes()
+    for f in foods:
+        r = rec.get(f.name)
+        if not r:
+            continue
+        # one unit of the dish is this share of the recipe
+        share = (f.grams / r["makes_g"]) if r.get("makes_g") and f.grams else 1.0
+        parts, tot = [], dict.fromkeys(("kcal", "protein", "carbs", "fat", "fiber"), 0.0)
+        for name, grams in r["ingredients"]:
+            n, g = ing[name], grams * share
+            vals = {k: n[k] * g / 100 for k in tot}
+            for k in tot:
+                tot[k] += vals[k]
+            parts.append((name, round(g, 1), round(vals["kcal"], 1), round(vals["protein"], 1),
+                          round(vals["carbs"], 1), round(vals["fat"], 1)))
+        f.calories, f.protein_g, f.carbs_g = round(tot["kcal"]), round(tot["protein"], 1), round(tot["carbs"], 1)
+        f.fat_g, f.fiber_g, f.recipe = round(tot["fat"], 1), round(tot["fiber"], 1), tuple(parts)
 
 
 def _shared():

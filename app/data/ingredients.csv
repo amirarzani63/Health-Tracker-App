@@ -1,0 +1,33 @@
+# Ingredient nutrition per 100 g, from USDA FoodData Central (rounded). Used to build dishes in recipes.json.
+name,kcal,protein,carbs,fat,fiber
+Eggplant (raw),25,1,6,0.2,3
+Olive / vegetable oil,884,0,0,100,0
+Butter,717,0.9,0.1,81,0
+Onion,40,1.1,9.3,0.1,1.7
+Garlic,149,6.4,33,0.5,2.1
+Kashk (liquid whey),100,10,5,4.5,0
+Walnuts,654,15,14,65,6.7
+Dried mint,285,20,52,6,30
+Potato (boiled),87,1.9,20,0.1,1.8
+Eggs,143,12.6,0.7,9.5,0
+Chicken breast (cooked),165,31,0,3.6,0
+Chicken breast (raw),120,22.5,0,2.6,0
+Mayonnaise,680,1,0.6,75,0
+Pickles (dill),12,0.3,2.4,0.2,1
+Green peas (cooked),84,5.4,15.6,0.2,5.5
+Carrot,41,0.9,9.6,0.2,2.8
+Lemon juice,22,0.4,6.9,0.2,0.3
+Tomato,18,0.9,3.9,0.2,1.2
+Tomato paste,82,4.3,19,0.5,4.1
+Fresh herbs (parsley / cilantro / leek / fenugreek),36,2.6,6,0.8,3
+Kidney beans (cooked),127,8.7,22.8,0.5,6.4
+Lamb / beef stew meat (cooked),250,30,0,14,0
+Yellow split peas (cooked),118,8.3,21,0.4,8.3
+French fries (potato straws topping),312,3.4,41,15,3.8
+Ground beef / lamb 80/20 (raw),254,17.2,0,20,0
+Basmati rice (cooked),130,2.7,28,0.3,0.4
+Plain yogurt,61,3.5,4.7,3.3,0
+Bulgur (cooked),83,3.1,18.6,0.2,4.5
+Bell pepper,26,1,6,0.3,2.1
+Flour,364,10,76,1,2.7
+Dried barberries,300,4,70,1,7
