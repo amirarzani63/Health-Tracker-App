@@ -912,3 +912,48 @@ shir berenj|persian rice pudding|shir berenj with rose water|شیر برنج,1 c
 ranginak|date walnut dessert|رنگینک,1 piece (60 g),60,270,3,30,16,3,nuts gluten dairy
 cake yazdi|yazdi cupcake|کیک یزدی,1 cake (50 g),50,200,3,26,9.5,0.5,gluten egg dairy
 persian tea with sugar cubes|chai with ghand|tea with 2 sugar cubes|چای با قند|چای و قند,1 cup + 2 cubes,250,32,0,8,0,0,
+# Delivery & chain restaurants popular in Toronto (DoorDash / Uber Eats / Skip), from the chains' published nutrition (approximate, Nov 2026)
+tim hortons double double|double double|tims coffee double double|medium double double,1 medium (14 oz),420,230,3,28,12,0,dairy
+tim hortons iced capp|iced capp|ice capp,1 medium,500,360,4,51,16,0,dairy
+honey dip donut|honey dip,1 donut,70,210,3,30,9,1,gluten egg dairy
+boston cream donut|boston cream,1 donut,95,250,4,36,10,1,gluten egg dairy
+timbit|timbits,1 timbit,15,63,1,8,3,0.2,gluten egg dairy
+everything bagel|tim hortons bagel,1 bagel,110,300,11,58,2.5,3,gluten
+tim hortons breakfast sandwich|sausage egg cheese english muffin|sausage egg and cheese muffin,1 sandwich,170,500,20,30,33,1,gluten egg dairy meat
+mcchicken,1 sandwich,160,400,14,40,21,2,gluten egg meat
+quarter pounder with cheese|quarter pounder,1 burger,200,520,30,42,26,2,gluten dairy meat
+mcdonalds fries medium|medium fries mcdonalds|medium fries,1 medium,114,345,4,44,17,4,
+chicken mcnugget|mcnugget|mcnuggets,1 nugget,16,45,2.5,2.7,2.7,0.1,gluten meat
+teen burger|a&w teen burger,1 burger,210,530,29,40,28,2,gluten dairy meat egg
+mozza burger|a&w mozza burger,1 burger,230,610,30,42,35,2,gluten dairy meat
+harveys original burger|harvey's burger|harveys burger,1 burger,160,360,19,35,16,2,gluten meat
+swiss chalet quarter chicken dinner|quarter chicken dinner|swiss chalet quarter chicken,1 dinner (white meat + fries + sauce + roll),450,960,56,100,38,6,gluten meat
+popeyes chicken sandwich|popeyes sandwich,1 sandwich,230,690,28,50,42,2,gluten egg meat
+kfc original recipe breast|kfc chicken breast|kfc breast,1 piece,160,390,39,11,21,0.5,gluten meat
+subway turkey 6 inch|subway turkey sub|6 inch turkey sub,1 six-inch sub,220,287,18,46,3.5,5,gluten meat
+subway chicken teriyaki 6 inch|subway teriyaki sub|chicken teriyaki sub,1 six-inch sub,260,328,25,47,4.5,4,gluten meat soy
+subway italian bmt 6 inch|italian bmt|bmt sub,1 six-inch sub,230,409,19,45,17,4,gluten meat
+pizza pizza pepperoni slice|pizza pizza slice,1 slice (large pizza),140,356,15,38,16,2,gluten dairy meat
+dominos pepperoni slice|domino's pepperoni slice,1 slice (medium pizza),100,264,11,28,12,1.5,gluten dairy meat
+osmows chicken on the rocks|chicken on the rocks|osmow's rocks,1 regular,550,940,55,90,40,4,meat dairy
+osmows chicken wrap|osmow's wrap,1 wrap,400,737,40,70,33,4,gluten meat dairy
+paramount chicken shawarma plate|chicken shawarma plate|shawarma plate with rice,1 plate,600,987,55,95,43,6,meat gluten
+chipotle chicken burrito bowl|chipotle bowl|chicken burrito bowl chipotle,1 bowl,500,653,50,66,21,12,meat dairy
+chipotle chicken burrito|chipotle burrito,1 burrito,600,1040,58,112,40,13,gluten meat dairy
+burrito boyz chicken burrito|burrito boyz,1 regular burrito,550,982,50,110,38,12,gluten meat dairy
+big mary|mary browns big mary,1 sandwich,260,695,35,60,35,2,gluten meat
+mary browns taters|taters,1 regular,170,398,5,45,22,4,
+starbucks caramel macchiato|caramel macchiato,1 grande (16 oz),470,243,10,35,7,0,dairy
+starbucks mocha frappuccino|mocha frappuccino,1 grande with whip,470,399,5,61,15,1,dairy
+booster juice smoothie|booster juice,1 regular (24 oz),700,401,6,92,1,6,dairy
+thai express pad thai|chicken pad thai takeout,1 order,550,843,40,110,27,5,meat egg nuts soy fish
+new york fries poutine|nyf poutine,1 regular,450,754,23,80,38,6,dairy gluten
+five guys cheeseburger,1 burger,300,906,47,40,62,2,gluten dairy meat
+five guys fries|five guys regular fries,1 regular,400,945,13,131,41,12,
+pita pit chicken souvlaki|chicken souvlaki pita,1 pita,300,493,30,55,17,5,gluten meat dairy
+kinton ramen|tonkotsu ramen takeout|pork ramen,1 bowl,650,797,35,90,33,4,gluten meat egg soy
+taco bell crunchy taco|crunchy taco,1 taco,78,174,8,13,10,2,meat dairy
+daves single|wendy's dave's single|wendys burger,1 burger,250,578,29,39,34,2,gluten dairy meat egg
+wendys spicy chicken sandwich|wendy's spicy chicken,1 sandwich,220,492,28,50,20,2,gluten meat egg
+frosty|wendy's frosty,1 small,230,341,9,56,9,0,dairy
+whopper|burger king whopper,1 burger,290,688,31,51,40,2,gluten meat egg
