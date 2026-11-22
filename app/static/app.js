@@ -744,36 +744,79 @@ $("#aiLog").addEventListener("click", (e) => withBusy(e.target, async () => {
 }));
 $("#aiDiscard").addEventListener("click", resetAi);
 
-// ---- voice: speak the meal, it's written into the box and the foods are found automatically.
-// Uses the phone's own speech recognition (Safari / Chrome), free, nothing extra to install.
+// ---- voice: speak the meal; it's written into the box and the foods are found automatically.
+// Free: uses the phone's own speech recognition, or the keyboard's dictation microphone.
+// iPhone home-screen apps often block in-page speech recognition, so there the 🎤 button opens the
+// keyboard and you speak with its microphone; the foods are found as soon as you stop.
 (() => {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const btn = $("#voiceBtn"), box = $("#aiForm").elements.description;
-  if (!SR) { btn.classList.add("hidden"); $("#voiceHint").classList.remove("hidden"); return; }
-  let rec = null;
+  const btn = $("#voiceBtn"), box = $("#aiForm").elements.description, hint = $("#voiceHint");
+  const iosApp = navigator.standalone === true || (/iPhone|iPad/.test(navigator.userAgent) && matchMedia("(display-mode: standalone)").matches);
+  let keyboardMode = !SR || iosApp || store.get("voiceKeyboard") === "1";
+  let lang = store.get("voiceLang") || "en-US";
+  const langBtn = document.createElement("button");
+  langBtn.type = "button"; langBtn.className = "ghost small-btn"; langBtn.id = "voiceLang";
+  const showLang = () => { langBtn.textContent = lang === "fa-IR" ? "زبان: فارسی" : "Language: English"; };
+  showLang(); btn.after(langBtn);
+  langBtn.addEventListener("click", () => {
+    lang = lang === "fa-IR" ? "en-US" : "fa-IR"; store.set("voiceLang", lang); showLang();
+    box.dir = lang === "fa-IR" ? "rtl" : "auto";
+    if (keyboardMode) toast(lang === "fa-IR" ? "Switch your keyboard to Persian (🌐), then tap its 🎙️" : "Switch your keyboard to English (🌐), then tap its 🎙️");
+  });
+
+  // keyboard dictation: when the text stops changing for 2 seconds, find the foods
+  let typingTimer = null, viaVoice = false;
+  box.addEventListener("input", () => {
+    if (!viaVoice) return;
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => { if (box.value.trim()) { viaVoice = false; $("#aiForm").requestSubmit(); } }, 2000);
+  });
+  function useKeyboard(msg) {
+    keyboardMode = true;
+    hint.innerHTML = `🎙️ <b>Tap the microphone on your keyboard</b> (bottom right, or hold 🌐 to pick Persian) and say what you ate. The foods appear as soon as you stop.`;
+    hint.classList.remove("hidden");
+    viaVoice = true;
+    box.focus();
+    if (msg) toast(msg);
+  }
+
+  let rec = null, heard = "", silence = null;
   btn.addEventListener("click", () => {
+    if (keyboardMode) return useKeyboard();
     if (rec) { rec.stop(); return; }
     rec = new SR();
-    rec.lang = navigator.language || "en-US";
+    rec.lang = lang;
     rec.interimResults = true;
-    rec.continuous = false;
+    rec.continuous = true;            // don't give up after a short pause
     const before = box.value.trim();
-    let heard = "";
+    heard = "";
+    const stopSoon = () => { clearTimeout(silence); silence = setTimeout(() => rec && rec.stop(), 2500); };
     rec.onresult = (e) => {
       heard = [...e.results].map((r) => r[0].transcript).join(" ");
       box.value = (before ? before + ", " : "") + heard;
+      stopSoon();                     // stop 2.5 s after you finish talking
     };
     rec.onerror = (e) => {
-      toast(e.error === "not-allowed" ? "Allow the microphone for this app, or use the 🎙️ on your keyboard." : "Didn't catch that, try again.", true);
-      $("#voiceHint").classList.remove("hidden");
+      const why = {
+        "no-speech": "I didn't hear anything. Tap 🎤 and start talking right away, close to the phone.",
+        "audio-capture": "No microphone found. Using the keyboard microphone instead.",
+        "network": "Voice needs an internet connection. Using the keyboard microphone instead.",
+        "language-not-supported": "Your phone can't do this language here. Using the keyboard microphone instead.",
+      }[e.error];
+      if (["not-allowed", "service-not-allowed", "audio-capture", "network", "language-not-supported"].includes(e.error)) {
+        store.set("voiceKeyboard", "1");
+        useKeyboard(why || "Voice isn't available inside this app. Use the 🎙️ on your keyboard instead.");
+      } else if (why) toast(why, true);
     };
     rec.onend = () => {
+      clearTimeout(silence);
       rec = null; btn.classList.remove("listening"); btn.textContent = "🎤 Speak";
       if (heard.trim()) $("#aiForm").requestSubmit();  // find the foods straight away
     };
     btn.classList.add("listening"); btn.textContent = "● Listening… tap to stop";
-    rec.start();
+    try { rec.start(); } catch { rec = null; useKeyboard(); }
   });
+  if (keyboardMode) hint.innerHTML = `🎙️ Tap <b>🎤 Speak</b>, then the <b>microphone on your keyboard</b>, and say what you ate.`, hint.classList.remove("hidden");
 })();
 
 // ================================================================ WORKOUTS
