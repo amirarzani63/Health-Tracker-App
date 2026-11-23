@@ -34,6 +34,7 @@
     <button data-view="about">About me</button>
     <button data-view="dashboard" class="active">Dashboard</button>
     <button data-view="diet">Food</button>
+    <button data-view="meals">Meals</button>
     <button data-view="exercise">Workouts</button>
     <button data-view="progress">Progress</button>
     <button data-view="settings">Settings</button>
@@ -83,6 +84,7 @@
 
   <!-- FOOD -->
   <section id="view-diet" class="view">
+    <h2 class="sec-title"><span>✍️</span> Log what you ate</h2>
     <div class="card" id="aiCard">
       <h3>🎤 Quick log: say or type what you ate</h3>
       <p class="muted small">Tap <b>🎤 Speak</b> and say it like you'd tell a friend: "for lunch I had 4 turkey meatballs, a cup of rice and a salad". The app finds every food and portion; check it and tap <b>Add to food log</b>.</p>
@@ -123,19 +125,6 @@
       <ul class="list suggestions" id="pickResults"></ul>
     </div>
 
-    <div class="card" id="waterCard">
-      <div class="row-between"><h3>💧 Water</h3><span class="muted small" id="waterSub"></span></div>
-      <div class="water-glasses" id="waterGlasses"></div>
-      <div class="water-btns">
-        <button type="button" class="ghost" data-water="-1" aria-label="Remove a glass">− 1 glass</button>
-        <button type="button" data-water="1">＋ 1 glass</button>
-      </div>
-      <p class="muted small">1 glass = a normal drinking glass or cup (about 250 ml). A 500 ml bottle = 2 glasses.</p>
-    </div>
-
-    <div class="card" id="mealPlanCard"></div>
-    <div class="card" id="shoppingCard"></div>
-
     <div class="trim card">
       <h3>Today vs. targets</h3>
       <div id="macroBars"></div>
@@ -143,8 +132,8 @@
     </div>
 
     <div class="grid two">
-      <details class="card fold" id="logFoodCard" open>
-        <summary><h3>🔎 Log food</h3></summary>
+      <details class="card fold" id="logFoodCard">
+        <summary><h3>🔎 Search the food list, or enter a food yourself</h3></summary>
         <label>Search for a food <span class="muted small">(tap one to pick how much)</span> <span class="muted small" id="foodDbCount"></span>
           <input id="foodSearch" placeholder="e.g. chicken, oats, kebab, latte" autocomplete="off">
         </label>
@@ -191,11 +180,24 @@
           <button type="submit">Add food</button>
         </form>
       </details>
-      <div class="card">
-        <h3>Food log</h3>
-        <div id="foodLog"></div>
-      </div>
     </div>
+
+    <h2 class="sec-title"><span>📒</span> Today</h2>
+    <div class="card">
+      <h3>Food log</h3>
+      <div id="foodLog"></div>
+    </div>
+    <div class="card" id="waterCard">
+      <div class="row-between"><h3>💧 Water</h3><span class="muted small" id="waterSub"></span></div>
+      <div class="water-glasses" id="waterGlasses"></div>
+      <div class="water-btns">
+        <button type="button" class="ghost" data-water="-1" aria-label="Remove a glass">− 1 glass</button>
+        <button type="button" data-water="1">＋ 1 glass</button>
+      </div>
+      <p class="muted small">1 glass = a normal drinking glass or cup (about 250 ml). A 500 ml bottle = 2 glasses.</p>
+    </div>
+
+
 
     <div class="trim card">
       <h3>Meal ideas for what's left today</h3>
@@ -204,8 +206,17 @@
     </div>
   </section>
 
+  <!-- MEALS: the week's menu, its recipes and the shopping list -->
+  <section id="view-meals" class="view">
+    <h2 class="sec-title"><span>🍽</span> This week's menu</h2>
+    <div class="card" id="mealPlanCard"><p class="muted">Loading…</p></div>
+    <h2 class="sec-title"><span>🛒</span> Shopping list</h2>
+    <div class="card" id="shoppingCard"></div>
+  </section>
+
   <!-- WORKOUTS (plan + log + history) -->
   <section id="view-exercise" class="view">
+    <h2 class="sec-title"><span>🏋️</span> My plan</h2>
     <div id="activePlan"></div>
       <details class="trim card fold" id="exGuide">
         <summary><h3>Exercise guide</h3></summary>
@@ -217,6 +228,7 @@
         <ul class="list guide-list" id="guideList"></ul>
       </details>
 
+      <h2 class="sec-title"><span>👟</span> Log activity</h2>
       <div class="card" id="stepsCard">
         <h3>Today's activity</h3>
         <p class="muted small">Type today's numbers here. They show on the Dashboard. You can change them any time.</p>
@@ -291,6 +303,7 @@
         </div>
         <ul class="list history" id="activityList"></ul>
       </div>
+    <h2 class="sec-title"><span>⚙️</span> Change the plan</h2>
     <details class="card fold" id="changePlan">
       <summary><h3>Change my plan</h3></summary>
     <div id="garminPlanCard" class="trim">
@@ -331,12 +344,14 @@
 
   <!-- PROGRESS -->
   <section id="view-progress" class="view">
+    <h2 class="sec-title"><span>📋</span> This week</h2>
     <div class="card" id="weeklyCard"></div>
 
     <div class="card">
       <h3>Coaching tips</h3>
       <ul class="recs" id="dashRecs"></ul>
     </div>
+    <h2 class="sec-title"><span>📈</span> Charts</h2>
     <div class="seg" role="tablist" id="rangeSeg">
       <button data-days="7">Week</button>
       <button data-days="30" class="active">Month</button>
@@ -395,9 +410,11 @@
 
   <!-- SETTINGS -->
   <section id="view-settings" class="view">
+    <h2 class="sec-title"><span>🎨</span> Look</h2>
     <div class="card"><h3>Your app colours</h3>
       <p class="small muted">Everyone has their own colour scheme. Faded colours are taken by someone else.</p>
       <div class="scheme-picks" id="schemePicks"></div></div>
+    <h2 class="sec-title"><span>🎯</span> Goals &amp; reminders</h2>
     <div class="grid two">
       <div class="card" id="goalsCard">
         <details class="auto-again">

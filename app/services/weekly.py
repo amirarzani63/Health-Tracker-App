@@ -121,6 +121,16 @@ def run_weekly(db: Session, today: date | None = None) -> dict | None:
     return review
 
 
+def _portion_amount(q: float, unit: str) -> str:
+    """How much of an ingredient one person's portion needs, in kitchen terms."""
+    if unit in ("g", "ml"):
+        return f"{round(q / 5) * 5:g} {unit}"
+    n = max(0.25, round(q * 4) / 4)
+    whole, frac = int(n), {0.25: "¼", 0.5: "½", 0.75: "¾"}.get(n % 1, "")
+    num = (str(whole) if whole else "") + frac
+    return f"{num} {unit}".strip()
+
+
 def meal_plan(db: Session, today: date | None = None) -> list[dict]:
     """Seven days of breakfast, lunch, dinner and a snack near the calorie target; changes every week."""
     today = today or date.today()
@@ -139,7 +149,8 @@ def meal_plan(db: Session, today: date | None = None) -> list[dict]:
         total = sum(m["calories"] for m in picks.values()) or 1
         factor = max(0.75, min(1.6, target.calories / total))
         meals = [{"meal": k, "name": m["name"], "portion": round(factor, 2),
-                  **{n: round(m[n] * factor) for n in ("calories", "protein_g", "carbs_g", "fat_g")}}
+                  **{n: round(m[n] * factor) for n in ("calories", "protein_g", "carbs_g", "fat_g")},
+                  "ingredients": [{"item": it, "amount": _portion_amount(q * factor, u)} for it, q, u, _ in m.get("ingredients", [])]}
                  for k, m in picks.items()]
         days.append({"day": (ws + timedelta(days=i)).isoformat(), "meals": meals,
                      "calories": sum(m["calories"] for m in meals), "protein_g": sum(m["protein_g"] for m in meals)})

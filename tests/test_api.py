@@ -396,3 +396,19 @@ def test_colour_words():
     from app.services.colors import resolve
     assert resolve("Teal") == "#14b8a6" and resolve("light-blue") == "#6fcfff" and resolve("ocean blue") == "#3d7bff"
     assert resolve("My favourite colour is purple") == "#9b5cff" and resolve("قرمز") == "#ff3b3b"
+
+
+def test_weekly_menu_has_recipes(client):
+    plan = client.get("/api/weekly").json()["meal_plan"]
+    m = plan[0]["meals"][0]
+    assert m["ingredients"] and all(i["item"] and i["amount"] for i in m["ingredients"])
+
+
+def test_meals_have_their_own_tab():
+    from app.paths import STATIC
+    html = (STATIC / "index.html").read_text()
+    assert 'data-view="meals"' in html
+    meals = html[html.index('id="view-meals"'):html.index('id="view-exercise"')]
+    assert 'id="mealPlanCard"' in meals and 'id="shoppingCard"' in meals
+    food = html[html.index('id="view-diet"'):html.index('id="view-meals"')]
+    assert "mealPlanCard" not in food and "shoppingCard" not in food

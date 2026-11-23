@@ -435,8 +435,9 @@ $("#weightDialog").addEventListener("close", async () => {
 });
 
 // ================================================================ FOOD
+loaders.meals = () => loadWeekly();
 loaders.diet = async () => {
-  loadWater(); loadWeekly();
+  loadWater();
   const [summary, foods, sugg] = await Promise.all([
     api(`/api/nutrition/summary?day=${state.day}`),
     api(`/api/foods?day=${state.day}`),
@@ -2312,13 +2313,17 @@ function renderMealPlan() {
   weeklyState.day ||= plan.find((d) => d.day === todayIso)?.day || plan[0].day;
   const d = plan.find((x) => x.day === weeklyState.day);
   const names = { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack" };
-  el.innerHTML = `<h3>🍽 This week's meals</h3>
-    <p class="muted small">A suggested menu that adds up to your daily calories. Changes every Monday. Eat these or anything similar, and log what you actually eat.</p>
+  el.innerHTML = `<p class="muted small">A suggested menu that adds up to your daily calories. It changes every Monday. Tap a meal to see its recipe.</p>
     <div class="mp-days">${plan.map((x) => `<button type="button" class="mp-day${x.day === weeklyState.day ? " on" : ""}${x.day === todayIso ? " today" : ""}" data-mp-day="${x.day}">
       ${new Date(x.day + "T12:00:00").toLocaleDateString(undefined, { weekday: "short" })}</button>`).join("")}</div>
-    <ul class="mp-meals">${d.meals.map((m) => `<li><span class="mp-meal">${names[m.meal]}</span>
-      <span class="mp-name">${esc(m.name)}${Math.abs(m.portion - 1) >= 0.1 ? ` <span class="muted small">(${m.portion > 1 ? "a bigger" : "a smaller"} portion, ×${m.portion})</span>` : ""}</span>
-      <span class="mp-kcal">${fmt(m.calories)} kcal · ${fmt(m.protein_g)} g protein</span></li>`).join("")}</ul>
+    <div class="mp-cards">${d.meals.map((m) => `<details class="mp-card">
+      <summary><span class="mp-meal">${names[m.meal]}</span>
+        <span class="mp-name">${esc(m.name)}</span>
+        <span class="mp-kcal">${fmt(m.calories)} kcal · ${fmt(m.protein_g)} g protein</span></summary>
+      ${m.ingredients?.length ? `<p class="mp-rh">Recipe: what goes in your portion</p>
+        <ul class="mp-ing">${m.ingredients.map((g) => `<li><span>${esc(g.item)}</span><b>${esc(g.amount)}</b></li>`).join("")}</ul>` : ""}
+      <p class="muted small">Carbs ${fmt(m.carbs_g)} g · fat ${fmt(m.fat_g)} g</p>
+    </details>`).join("")}</div>
     <p class="small"><b>Day total: ${fmt(d.calories)} calories · ${fmt(d.protein_g)} g protein</b></p>`;
   renderShopping();
 }
@@ -2330,8 +2335,7 @@ function renderShopping() {
   let got = {};
   try { got = JSON.parse(store.get(key) || "{}"); } catch {}
   const n = list.reduce((t, s) => t + s.items.length, 0), done = list.reduce((t, s) => t + s.items.filter((i) => got[i.item]).length, 0);
-  el.innerHTML = `<h3>🛒 Shopping list for this week</h3>
-    <p class="muted small">Everything you need for this week's meals above, already added up for your portions. Tick items off as you shop.</p>
+  el.innerHTML = `<p class="muted small">Everything you need for this week's menu, already added up for your portions. Tick items off as you shop.</p>
     <p class="small"><b>${done} of ${n} items in the basket</b></p>
     ${list.map((s) => `<h4 class="shop-sec">${esc(s.section)}</h4><ul class="shop-list">${s.items.map((i) => `<li>
       <label class="${got[i.item] ? "got" : ""}"><input type="checkbox" data-shop="${esc(i.item)}" ${got[i.item] ? "checked" : ""}>
