@@ -500,3 +500,9 @@ def test_every_food_adds_up():
         if f.calories > 40 and f.fat_g + f.carbs_g + f.protein_g > 0 and not set(f.tags) & {"alcohol"}:
             at = 4 * f.protein_g + 4 * f.carbs_g - 2 * f.fiber_g + 9 * f.fat_g  # fibre gives ~2 kcal/g, not 4
             assert abs(at - f.calories) / f.calories < 0.25 or any(w in f.names[0] for w in ("beer", "wine", "spirit", "cocktail", "prosecco")), f.names[0]
+
+
+def test_search_box_finds_dish_with_extra_words():
+    from app.services import food_db
+    for q in ("amadeus pistachio cake", "slice of pistachio cake", "cake pistachio"):
+        assert food_db.search(q)[0]["name"].startswith("Pistachio cake"), q

@@ -191,8 +191,21 @@ def search(query: str, db: Session | None = None, banned: set[str] | None = None
         best = min(hits, key=len)
         score = (0 if food.custom else 1, 0 if best.startswith(q) else 1, len(best))
         scored.append((score, food))
+    if not scored:  # extra words ("amadeus pistachio cake", "slice of cake"): rank by how many words match
+        words = {w for w in re.findall(r"\w+", q) if len(w) > 2 and w not in _STOP}
+        best = match(q, db)
+        for food in all_foods(db):
+            if set(food.tags) & banned:
+                continue
+            text = " ".join(food.names)
+            hit = sum(1 for w in words if any(v in text for v in _plural_variants(w)))
+            if hit:
+                scored.append(((-hit, 0 if food is best else 1, len(food.names[0])), food))
     scored.sort(key=lambda x: x[0])
     return [f.as_dict() for _, f in scored[:limit]]
+
+
+_STOP = {"slice", "slices", "piece", "pieces", "the", "and", "with", "from", "cup", "bowl", "plate", "one", "two", "half"}
 
 
 def save_custom(db: Session, name: str, unit: str, values: dict) -> CustomFood:
