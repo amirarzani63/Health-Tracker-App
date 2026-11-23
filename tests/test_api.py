@@ -270,7 +270,7 @@ def test_sports_can_be_logged_on_any_day_and_count_as_burn(client):
     client.put("/api/profile", json={**client.get("/api/profile").json(), "weight_kg": 80})
     for act, met in (("yoga_vinyasa", 3.3), ("tennis_singles", 8.0), ("ski_downhill", 5.3), ("swim_freestyle", 5.8), ("padel", 6.0)):
         r = client.post("/api/cardio-log", json={"day": "2026-11-10", "activity": act, "minutes": 60}).json()
-        assert r["items"][-1]["calories"] == round(met * 3.5 * 80 / 200 * 60)
+        assert r["items"][-1]["calories"] == round((met - 1) * 3.5 * 80 / 200 * 60)
     r = client.get("/api/cardio-log?day=2026-11-10").json()
     assert r["total_minutes"] == 300
     assert client.post("/api/cardio-log", json={"day": "2026-11-10", "activity": "made_up", "minutes": 10}).status_code == 422
@@ -330,7 +330,7 @@ def test_finished_strength_workout_counts_as_exercise_burn(client):
     client.post("/api/plans/checkins/all", json={"day": day.isoformat(), "done": True})
     after = client.get(f"/api/dashboard?day={day}").json()
     mins = strength[names[day.weekday()]]["minutes"]
-    expected = round(5.0 * 3.5 * 70 / 200 * mins)
+    expected = round(4.0 * 3.5 * 70 / 200 * mins)
     assert after["cardio_kcal"] - before["cardio_kcal"] == expected > 0
     assert after["burned"] - before["burned"] == expected
 
@@ -347,7 +347,7 @@ def test_steps_and_every_exercise_add_up_in_the_burn(client):
     bp = d["burn_parts"]
     assert bp["steps_counted"] == 10000 - 30 * 110             # treadmill steps not counted twice
     assert abs(bp["steps"] - 0.5 * 80 * (10000 - 3300) * 1.80 * 0.415 / 1000) < 1
-    assert bp["cardio"] == round(5.0 * 3.5 * 80 / 200 * 30)
+    assert bp["cardio"] == round(4.0 * 3.5 * 80 / 200 * 30)  # on top of resting: MET − 1
     assert d["burned"] == bp["total"] == bp["resting"] + bp["digestion"] + bp["steps"] + bp["workouts"] + bp["cardio"] + bp["other"]
     assert bp["exercise"] == bp["steps"] + bp["workouts"] + bp["cardio"] + bp["other"]
 
@@ -430,3 +430,24 @@ def test_outdoor_walk_counts_in_burn(client):
     assert r.status_code == 200
     items = client.get(f"/api/cardio-log?day={date.today()}").json()["items"]
     assert items[0]["label"].startswith("Outdoor walk")
+
+
+def test_steps_and_outdoor_walk_are_not_counted_twice():
+    from datetime import date
+    from types import SimpleNamespace as NS
+    from app.services import cardio
+    me = NS(sex="male", weight_kg=105, height_cm=180, birth_year=1984)
+    walk = NS(activity="walk", minutes=60, calories=cardio.calories("walk", 60, 105))
+    d = date(2026, 11, 23)
+    steps_only = cardio.day_parts(me, d, 10000, [], 0, 0)
+    both = cardio.day_parts(me, d, 10000, [walk], 0, 0)
+    # the hour's walk was about 6,600 of the 10,000 steps: only the other 3,400 count as steps
+    assert both["steps_counted"] == 10000 - 110 * 60
+    assert both["steps"] == round(cardio.steps_kcal(me, 3400))
+    # the walk adds only its burn above resting (resting is already in the day's total)
+    assert both["cardio"] == round(walk.calories * 3.3 / 4.3)  # only the burn on top of resting
+    # a walk logged with no steps: the walk counts once, the daily-movement allowance stays
+    walk_only = cardio.day_parts(me, d, None, [walk], 0, 0)
+    assert walk_only["steps"] == 0 and walk_only["cardio"] == both["cardio"]
+    # steps all inside the walk: no extra steps burn at all
+    assert cardio.day_parts(me, d, 5000, [walk], 0, 0)["steps"] == 0

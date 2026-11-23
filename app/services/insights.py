@@ -137,7 +137,7 @@ def daily_series(db: Session, start: date, end: date) -> list[dict]:
     for day, items in acts.items():
         other[day] += sum(a.calories or 0 for a in items if a.source == "manual")
     cardio_kcal = {d: v for d in set(cardio_rows) | set(planned) | set(other)
-                   if (v := sum(r.calories for r in cardio_rows.get(d, [])) + (0 if other.get(d) else planned.get(d, 0)) + other.get(d, 0))}
+                   if (v := sum(_cardio.extra(r) for r in cardio_rows.get(d, [])) + (0 if other.get(d) else planned.get(d, 0)) + other.get(d, 0))}
 
     out = []
     d = start

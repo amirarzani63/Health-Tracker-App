@@ -215,8 +215,8 @@ class CardioIn(BaseModel):
 def _cardio_day(db: Session, day: date) -> dict:
     rows = db.scalars(select(CardioLog).where(CardioLog.day == day).order_by(CardioLog.id)).all()
     return {"day": day, "items": [{"id": r.id, "activity": r.activity, "label": cardio_svc.ACTIVITIES[r.activity][0],
-                                   "minutes": r.minutes, "calories": round(r.calories)} for r in rows],
-            "total_minutes": sum(r.minutes for r in rows), "total_calories": round(sum(r.calories for r in rows)),
+                                   "minutes": r.minutes, "calories": round(cardio_svc.extra(r))} for r in rows],
+            "total_minutes": sum(r.minutes for r in rows), "total_calories": round(sum(cardio_svc.extra(r) for r in rows)),
             "resting": cardio_svc.resting_burn(get_profile(db), day)}
 
 

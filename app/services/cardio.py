@@ -87,6 +87,13 @@ ACTIVITIES = {
 }
 
 
+def extra(r) -> float:
+    """Calories an activity burns ON TOP of resting. The day's "resting" already counts the body's own burn
+    during those minutes, so only the extra is added (MET − 1); otherwise that hour would be counted twice."""
+    met = ACTIVITIES.get(r.activity, ("", 5.0))[1]
+    return r.calories * max(0.0, met - 1) / met
+
+
 def calories(activity: str, minutes: float, weight_kg: float) -> float:
     return round(ACTIVITIES[activity][1] * 3.5 * weight_kg / 200 * minutes)
 
@@ -101,7 +108,7 @@ def resting_burn(profile, day: date) -> float:
 def logged(db: Session, start: date, end: date) -> dict[date, float]:
     out: dict[date, float] = {}
     for r in db.scalars(select(CardioLog).where(CardioLog.day >= start, CardioLog.day <= end)):
-        out[r.day] = out.get(r.day, 0) + r.calories
+        out[r.day] = out.get(r.day, 0) + extra(r)
     return out
 
 
@@ -130,7 +137,7 @@ def planned_workout_kcal(db: Session, start: date, end: date, done: dict, profil
     by_wd = {d.get("weekday"): d for d in plan.days or []}
     names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     logged_days = set(logged(db, start, end))
-    per_min = STRENGTH_MET * 3.5 * profile.weight_kg / 200
+    per_min = (STRENGTH_MET - 1) * 3.5 * profile.weight_kg / 200  # on top of resting, which is counted already
     out: dict[date, float] = {}
     d = start
     while d <= end:
@@ -183,7 +190,7 @@ def day_parts(profile, day: date, steps: float | None, cardio_rows: list, workou
     other    = workouts logged with their own calorie number
     """
     bmr = nutrition.bmr_mifflin(profile.sex, profile.weight_kg, profile.height_cm, nutrition.age_on(profile.birth_year, day))
-    cardio_kcal = sum(r.calories for r in cardio_rows)
+    cardio_kcal = sum(extra(r) for r in cardio_rows)  # only the burn on top of resting (resting is counted once)
     parts = {"resting": round(bmr), "digestion": round(bmr * TEF), "steps": 0, "movement": 0,
              "workouts": round(workout_kcal), "cardio": round(cardio_kcal), "other": round(other_kcal)}
     if steps:
