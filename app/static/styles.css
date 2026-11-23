@@ -1530,3 +1530,4 @@ dialog, .guide-list, .ex-dialog { overflow-x: hidden; }
 .wf.bad .wf-num { color: var(--bad); text-shadow: 0 0 12px var(--bad); }
 .wf.bad .wf-unit { color: var(--bad); }
 .wf.good .wf-num { color: var(--wf-good); }
+.cluster.wf-row2 { margin-top: 12px; }

@@ -284,7 +284,7 @@ loaders.dashboard = async () => {
 
 // ---------------------------------------------------------------- dashboard: digital watch faces
 // one round face: the number in the middle, a ring of 40 segments that light up toward the goal
-function watchFace({ goto, focus, title, label, value, goal, readout, unit, color, state }) {
+function watchFace({ goto, focus, title, label, value, goal, readout, unit, color, state, over }) {
   const n = 40, on = Math.round(Math.min(1, goal ? value / goal : 0) * n), c = state === "bad" ? "var(--bad)" : state === "good" ? "var(--wf-good)" : color;
   let segs = "";
   for (let i = 0; i < n; i++) {
@@ -293,7 +293,7 @@ function watchFace({ goto, focus, title, label, value, goal, readout, unit, colo
   }
   return `<div class="wf tap ${state || ""}" role="button" tabindex="0" data-goto="${goto}" ${focus ? `data-focus="${focus}"` : ""} title="${title}" style="--c:${c}">
     <svg viewBox="0 0 100 100" aria-hidden="true">${segs}</svg>
-    <div class="wf-in"><span class="wf-lbl">${label}</span><span class="wf-num">${readout}</span><span class="wf-unit">${state === "bad" ? (label === "Eaten" ? "⚠ over limit" : "⚠ behind") + "<br>" : ""}${esc(unit)}</span></div></div>`;
+    <div class="wf-in"><span class="wf-lbl">${label}</span><span class="wf-num">${readout}</span><span class="wf-unit">${state === "bad" ? (over || (label === "Eaten" ? "⚠ over limit" : "⚠ behind")) + "<br>" : ""}${esc(unit)}</span></div></div>`;
 }
 function renderCluster(d) {
   const t = d.targets, c = d.consumed, g = d.goals;
@@ -326,6 +326,14 @@ function renderCluster(d) {
       ${watchFace({ goto: "diet", title: "Log food", label: "Protein", value: c.protein_g, goal: protGoal, readout: fmt(c.protein_g), unit: `of ${fmt(protGoal)} g`,
         color: "var(--wf-prot)", state: c.protein_g >= protGoal ? "good" : behind(c.protein_g, protGoal) ? "bad" : "" })}
     </div>
+    <div class="cluster wf-row wf-row2">
+      ${watchFace({ goto: "diet", title: "Log food", label: "Carbs", value: c.carbs_g, goal: t.carbs_g, readout: fmt(c.carbs_g), unit: `of ${fmt(t.carbs_g)} g`,
+        color: "var(--carbs)", state: c.carbs_g > t.carbs_g ? "bad" : "" , over: "⚠ over limit" })}
+      ${watchFace({ goto: "diet", title: "Log food", label: "Fat", value: c.fat_g, goal: t.fat_g, readout: fmt(c.fat_g), unit: `of ${fmt(t.fat_g)} g`,
+        color: "var(--fat)", state: c.fat_g > t.fat_g ? "bad" : "", over: "⚠ over limit" })}
+      ${watchFace({ goto: "diet", title: "Log food", label: "Fibre", value: c.fiber_g || 0, goal: t.fiber_g, readout: fmt(c.fiber_g || 0), unit: `of ${fmt(t.fiber_g)} g`,
+        color: "var(--fiber)", state: (c.fiber_g || 0) >= t.fiber_g ? "good" : behind(c.fiber_g || 0, t.fiber_g) ? "bad" : "" })}
+    </div>
     <div class="info-boxes">
       <div class="ibox tap" role="button" tabindex="0" data-goto="diet">
         <span class="ibox-title">🍽 Food left for today</span>
@@ -351,8 +359,6 @@ function renderCluster(d) {
         <span class="ibox-hint">${steps >= (g.steps.goal || 10000) ? "Goal reached ✓" : `${fmt((g.steps.goal || 10000) - steps)} more steps to reach your goal`}</span>
       </div>
     </div>
-    <div class="macro-bars">${[["Carbs", c.carbs_g, t.carbs_g, "carbs"], ["Fat", c.fat_g, t.fat_g, "fat"], ["Fibre", c.fiber_g || 0, t.fiber_g, "fiber"]]
-      .map(([n, v, goal, k]) => `<div class="mbar"><span>${n}</span><div class="mtrack"><div class="mfill ${k}" style="width:${Math.min(100, goal ? (v / goal) * 100 : 0)}%"></div></div><span class="muted">${fmt(v)}/${fmt(goal)} g</span></div>`).join("")}</div>
     ${lights.length ? `<div class="lights">${lights.map((l) => `<span class="light ${l.cls}"><b>${l.icon}</b>${l.text}</span>`).join("")}</div>` : ""}`;
   Gauge.animate($("#cluster"));
 }
