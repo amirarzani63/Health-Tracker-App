@@ -293,7 +293,7 @@ function watchFace({ goto, focus, title, label, value, goal, readout, unit, colo
   }
   return `<div class="wf tap ${state || ""}" role="button" tabindex="0" data-goto="${goto}" ${focus ? `data-focus="${focus}"` : ""} title="${title}" style="--c:${c}">
     <svg viewBox="0 0 100 100" aria-hidden="true">${segs}</svg>
-    <div class="wf-in"><span class="wf-lbl">${label}</span><span class="wf-num">${readout}</span><span class="wf-unit">${esc(unit)}</span></div></div>`;
+    <div class="wf-in"><span class="wf-lbl">${label}</span><span class="wf-num">${readout}</span><span class="wf-unit">${state === "bad" ? (label === "Eaten" ? "⚠ over limit" : "⚠ behind") + "<br>" : ""}${esc(unit)}</span></div></div>`;
 }
 function renderCluster(d) {
   const t = d.targets, c = d.consumed, g = d.goals;
@@ -304,6 +304,10 @@ function renderCluster(d) {
   const net = burned != null ? Math.round(eaten - burned) : null;
   const typedBurn = d.burn_source === "typed", bp = d.burn_parts || {}, exKcal = Math.round(bp.exercise ?? d.cardio_kcal ?? 0), restKcal = burned != null ? Math.round(burned - exKcal) : 0;
   const steps = g.steps.value || 0;
+  // how far into the day you should be (7am -> 0, 9pm -> 1); past days count as finished
+  const isToday = state.day === isoDate(new Date()), hr = new Date().getHours() + new Date().getMinutes() / 60;
+  const pace = isToday ? Math.min(1, Math.max(0, (hr - 7) / 14)) : 1;
+  const behind = (v, goal) => goal > 0 && pace > 0 && v < goal * pace * 0.85;
   const eatState = eaten > target ? "bad" : "good";
   const lights = [
     { on: eaten > target, cls: "bad", icon: "⚠", text: "Over calories" },
@@ -318,9 +322,9 @@ function renderCluster(d) {
       ${watchFace({ goto: "diet", title: "Log food", label: "Eaten", value: eaten, goal: target, readout: fmt(eaten), unit: `of ${fmt(target)} kcal`,
         color: "var(--wf-eat)", state: eaten > target ? "bad" : "" })}
       ${watchFace({ goto: "exercise", focus: "#cardioAct", title: "Log cardio", label: "Burned", value: burned || 0, goal: burnGoal, readout: burned == null ? "–" : fmt(burned),
-        unit: burned == null ? "tap to log" : typedBurn ? "from your watch" : "kcal today", color: "var(--wf-burn)", state: burned != null && t.tdee && burned >= t.tdee ? "good" : "" })}
+        unit: burned == null ? "tap to log" : typedBurn ? "from your watch" : "kcal today", color: "var(--wf-burn)", state: burned != null && t.tdee && burned >= t.tdee ? "good" : burned != null && behind(burned, t.tdee) ? "bad" : "" })}
       ${watchFace({ goto: "diet", title: "Log food", label: "Protein", value: c.protein_g, goal: protGoal, readout: fmt(c.protein_g), unit: `of ${fmt(protGoal)} g`,
-        color: "var(--wf-prot)", state: c.protein_g >= protGoal ? "good" : "" })}
+        color: "var(--wf-prot)", state: c.protein_g >= protGoal ? "good" : behind(c.protein_g, protGoal) ? "bad" : "" })}
     </div>
     <div class="info-boxes">
       <div class="ibox tap" role="button" tabindex="0" data-goto="diet">

@@ -1527,3 +1527,6 @@ dialog, .guide-list, .ex-dialog { overflow-x: hidden; }
   color: #fff; text-shadow: 0 0 10px var(--c); }
 .wf-unit { font-size: clamp(8px, 2.3vw, 11px); color: #aab4d4; line-height: 1.2; }
 .wf:active { transform: scale(.97); }
+.wf.bad .wf-num { color: var(--bad); text-shadow: 0 0 12px var(--bad); }
+.wf.bad .wf-unit { color: var(--bad); }
+.wf.good .wf-num { color: var(--wf-good); }

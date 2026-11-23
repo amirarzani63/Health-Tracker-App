@@ -474,3 +474,11 @@ def test_dashboard_uses_three_equal_watch_faces():
     js = (root / "app.js").read_text(encoding="utf-8")
     assert "function watchFace(" in js and js.count("${watchFace({") == 3 and "Gauge.dial({ id: \"eat\"" not in js
     assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in (root / "styles.css").read_text(encoding="utf-8")
+
+
+def test_watch_faces_warn_in_red_when_behind():
+    from pathlib import Path
+    root = Path(__file__).parents[1] / "app/static"
+    js = (root / "app.js").read_text(encoding="utf-8")
+    assert "const behind = (v, goal)" in js and "behind(c.protein_g, protGoal)" in js and "behind(burned, t.tdee)" in js
+    assert ".wf.bad .wf-num { color: var(--bad)" in (root / "styles.css").read_text(encoding="utf-8")
