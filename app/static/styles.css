@@ -710,7 +710,7 @@ body.dlg-open { overflow: hidden; }
 .ibar { height: 10px; border-radius: 99px; background: rgba(127,127,127,.18); overflow: hidden; flex: 1; }
 .ibar-fill { height: 100%; border-radius: 99px; } .ibar-fill.good { background: #4ade80; } .ibar-fill.bad { background: #f87171; }
 .ibar-fill.eat { background: var(--accent); } .ibar-fill.burn { background: #60a5fa; }
-.vs-row { display: grid; grid-template-columns: 60px 1fr auto; gap: 8px; align-items: center; font-size: 14px; }
+.vs-row { display: grid; grid-template-columns: 112px 1fr auto; gap: 8px; align-items: center; font-size: 14px; }
 .ibox-row { display: flex; align-items: center; gap: 10px; } .ibox-goal { color: var(--muted); font-size: 14px; }
 .ibox > .ibar { flex: none; }
 
