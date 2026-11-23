@@ -466,3 +466,11 @@ def test_changing_the_portion_rescales_the_numbers():
     js = (Path(__file__).parents[1] / "app/static/app.js").read_text(encoding="utf-8")
     assert 'if (k === "portion") return;' in js and "function leadNum(t)" in js
     assert "for (const k of AI_NUMS) item[k] = (Number(item[k]) || 0) * f;" in js
+
+
+def test_dashboard_uses_three_equal_watch_faces():
+    from pathlib import Path
+    root = Path(__file__).parents[1] / "app/static"
+    js = (root / "app.js").read_text(encoding="utf-8")
+    assert "function watchFace(" in js and js.count("${watchFace({") == 3 and "Gauge.dial({ id: \"eat\"" not in js
+    assert "grid-template-columns: repeat(3, minmax(0, 1fr))" in (root / "styles.css").read_text(encoding="utf-8")

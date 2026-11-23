@@ -1511,3 +1511,19 @@ dialog, .guide-list, .ex-dialog { overflow-x: hidden; }
 /* seven tabs: keep them on one line and swipe sideways when they do not fit */
 #tabs { display: flex !important; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; }
 #tabs button { flex: 0 0 auto; white-space: nowrap; }
+
+/* Dashboard: three equal digital watch faces, side by side */
+:root { --wf-eat: var(--neon-cyan, #5fd0ff); --wf-burn: #ffb347; --wf-prot: #3ddc84; --wf-good: #3ddc84; }
+.cluster.wf-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: center; max-width: 560px; margin: 4px auto 0; }
+.wf { position: relative; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; text-align: center; cursor: pointer;
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--c) 14%, #10172e), #04070f 72%);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 18%, #1a223c), 0 0 18px color-mix(in srgb, var(--c) 20%, transparent); }
+.wf svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.wf path { fill: none; stroke: #ffffff17; stroke-width: 6; }
+.wf path.on { stroke: var(--c); filter: drop-shadow(0 0 1.5px var(--c)); }
+.wf-in { position: relative; display: grid; gap: 1px; padding: 0 16%; }
+.wf-lbl { font-size: clamp(8px, 2.4vw, 11px); letter-spacing: .14em; text-transform: uppercase; color: #aab4d4; }
+.wf-num { font: 700 clamp(17px, 6vw, 30px)/1.1 "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums;
+  color: #fff; text-shadow: 0 0 10px var(--c); }
+.wf-unit { font-size: clamp(8px, 2.3vw, 11px); color: #aab4d4; line-height: 1.2; }
+.wf:active { transform: scale(.97); }

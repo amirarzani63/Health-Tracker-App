@@ -282,7 +282,19 @@ loaders.dashboard = async () => {
   if (tip) $("#topTip").innerHTML = `<ul class="recs">${renderRecs([tip])}</ul>`;
 };
 
-// ---------------------------------------------------------------- car-style dashboard
+// ---------------------------------------------------------------- dashboard: digital watch faces
+// one round face: the number in the middle, a ring of 40 segments that light up toward the goal
+function watchFace({ goto, focus, title, label, value, goal, readout, unit, color, state }) {
+  const n = 40, on = Math.round(Math.min(1, goal ? value / goal : 0) * n), c = state === "bad" ? "var(--bad)" : state === "good" ? "var(--wf-good)" : color;
+  let segs = "";
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * 2 * Math.PI - Math.PI / 2, b = a + (2 * Math.PI / n) * 0.68, P = (x) => `${(50 + 44 * Math.cos(x)).toFixed(2)} ${(50 + 44 * Math.sin(x)).toFixed(2)}`;
+    segs += `<path d="M${P(a)} A44 44 0 0 1 ${P(b)}" class="${i < on ? "on" : ""}"/>`;
+  }
+  return `<div class="wf tap ${state || ""}" role="button" tabindex="0" data-goto="${goto}" ${focus ? `data-focus="${focus}"` : ""} title="${title}" style="--c:${c}">
+    <svg viewBox="0 0 100 100" aria-hidden="true">${segs}</svg>
+    <div class="wf-in"><span class="wf-lbl">${label}</span><span class="wf-num">${readout}</span><span class="wf-unit">${esc(unit)}</span></div></div>`;
+}
 function renderCluster(d) {
   const t = d.targets, c = d.consumed, g = d.goals;
   const eaten = c.calories, target = t.calories, left = Math.round(target - eaten);
@@ -302,14 +314,13 @@ function renderCluster(d) {
   ].filter((l) => l.on);
 
   $("#cluster").innerHTML = `
-    <div class="cluster">
-      <div class="g-main tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "eat", value: eaten, max: Math.max(target * 1.3, eaten * 1.05), target,
-        label: "EATEN", unit: `of ${fmt(target)} kcal`, readout: fmt(eaten), ticks: 6, state: eatState })}</div>
-      <div class="g-side tap" role="button" tabindex="0" data-goto="exercise" data-focus="#cardioAct" title="Log cardio">${Gauge.dial({ id: "burn", value: burned || 0, max: burnGoal * 1.2, target: t.tdee || null, zone: "good",
-        label: "BURNED", unit: burned == null ? "tap to log" : typedBurn ? "from your watch" : `body ${fmt(restKcal)} + activity ${fmt(exKcal)}`, readout: burned == null ? "–" : fmt(burned), ticks: 5,
-        state: burned != null && t.tdee && burned >= t.tdee ? "good" : "" })}</div>
-      <div class="g-side tap" role="button" tabindex="0" data-goto="diet" title="Log food">${Gauge.dial({ id: "prot", value: c.protein_g, max: protGoal * 1.25, target: protGoal, zone: "good",
-        label: "PROTEIN", unit: `of ${fmt(protGoal)} g`, readout: fmt(c.protein_g), ticks: 4, state: c.protein_g >= protGoal ? "good" : "" })}</div>
+    <div class="cluster wf-row">
+      ${watchFace({ goto: "diet", title: "Log food", label: "Eaten", value: eaten, goal: target, readout: fmt(eaten), unit: `of ${fmt(target)} kcal`,
+        color: "var(--wf-eat)", state: eaten > target ? "bad" : "" })}
+      ${watchFace({ goto: "exercise", focus: "#cardioAct", title: "Log cardio", label: "Burned", value: burned || 0, goal: burnGoal, readout: burned == null ? "–" : fmt(burned),
+        unit: burned == null ? "tap to log" : typedBurn ? "from your watch" : "kcal today", color: "var(--wf-burn)", state: burned != null && t.tdee && burned >= t.tdee ? "good" : "" })}
+      ${watchFace({ goto: "diet", title: "Log food", label: "Protein", value: c.protein_g, goal: protGoal, readout: fmt(c.protein_g), unit: `of ${fmt(protGoal)} g`,
+        color: "var(--wf-prot)", state: c.protein_g >= protGoal ? "good" : "" })}
     </div>
     <div class="info-boxes">
       <div class="ibox tap" role="button" tabindex="0" data-goto="diet">
