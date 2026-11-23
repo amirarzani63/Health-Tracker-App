@@ -482,3 +482,21 @@ def test_watch_faces_warn_in_red_when_behind():
     js = (root / "app.js").read_text(encoding="utf-8")
     assert "const behind = (v, goal)" in js and "behind(c.protein_g, protGoal)" in js and "behind(burned, t.tdee)" in js
     assert ".wf.bad .wf-num { color: var(--bad)" in (root / "styles.css").read_text(encoding="utf-8")
+
+
+def test_describing_word_does_not_replace_the_dish():
+    """'pistachio cake' is cake (a bakery slice), not a handful of pistachios."""
+    from app.services.food_ai import parse_item
+    cake = parse_item("1 amadeus slice of pistachio cake")
+    assert cake["calories"] >= 450 and "slice" in cake["portion"]
+    assert parse_item("apple pie")["portion"].startswith("1 slice")
+    assert parse_item("pistachios")["calories"] < 200
+
+
+def test_every_food_adds_up():
+    """Calories in the food list match protein*4 + carbs*4 + fat*9 (within 25%, alcohol and fibre aside)."""
+    from app.services import food_db
+    for f in food_db.builtin_foods():
+        if f.calories > 40 and f.fat_g + f.carbs_g + f.protein_g > 0 and not set(f.tags) & {"alcohol"}:
+            at = 4 * f.protein_g + 4 * f.carbs_g - 2 * f.fiber_g + 9 * f.fat_g  # fibre gives ~2 kcal/g, not 4
+            assert abs(at - f.calories) / f.calories < 0.25 or any(w in f.names[0] for w in ("beer", "wine", "spirit", "cocktail", "prosecco")), f.names[0]

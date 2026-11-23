@@ -343,7 +343,12 @@ frozen yogurt,1 cup (144 g),144,220,6,38,6,0,dairy
 cookie|cookies|biscuit|biscuits,1 cookie (15 g),15,75,1,10,3.5,0.3,gluten
 chocolate chip cookie,1 large (40 g),40,200,2.3,26,10,1,gluten dairy
 brownie,1 piece (60 g),60,270,3,36,13,1.2,gluten dairy egg
-cake|sponge cake,1 slice (80 g),80,300,3.5,40,14,1,gluten dairy egg
+cake|sponge cake|slice of cake,1 slice (100 g),100,375,4.5,50,17.5,1,gluten dairy egg
+# Bakery / café layer cakes: a café slice is ~130 g; ~415 kcal per 100 g (published café slices: e.g. a 140 g pistachio slice = 596 kcal)
+pistachio cake|pistachio slice|کیک پسته,1 bakery slice (130 g),130,540,9,58,30,2,gluten dairy egg nuts
+chocolate cake|chocolate fudge cake|کیک شکلاتی,1 bakery slice (130 g),130,490,5.5,62,25,2.5,gluten dairy egg
+bakery cake|cafe cake|layer cake|cream cake|patisserie cake|کیک,1 bakery slice (130 g),130,480,5.5,58,25,1,gluten dairy egg
+mousse cake,1 slice (110 g),110,380,5,38,24,1,gluten dairy egg
 cheesecake,1 slice (100 g),100,320,5.5,25,22,0.4,dairy gluten egg
 carrot cake,1 slice (100 g),100,380,4,45,21,1.3,gluten egg nuts
 pie|apple pie,1 slice (125 g),125,300,2.5,42,14,2,gluten

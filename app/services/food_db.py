@@ -146,21 +146,34 @@ def match_len(text: str, db: Session | None = None) -> int:
     return best
 
 
-def match(text: str, db: Session | None = None) -> Food | None:
-    """Best food for a phrase: the longest name found in it (custom foods win ties)."""
-    text = " " + re.sub(r"[^\w%&' ]+|_", " ", text.lower().replace("\u200c", " ")) + " "  # keeps Farsi letters
-    best, best_len = None, 0
+def _hits(text: str, db: Session | None):
+    """Every food name found in the phrase, with where it starts and ends."""
+    out = []
     for food in all_foods(db):
         for n in food.names:
-            if len(n) <= best_len:
-                continue
             last = n.split()[-1]
             for v in _plural_variants(last):
-                cand = n[: len(n) - len(last)] + v
-                if f" {cand} " in text:
-                    best, best_len = food, len(n)
+                cand = f" {n[: len(n) - len(last)] + v} "
+                i = text.find(cand)
+                if i >= 0:
+                    out.append((food, len(n), i, i + len(cand) - 1))
                     break
-    return best
+    return out
+
+
+def match(text: str, db: Session | None = None) -> Food | None:
+    """Best food for a phrase: the longest name found in it (custom foods win ties).
+    A food word right in front of another one only describes it: "pistachio cake" is cake, not pistachios."""
+    text = " " + re.sub(r"[^\w%&' ]+|_", " ", text.lower().replace("\u200c", " ")) + " "  # keeps Farsi letters
+    hits = _hits(text, db)
+    if not hits:
+        return None
+    best = max(hits, key=lambda h: (h[1], h[0].custom))  # max keeps the first of equals: custom foods come first
+    while True:
+        head = [h for h in hits if h[2] == best[3]]  # a food that starts right where this one ends
+        if not head:
+            return best[0]
+        best = max(head, key=lambda h: (h[1], h[0].custom))
 
 
 def search(query: str, db: Session | None = None, banned: set[str] | None = None, limit: int = 20) -> list[dict]:
