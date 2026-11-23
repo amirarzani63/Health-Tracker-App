@@ -13,10 +13,8 @@ from app.models import CardioLog
 from app.services import nutrition
 
 ACTIVITIES = {
-    "walk": ("Fast walk outside", 4.3),
     "treadmill_walk_flat": ("Treadmill walk (flat, brisk)", 4.3),
     "treadmill_walk": ("Treadmill walk (incline)", 5.0),
-    "run": ("Jog / run outside", 7.0),
     "treadmill_run": ("Treadmill jog", 7.0),
     "bike": ("Upright exercise bike", 6.8),
     "recumbent": ("Recumbent bike", 5.5),
@@ -60,6 +58,32 @@ ACTIVITIES = {
     "yoga_power": ("Yoga: Power / Ashtanga", 4.0),
     "yoga_yin": ("Yoga: Yin / restorative", 2.0),
     "water_skiing": ("Water skiing / wakeboarding", 6.0),
+    # outdoors
+    "walk_easy": ("Outdoor walk (easy, ~4.5 km/h)", 3.5),
+    "walk": ("Outdoor walk (brisk, ~5.5 km/h)", 4.3),
+    "walk_fast": ("Outdoor walk (very fast, ~6.5 km/h)", 5.0),
+    "walk_hills": ("Outdoor walk with hills", 5.3),
+    "nordic_walk": ("Nordic walking (with poles)", 4.8),
+    "hike": ("Hiking (trails)", 6.0),
+    "hike_pack": ("Hiking uphill with a backpack", 7.8),
+    "run": ("Outdoor jog (easy, ~8 km/h)", 7.0),
+    "run_steady": ("Outdoor run (steady, ~10 km/h)", 9.8),
+    "run_fast": ("Outdoor run (fast, ~12 km/h)", 11.5),
+    "trail_run": ("Trail running", 9.0),
+    "run_walk": ("Walk / jog intervals outside", 6.0),
+    "sprints": ("Sprint intervals outside", 10.0),
+    "cycle_easy": ("Outdoor cycling (easy, <16 km/h)", 4.0),
+    "cycle": ("Outdoor cycling (moderate, 19–22 km/h)", 8.0),
+    "cycle_fast": ("Outdoor cycling (fast, 22–26 km/h)", 10.0),
+    "mountain_bike": ("Mountain biking", 8.5),
+    "inline_skating": ("Rollerblading / inline skating", 7.5),
+    "outdoor_stairs": ("Outdoor stairs / bleachers", 8.0),
+    "outdoor_bootcamp": ("Outdoor bootcamp / park workout", 6.0),
+    "frisbee": ("Frisbee / ultimate", 6.0),
+    "soccer": ("Soccer (casual)", 7.0),
+    "basketball": ("Basketball (shooting around / pickup)", 6.5),
+    "golf_walk": ("Golf (walking, carrying clubs)", 4.8),
+    "gardening": ("Gardening / yard work", 3.8),
 }
 
 
@@ -125,7 +149,7 @@ def planned_workout_kcal(db: Session, start: date, end: date, done: dict, profil
 
 
 # ---- the whole day's burn, part by part -------------------------------------------------------
-WALKING = {"walk": 110, "treadmill_walk_flat": 115, "treadmill_walk": 110, "run": 160, "treadmill_run": 160,
+WALKING = {"treadmill_walk_flat": 115, "treadmill_walk": 110, "treadmill_run": 160, "walk_easy": 100, "walk": 110, "walk_fast": 125, "walk_hills": 105, "nordic_walk": 110, "hike": 100, "hike_pack": 95, "run": 160, "run_steady": 165, "run_fast": 175, "trail_run": 160, "run_walk": 135, "sprints": 150, "golf_walk": 90, 
            "snowshoeing": 100}  # steps per minute counted by a phone/watch during these activities
 TEF = 0.10  # digesting food uses ~10% of the day's energy (thermic effect of food)
 

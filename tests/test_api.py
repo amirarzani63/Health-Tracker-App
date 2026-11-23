@@ -412,3 +412,21 @@ def test_meals_have_their_own_tab():
     assert 'id="mealPlanCard"' in meals and 'id="shoppingCard"' in meals
     food = html[html.index('id="view-diet"'):html.index('id="view-meals"')]
     assert "mealPlanCard" not in food and "shoppingCard" not in food
+
+
+def test_outdoor_activities_can_be_logged(client):
+    from app.services import cardio
+    for k in ("walk_easy", "walk", "run", "hike", "cycle", "trail_run"):
+        assert k in cardio.ACTIVITIES
+    from app.paths import STATIC
+    js = (STATIC / "app.js").read_text()
+    assert 'group: "Outdoors"' in js and "walk_easy:" in js and "hike:" in js
+    assert "walk: \"treadmill" not in js   # an outdoor walk stays an outdoor walk
+
+
+def test_outdoor_walk_counts_in_burn(client):
+    from datetime import date
+    r = client.post("/api/cardio-log", json={"day": str(date.today()), "activity": "walk_easy", "minutes": 40})
+    assert r.status_code == 200
+    items = client.get(f"/api/cardio-log?day={date.today()}").json()["items"]
+    assert items[0]["label"].startswith("Outdoor walk")

@@ -1119,8 +1119,6 @@ const CARDIO_OPTS = {
     how: ["Incline 0–1%, speed about 5.5–6.5 km/h (3.5–4 mph): walk briskly.", "Don't hold the handrails; swing your arms."] },
   treadmill_walk: { label: "Treadmill walk (incline)", machine: true, photo: "Walking, Treadmill", met: 5.0,
     how: ["Set speed 5–6 km/h (3–3.7 mph) and incline 5–8%.", "Don't hold the handrails; swing your arms."] },
-  run: { label: "Jog / run outside", photo: "Trail Running/Walking", met: 7.0,
-    how: ["Jog slowly enough that you can still talk.", "If you get out of breath, walk for a minute, then jog again."] },
   treadmill_run: { label: "Treadmill jog", machine: true, photo: "Jogging, Treadmill", met: 7.0,
     how: ["Start at 7–8 km/h (4.5–5 mph), flat or 1% incline.", "Slow down to a fast walk if you can't talk."] },
   bike: { label: "Upright exercise bike", machine: true, photo: "Bicycling, Stationary", met: 6.8,
@@ -1131,6 +1129,32 @@ const CARDIO_OPTS = {
     how: ["Stand tall, push and pull the handles.", "Medium resistance; keep a smooth, steady rhythm."] },
   jump_rope: { label: "Rope skipping", photo: "Rope Jumping", met: 8.8,
     how: ["Small, low hops on the balls of your feet; turn the rope with your wrists.", "Beginners: skip 30 seconds, rest 30 seconds, and repeat. Count only the time you skip."] },
+  // outdoors: walking, jogging, hiking, cycling and more
+  walk_easy: { label: "Outdoor walk (easy, ~4.5 km/h)", group: "Outdoors", met: 3.5, how: ["A normal, relaxed walking pace."] },
+  walk: { label: "Outdoor walk (brisk, ~5.5 km/h)", group: "Outdoors", met: 4.3, how: ["Walk fast enough that you breathe a bit harder but can talk."] },
+  walk_fast: { label: "Outdoor walk (very fast, ~6.5 km/h)", group: "Outdoors", met: 5.0, how: ["Power walking: quick steps, arms swinging."] },
+  walk_hills: { label: "Outdoor walk with hills", group: "Outdoors", met: 5.3, how: ["Walking routes with real uphills."] },
+  nordic_walk: { label: "Nordic walking (with poles)", group: "Outdoors", met: 4.8, how: ["Push the poles behind you with each step."] },
+  hike: { label: "Hiking (trails)", group: "Outdoors", met: 6.0, how: ["Count the time moving, not long breaks."] },
+  hike_pack: { label: "Hiking uphill with a backpack", group: "Outdoors", met: 7.8, how: ["Steep trails or a loaded pack."] },
+  run: { label: "Outdoor jog (easy, ~8 km/h)", group: "Outdoors", met: 7.0, how: ["Slow enough to talk. Walk a minute when you need to."] },
+  run_steady: { label: "Outdoor run (steady, ~10 km/h)", group: "Outdoors", met: 9.8, how: ["A comfortable but hard-working pace."] },
+  run_fast: { label: "Outdoor run (fast, ~12 km/h)", group: "Outdoors", met: 11.5, how: ["Hard running pace."] },
+  trail_run: { label: "Trail running", group: "Outdoors", met: 9.0, how: ["Running on uneven paths and hills."] },
+  run_walk: { label: "Walk / jog intervals outside", group: "Outdoors", met: 6.0, how: ["e.g. jog 1 minute, walk 2 minutes, repeat."] },
+  sprints: { label: "Sprint intervals outside", group: "Outdoors", met: 10.0, how: ["Count the whole session, including the walks between sprints."] },
+  cycle_easy: { label: "Outdoor cycling (easy, <16 km/h)", group: "Outdoors", met: 4.0, how: ["Relaxed riding, e.g. around the neighbourhood."] },
+  cycle: { label: "Outdoor cycling (moderate, 19–22 km/h)", group: "Outdoors", met: 8.0, how: ["Steady riding where you breathe harder."] },
+  cycle_fast: { label: "Outdoor cycling (fast, 22–26 km/h)", group: "Outdoors", met: 10.0, how: ["Hard, fast riding."] },
+  mountain_bike: { label: "Mountain biking", group: "Outdoors", met: 8.5, how: ["Count the time riding."] },
+  inline_skating: { label: "Rollerblading / inline skating", group: "Outdoors", met: 7.5, how: ["Steady skating."] },
+  outdoor_stairs: { label: "Outdoor stairs / bleachers", group: "Outdoors", met: 8.0, how: ["Walking up steps; count the time climbing and coming down."] },
+  outdoor_bootcamp: { label: "Outdoor bootcamp / park workout", group: "Outdoors", met: 6.0, how: ["Mixed bodyweight moves and short runs."] },
+  frisbee: { label: "Frisbee / ultimate", group: "Outdoors", met: 6.0, how: ["Count the time playing."] },
+  soccer: { label: "Soccer (casual)", group: "Outdoors", met: 7.0, how: ["Count the time playing."] },
+  basketball: { label: "Basketball (shooting around / pickup)", group: "Outdoors", met: 6.5, how: ["Count the time playing."] },
+  golf_walk: { label: "Golf (walking, carrying clubs)", group: "Outdoors", met: 4.8, how: ["Walking the course."] },
+  gardening: { label: "Gardening / yard work", group: "Outdoors", met: 3.8, how: ["Digging, raking, planting."] },
   // sports: pick any of them on any day; effort values from the Compendium of Physical Activities
   yoga_hatha: { label: "Yoga: Hatha (gentle)", group: "Yoga", met: 2.5, how: ["Count the whole class or session."] },
   yoga_vinyasa: { label: "Yoga: Vinyasa / flow (sun salutations)", group: "Yoga", met: 3.3, how: ["Flowing from pose to pose."] },
@@ -1168,7 +1192,7 @@ const CARDIO_OPTS = {
   water_polo: { label: "Water polo", group: "Water sports", met: 10.0, how: ["Count your playing time."] },
   water_skiing: { label: "Water skiing / wakeboarding", group: "Water sports", met: 6.0, how: ["Count the time on the water."] },
 };
-const SPORT_ICON = { Yoga: "🧘", "Racquet sports": "🎾", "Winter sports": "⛷️", "Water sports": "🏊" };
+const SPORT_ICON = { Outdoors: "🌳", Yoga: "🧘", "Racquet sports": "🎾", "Winter sports": "⛷️", "Water sports": "🏊" };
 const cardioThumb = (k) => CARDIO_OPTS[k]?.photo ? `<img class="cl-thumb" data-cl-photo="${esc(CARDIO_OPTS[k].photo)}" alt="">`
   : `<span class="cl-thumb cl-emoji">${SPORT_ICON[CARDIO_OPTS[k]?.group] || "🏃"}</span>`;
 // dropdown options grouped: gym cardio first, then each sport family
@@ -1179,7 +1203,7 @@ function cardioOptions(cur) {
     `<option value="${k}"${k === cur ? " selected" : ""}>${esc(o.label)}</option>`).join("")}</optgroup>`).join("");
 }
 const cardioState = { picks: {}, kg: 105 };
-const LEGACY_CARDIO = { walk: "treadmill_walk_flat", rower: "bike", stairs: "elliptical" };
+const LEGACY_CARDIO = { rower: "bike", stairs: "elliptical" };
 const fixCardio = (k) => LEGACY_CARDIO[k] || k;
 const cardioFor = (iso) => { const v = cardioState.picks[iso]; return typeof v === "string" ? v : Array.isArray(v) ? v[0].activity : cardioState.picks.default || "treadmill_walk"; };
 // The day's cardio as a list of {activity, minutes}; planned minutes go to one activity unless the user split them
