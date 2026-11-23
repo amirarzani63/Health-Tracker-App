@@ -458,3 +458,11 @@ def test_counted_food_logs_the_total():
     from pathlib import Path
     js = (Path(__file__).parents[1] / "app/static/app.js").read_text(encoding="utf-8")
     assert "function pieceName(food)" in js and '"Count" : "Servings"' in js and "Total for" in js
+
+
+def test_changing_the_portion_rescales_the_numbers():
+    """In 'Find the foods', changing the portion (1 strawberry -> 2) scales calories and macros with it."""
+    from pathlib import Path
+    js = (Path(__file__).parents[1] / "app/static/app.js").read_text(encoding="utf-8")
+    assert 'if (k === "portion") return;' in js and "function leadNum(t)" in js
+    assert "for (const k of AI_NUMS) item[k] = (Number(item[k]) || 0) * f;" in js

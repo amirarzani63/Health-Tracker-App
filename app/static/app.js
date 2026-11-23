@@ -592,7 +592,7 @@ function updatePick() {
 $("#pickAmount").addEventListener("input", updatePick);
 $("#unitSeg").addEventListener("click", (e) => {
   const b = e.target.closest("[data-seg]");
-  if (!b) return;
+  if (!b) { item.portion = now; return; }
   pick.lastGrams = pickTotals().grams;
   $("#pickUnit").value = b.dataset.seg;
   $("#pickUnit").dispatchEvent(new Event("change"));
@@ -714,8 +714,29 @@ $("#aiItems").addEventListener("input", (e) => {
   if (!row) return;
   const item = ai.items[row.dataset.i];
   const k = e.target.dataset.k;
+  if (k === "portion") return;  // applied on change, so the numbers can follow it
   item[k] = k === "keep" ? e.target.checked : e.target.type === "number" ? Number(e.target.value) : e.target.value;
   updateAiTotals();
+});
+// change the portion (e.g. "1 strawberry" -> "2") and every number follows
+function leadNum(t) {
+  const m = /^\s*(\d+(?:[.,]\d+)?(?:\s*\/\s*\d+)?|[¼½¾])/.exec(t || "");
+  if (!m) return null;
+  const v = { "¼": 0.25, "½": 0.5, "¾": 0.75 }[m[1]] ?? (m[1].includes("/") ? m[1].split("/").reduce((x, y) => x / y) : Number(m[1].replace(",", ".")));
+  return v > 0 ? v : null;
+}
+$("#aiItems").addEventListener("change", (e) => {
+  if (e.target.dataset.k !== "portion") return;
+  const item = ai.items[e.target.closest("[data-i]").dataset.i];
+  const was = item.portion, now = e.target.value;
+  const a = leadNum(was) ?? 1, b = leadNum(now);
+  if (!b) return;
+  const f = b / a;
+  for (const k of AI_NUMS) item[k] = (Number(item[k]) || 0) * f;
+  (item.ingredients || []).forEach((g) => ["grams", "calories", "protein_g", "carbs_g", "fat_g"].forEach((k) => (g[k] = (g[k] || 0) * f)));
+  // "2" alone keeps the unit: "1 strawberry" -> "2 × 1 strawberry"
+  item.portion = /^\s*[\d.,/¼½¾\s]+$/.test(now) ? `${b} × ${String(was).replace(/^\s*[\d.,/¼½¾]+\s*×\s*/, "")}` : now;
+  renderAiItems();
 });
 function resetAi() {
   ai.items = [];
