@@ -533,7 +533,18 @@ function kcalPer(food, unit) {  // calories in one of `unit`
   const g = gramsPer(food, unit);
   return g && food.grams ? (food.calories * g) / food.grams : null;
 }
+// "1 strawberry", "1 egg", "1 slice": foods you count one by one
+const NOT_PIECE = /^(g|ml|oz|cup|cups|tbsp|tsp|serving|portion|bowl|glass|can|bottle|scoop|handful|plate|pack|bag|jar|pot|glazed|medium|large|small|sheet|stick|finger|hot|fresh|extra|grande|pint|shot|meal|dinner|regular|order|quarter|box|ear|corn)$/;
+function pieceName(food) {
+  const m = /^1\s+([^(]*)/i.exec((food?.unit || "").trim());
+  if (!m) return null;
+  const w = m[1].toLowerCase().trim().split(/\s+/).filter((x) => !/^(large|medium|small|big)$/.test(x));
+  return w[0] && /^[a-z]+$/.test(w[0]) && !NOT_PIECE.test(w[0]) ? w[0] : null;
+}
+function plural(w, n) { return n === 1 ? w : /(s|sh|ch|x)$/.test(w) ? w + "es" : /[^aeiou]y$/.test(w) ? w.slice(0, -1) + "ies" : w + "s"; }
 function unitLabel(unit, food) {
+  const pc = pieceName(food);
+  if (unit === "serving" && pc) return `${plural(pc, 2)} — ${fmt(food.calories, food.calories < 10 ? 1 : 0)} kcal each`;
   const k = kcalPer(food, unit);
   const per = k == null ? "" : unit === "g" ? ` — ${fmt(k * 100)} kcal per 100 g` : ` — ${fmt(k, k < 10 ? 1 : 0)} kcal per ${unit === "serving" ? "serving" : unit}`;
   return unit === "serving" ? `servings of ${food.unit}${per}` : `${unit}${per}`;
@@ -552,8 +563,11 @@ function openPick(food) {
   $("#pickUnit").value = start;
   $("#pickAmount").value = start === "oz" ? Math.round(food.grams / 28.35) || 1 : 1;
   $("#pickMeal").value = defaultMeal();
+  const pc = pieceName(food);
+  $('#unitSeg [data-seg="serving"]').textContent = pc ? "Count" : "Servings";
+  $("#pickAmount").setAttribute("aria-label", pc ? `How many ${plural(pc, 2)}` : "Amount");
   updatePick();
-  $("#pickAmount").focus();
+  $("#pickAmount").select();
 }
 function pickTotals() {
   const f = pick.food, unit = $("#pickUnit").value, amt = Number($("#pickAmount").value) || 0;
@@ -567,9 +581,10 @@ function updatePick() {
   const t = pickTotals(), unit = $("#pickUnit").value;
   const can = pick.food && pick.food.grams;
   document.querySelectorAll("#unitSeg [data-seg]").forEach((b) => { b.classList.toggle("on", b.dataset.seg === unit); b.hidden = b.dataset.seg !== "serving" && !can; });
-  $("#pickQuick").innerHTML = (QUICK[unit] || []).map((q) => `<button type="button" class="chip-btn" data-q="${q}">${q}</button>`).join("");
+  $("#pickQuick").innerHTML = (unit === "serving" && pieceName(pick.food) ? [1, 2, 3, 5, 10] : QUICK[unit] || []).map((q) => `<button type="button" class="chip-btn" data-q="${q}">${q}</button>`).join("");
   const w = t.grams != null && unit !== "g" ? `≈ ${U.imperial ? `${(t.grams / 28.35).toFixed(1)} oz` : `${Math.round(t.grams)} g`}` : "";
-  $("#pickResult").innerHTML = `<span class="kcal">${fmt(t.calories)}<small> kcal</small></span>
+  const pc = unit === "serving" && pieceName(pick.food), amt = Number($("#pickAmount").value) || 0;
+  $("#pickResult").innerHTML = `${pc ? `<span class="muted small">Total for ${fmt(amt, 2)} ${esc(plural(pc, amt))}</span>` : ""}<span class="kcal">${fmt(t.calories)}<small> kcal</small></span>
     <span class="macros"><b class="p">P ${t.protein_g.toFixed(1)}</b><b class="c">C ${t.carbs_g.toFixed(1)}</b><b class="f">F ${t.fat_g.toFixed(1)}</b></span>
     <span class="muted small">${w}</span>`;
   $("#pickAdd").disabled = !(t.factor > 0);
@@ -593,7 +608,7 @@ $("#pickPanel").addEventListener("click", (e) => {
   const q = e.target.closest("[data-q]"), st = e.target.closest("[data-step]");
   if (q) $("#pickAmount").value = q.dataset.q;
   if (st) {
-    const unit = $("#pickUnit").value, inc = { g: 25, ml: 50, kg: 0.1, lb: 0.25, oz: 1, "fl oz": 1, tsp: 1, tbsp: 1 }[unit] || 0.5;
+    const unit = $("#pickUnit").value, inc = { g: 25, ml: 50, kg: 0.1, lb: 0.25, oz: 1, "fl oz": 1, tsp: 1, tbsp: 1 }[unit] || (unit === "serving" && pieceName(pick.food) ? 1 : 0.5);
     $("#pickAmount").value = Math.max(0, Math.round(((Number($("#pickAmount").value) || 0) + Number(st.dataset.step) * inc) * 100) / 100);
   }
   if (q || st) { pick.lastGrams = pickTotals().grams; updatePick(); }
@@ -601,7 +616,8 @@ $("#pickPanel").addEventListener("click", (e) => {
 $("#pickClose").onclick = () => { $("#pickPanel").classList.add("hidden"); pick.food = null; };
 $("#pickAdd").addEventListener("click", (e) => withBusy(e.target, async () => {
   const f = pick.food, t = pickTotals(), unit = $("#pickUnit").value, amt = Number($("#pickAmount").value);
-  const qty = unit === "serving" ? `${amt} × ${f.unit}` : `${amt} ${unit}`;
+  const pc = pieceName(f);
+  const qty = unit === "serving" ? (pc ? `${amt} ${plural(pc, amt)}` : `${amt} × ${f.unit}`) : `${amt} ${unit}`;
   await api("/api/foods", { method: "POST", body: { day: state.day, meal: $("#pickMeal").value,
     name: `${f.food || f.name} — ${qty}`.slice(0, 200), servings: 1,
     calories: Math.round(t.calories), protein_g: +t.protein_g.toFixed(1), carbs_g: +t.carbs_g.toFixed(1),

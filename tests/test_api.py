@@ -451,3 +451,10 @@ def test_steps_and_outdoor_walk_are_not_counted_twice():
     assert walk_only["steps"] == 0 and walk_only["cardio"] == both["cardio"]
     # steps all inside the walk: no extra steps burn at all
     assert cardio.day_parts(me, d, 5000, [walk], 0, 0)["steps"] == 0
+
+
+def test_counted_food_logs_the_total():
+    """Countable foods (e.g. strawberries) are logged by count, and the app shows the total."""
+    from pathlib import Path
+    js = (Path(__file__).parents[1] / "app/static/app.js").read_text(encoding="utf-8")
+    assert "function pieceName(food)" in js and '"Count" : "Servings"' in js and "Total for" in js
