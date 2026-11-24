@@ -411,7 +411,7 @@ def _styled_plan(goal, days_per_week, weeks, have, experience, include_cardio, f
                 sets, reps, rest = 3, "12-15 each side" if any(w in name.lower() for w in ("chop", "pallof", "twist", "bicycle")) else "12-15", 45
             if any(w in name.lower() for w in ("plank", "hold", "carry", "crawl")):
                 reps = "30-45s"
-            exercises.append({"exercise": name, "pattern": pattern, "sets": max(2, sets + set_adj), "reps": reps, "rest_s": rest})
+            exercises.append({"exercise": name, "pattern": pattern, "sets": max(3, sets + set_adj), "reps": reps, "rest_s": rest})
         # fit the session: ab moves are quick (~4 min) and always stay; trim lifts, a repeated muscle first
         lifts = lambda: [j for j, e in enumerate(exercises) if e["pattern"] not in ("oblique", "lower_abs", "core")]
         while len(lifts()) > max_ex:
@@ -501,7 +501,7 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
             exercises.append({
                 "exercise": exercise,
                 "pattern": pattern,
-                "sets": max(2, sets + set_adj),
+                "sets": max(3, sets + set_adj),
                 "reps": reps,
                 "rest_s": rest,
             })

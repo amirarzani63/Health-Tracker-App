@@ -521,6 +521,7 @@ def test_plan_follows_the_sets_you_do(client):
     plan = client.get("/api/plans/active").json()
     ex = next(e for d in plan["days"] for e in d["exercises"] if e.get("pattern") != "cardio")
     planned = ex["sets"]
+    assert planned >= 3  # beginners get 3 sets too
     did = planned + 1
     client.post("/api/activities", json={"start_time": f"{TODAY}T07:00:00", "activity_type": "strength_training", "name": "Gym",
                                          "duration_s": 1800, "sets": [{"exercise": ex["exercise"], "reps": 10, "weight_kg": 20}] * did})

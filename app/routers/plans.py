@@ -42,6 +42,8 @@ def _your_sets(days: list, db: Session) -> list:
     for d in days:
         for e in d.get("exercises", []):
             n = (e.get("exercise") or "").strip().lower()
+            if e.get("pattern") != "cardio" and 1 < (e.get("sets") or 0) < 3:
+                e["sets"] = 3  # plans made earlier with 2 sets: every exercise is 3 sets now
             if e.get("pattern") != "cardio" and done.get(n, 0) > (e.get("sets") or 0):
                 e["sets"], e["sets_note"] = min(done[n], 6), "what you did last time"
     return days
