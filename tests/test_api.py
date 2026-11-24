@@ -549,3 +549,30 @@ def test_no_pull_up_negatives_in_the_plan(client):
     with Session(engine) as db:
         swapped = _easier_pulls(fake, db)[0]["exercises"][0]
     assert swapped["exercise"] != "Pull-up / negative" and swapped["swapped_from"] == "Pull-up / negative"
+
+
+def test_plan_only_uses_equipment_you_have(client):
+    """Dumbbells, bench and a cable station only: barbell / EZ-bar moves become dumbbell ones (same muscles)."""
+    from sqlalchemy.orm import Session
+    from app.db import engine
+    from app.routers.plans import _easier_pulls
+    prof = client.get("/api/profile").json()
+    client.put("/api/profile", json={**prof, "equipment": "gym", "equipment_list": ["dumbbells", "bench", "cable", "pullup", "cardio"]})
+    day = [{"type": "strength", "exercises": [{"exercise": n, "sets": 3, "reps": "10"} for n in
+                                              ("EZ-bar curl", "Barbell row", "Hip thrust", "Barbell bench press", "Leg press", "Dumbbell curl")]}]
+    with Session(engine) as db:
+        got = [e["exercise"] for e in _easier_pulls(day, db)[0]["exercises"]]
+    assert got[0] != "EZ-bar curl" and "Dumbbell" in got[0] or "Hammer" in got[0]  # a dumbbell curl (Dumbbell curl is already in the day)
+    assert got[1] in ("Chest-supported row", "One-arm dumbbell row")
+    assert got[2] == "Dumbbell hip thrust" and got[3].startswith(("Dumbbell", "Incline dumbbell"))
+    assert got[4] in ("Goblet squat", "Dumbbell split squat") and got[5] == "Dumbbell curl"
+    assert len(set(got)) == len(got)
+
+
+def test_new_plan_uses_only_your_equipment(client):
+    prof = client.get("/api/profile").json()
+    client.put("/api/profile", json={**prof, "equipment": "gym", "equipment_list": ["dumbbells", "bench", "cable", "pullup", "cardio"]})
+    for goal in ("fat_loss", "strength", "hypertrophy", "general"):
+        plan = client.post("/api/plans/generate", json={"goal": goal, "days_per_week": 4}).json()
+        names = [e["exercise"].lower() for d in plan["days"] for e in d["exercises"]]
+        assert not [n for n in names if "barbell" in n or "ez-bar" in n or "leg press" in n or "machine" in n], (goal, names)

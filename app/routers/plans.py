@@ -31,25 +31,60 @@ def _with_loads(plan: WorkoutPlan | None, db: Session) -> dict | None:
 
 
 TOO_HARD = {"Pull-up / negative"}  # needs the strength to lower yourself slowly from the bar
+# The building gym (Nov 2026 photos): dumbbells, adjustable benches, one cable station (lat pulldown, seated row,
+# leg extension / curl, rope), a pull-up / dip / knee-raise tower and cardio machines. No barbell, EZ bar or other machines.
+BUILDING_GYM = ["dumbbells", "bench", "cable", "pullup", "cardio"]
+
+
+def _equipment(db: Session) -> set[str]:
+    """What this person can train with. A building-gym plan with no list saved gets the building gym's list (saved once)."""
+    from app.services.workout_planner import equipment_set
+    prof = get_profile(db)
+    if not prof.equipment_list:
+        plan = db.scalar(select(WorkoutPlan).where(WorkoutPlan.active))
+        if plan and "building gym" in (plan.name or "").lower():
+            prof.equipment_list = list(BUILDING_GYM)
+            db.commit()
+    return equipment_set(prof.equipment or "gym", prof.equipment_list or [])
 
 
 def _easier_pulls(days: list, db: Session) -> list:
-    """Swap moves most people can't do yet for an easier one that works the same muscles (lats / upper back)."""
-    from app.services.workout_planner import equipment_set
-    prof = get_profile(db)
-    have = equipment_set(prof.equipment or "gym", prof.equipment_list or [])
-    # easier moves for the lats / upper back, best first, that this person has the equipment for
-    easy = [n for n, need in (("Lat pulldown", {"cable"}), ("Band lat pulldown", {"bands"}),
-                              ("One-arm dumbbell row", {"dumbbells"}), ("Superman pull", set())) if need <= have]
+    """Swap anything the person can't do: exercises needing equipment they don't have (barbell, EZ bar, machines...)
+    and moves too hard to start with. The swap works the same muscles with what they do have, dumbbells first."""
+    from app.services.workout_planner import CATALOG, FOCUS_CATALOG, ranked
+    have = _equipment(db)
+    info = {n: (p, need) for p, opts in CATALOG.items() for n, need, _ in opts}
+    for area, opts in FOCUS_CATALOG.items():
+        for n, need in opts:
+            info.setdefault(n, ("f:" + area, need))
+
+    def options(pattern):
+        if pattern.startswith("f:"):
+            return [n for n, need in FOCUS_CATALOG[pattern[2:]] if need <= have]
+        # beginner order puts dumbbells and simple machines before bodyweight; never the too-hard moves
+        kind = {n: k for n, _, k in CATALOG[pattern]}
+        order = {"db": 0, "mach": 1, "bw": 2}  # dumbbells first, then the cable station, then bodyweight
+        return sorted((n for n in ranked(pattern, have, "beginner", 30, True) if n not in TOO_HARD and kind.get(n) in order),
+                      key=lambda n: order[kind[n]])
+
+    pulls = [n for n, need in (("Lat pulldown", {"cable"}), ("Band lat pulldown", {"bands"}),
+                               ("One-arm dumbbell row", {"dumbbells"}), ("Superman pull", set())) if need <= have]
     out = []
     for d in days:
         names = {e.get("exercise") for e in d.get("exercises", [])}
         exs = []
         for e in d.get("exercises", []):
-            if e.get("exercise") in TOO_HARD:
-                swap = next((n for n in easy if n not in names), None)
+            n = e.get("exercise")
+            bad = n in TOO_HARD or (n in info and not info[n][1] <= have)
+            if bad:
+                cands = pulls if n in TOO_HARD else options(info[n][0])
+                # the closest version first: "Hip thrust" -> "Dumbbell hip thrust", "Barbell row" -> a dumbbell row
+                words = set(n.lower().replace("-", " ").split()) - {"barbell", "ez", "bar", "machine", "cable", "dumbbell"}
+                cands = sorted(cands, key=lambda c: -len(words & set(c.lower().replace("-", " ").split())))
+                swap = next((c for c in cands if c not in names), None)
                 if swap:
-                    e = {**e, "exercise": swap, "swapped_from": e["exercise"]}
+                    e = {k: v for k, v in e.items() if k != "photo"}
+                    e.update(exercise=swap, swapped_from=n)
                     names.add(swap)
             exs.append(e)
         out.append({**d, "exercises": exs})
@@ -100,6 +135,8 @@ def create_plan(req: PlanRequest, db: Session = Depends(get_db)):
         days_per_week=req.days_per_week or profile.training_days,
         weeks=req.weeks,
         equipment=req.equipment or profile.equipment,
+        # what you ticked in About (e.g. only dumbbells, bench and a cable station), unless you picked another place here
+        equipment_list=profile.equipment_list if (req.equipment or profile.equipment) == profile.equipment else None,
         experience=req.experience or profile.experience,
         include_cardio=req.include_cardio,
     )
