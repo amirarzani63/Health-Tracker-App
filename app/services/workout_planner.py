@@ -25,7 +25,7 @@ EXERCISES = {
                "bodyweight": ["Inverted row (table)", "Towel door row"]},
     "v_pull": {"gym": ["Pull-up", "Lat pulldown"],
                "home": ["Band lat pulldown", "Pull-up (doorway bar)"],
-               "bodyweight": ["Pull-up / negative", "Superman pull"]},
+               "bodyweight": ["Superman pull", "Pull-up / negative"]},
     "lunge": {"gym": ["Walking lunge", "Step-up"],
               "home": ["Dumbbell reverse lunge", "Step-up"],
               "bodyweight": ["Reverse lunge", "Lateral lunge"]},
@@ -55,7 +55,7 @@ CATALOG = {
                ("Dumbbell shoulder press", {"dumbbells"}, "db"), ("Arnold press", {"dumbbells"}, "db"), ("Pike push-up", set(), "hard")],
     "h_pull": [("Barbell row", {"barbell"}, "bar"), ("Seated cable row", {"cable"}, "mach"), ("Chest-supported row", {"dumbbells", "bench"}, "db"),
                ("One-arm dumbbell row", {"dumbbells"}, "db"), ("Band row", {"bands"}, "bw"), ("Inverted row (table)", set(), "hard")],
-    "v_pull": [("Pull-up", {"pullup"}, "hard"), ("Lat pulldown", {"cable"}, "mach"), ("Pull-up / negative", {"pullup"}, "bw"),
+    "v_pull": [("Pull-up", {"pullup"}, "hard"), ("Lat pulldown", {"cable"}, "mach"), ("Pull-up / negative", {"pullup"}, "hard"),
                ("Band lat pulldown", {"bands"}, "bw"), ("Superman pull", set(), "bw")],
     "lunge": [("Walking lunge", {"dumbbells"}, "db"), ("Step-up", {"dumbbells", "bench"}, "db"), ("Dumbbell reverse lunge", {"dumbbells"}, "db"),
               ("Reverse lunge", set(), "bw"), ("Lateral lunge", set(), "bw")],
@@ -98,6 +98,9 @@ def equipment_set(equipment: str, equipment_list: list[str] | None = None) -> se
     return set(EQUIPMENT_PRESETS.get(equipment, EQUIPMENT_PRESETS["gym"]))
 
 
+TOO_HARD_TO_START = {"Pull-up / negative"}  # needs the strength to lower yourself slowly from the bar
+
+
 def ranked(pattern: str, have: set[str], experience: str, age: int, main: bool) -> list[str]:
     """Exercises for a movement the person can do with their equipment, best fit first.
 
@@ -105,7 +108,8 @@ def ranked(pattern: str, have: set[str], experience: str, age: int, main: bool) 
     Experienced: barbell compound lifts first for the main lifts (the core of proven programs).
     55+: barbell squats/deadlifts moved down in favour of machines and dumbbells (joint-friendly).
     """
-    opts = [(n, kind) for n, needs, kind in CATALOG[pattern] if needs <= have]
+    opts = [(n, kind) for n, needs, kind in CATALOG[pattern] if needs <= have
+            and (experience == "advanced" or n not in TOO_HARD_TO_START)]
     if experience == "beginner":
         order = {"mach": 0, "db": 1, "bw": 2, "bar": 3, "hard": 4}
     elif main:

@@ -30,6 +30,32 @@ def _with_loads(plan: WorkoutPlan | None, db: Session) -> dict | None:
     return out
 
 
+TOO_HARD = {"Pull-up / negative"}  # needs the strength to lower yourself slowly from the bar
+
+
+def _easier_pulls(days: list, db: Session) -> list:
+    """Swap moves most people can't do yet for an easier one that works the same muscles (lats / upper back)."""
+    from app.services.workout_planner import equipment_set
+    prof = get_profile(db)
+    have = equipment_set(prof.equipment or "gym", prof.equipment_list or [])
+    # easier moves for the lats / upper back, best first, that this person has the equipment for
+    easy = [n for n, need in (("Lat pulldown", {"cable"}), ("Band lat pulldown", {"bands"}),
+                              ("One-arm dumbbell row", {"dumbbells"}), ("Superman pull", set())) if need <= have]
+    out = []
+    for d in days:
+        names = {e.get("exercise") for e in d.get("exercises", [])}
+        exs = []
+        for e in d.get("exercises", []):
+            if e.get("exercise") in TOO_HARD:
+                swap = next((n for n in easy if n not in names), None)
+                if swap:
+                    e = {**e, "exercise": swap, "swapped_from": e["exercise"]}
+                    names.add(swap)
+            exs.append(e)
+        out.append({**d, "exercises": exs})
+    return out
+
+
 def _your_sets(days: list, db: Session) -> list:
     """If you've been doing more sets of an exercise than the plan says, the plan shows what you actually do."""
     from datetime import datetime, timedelta
@@ -46,6 +72,7 @@ def _your_sets(days: list, db: Session) -> list:
             done.setdefault(n, c)  # newest session wins
     from app.services.workout_planner import normalize_day
     days = [normalize_day(d) for d in days]  # 3 sets each, and the real session length
+    days = _easier_pulls(days, db)
     for d in days:
         for e in d.get("exercises", []):
             n = (e.get("exercise") or "").strip().lower()

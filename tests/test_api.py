@@ -531,3 +531,21 @@ def test_plan_follows_the_sets_you_do(client):
                                          "duration_s": 1800, "sets": [{"exercise": ex["exercise"], "reps": 10, "weight_kg": 20}] * did})
     again = next(e for d in client.get("/api/plans/active").json()["days"] for e in d["exercises"] if e["exercise"] == ex["exercise"])
     assert again["sets"] == did and again["sets_note"]
+
+
+def test_no_pull_up_negatives_in_the_plan(client):
+    """Pull-up negatives are too hard to start with: plans use an easier lat exercise instead."""
+    from app.services.workout_planner import generate_plan
+    for eq, lst in [("gym", []), ("home", ["dumbbells", "bench", "pullup"]), ("home", ["pullup"]), ("bodyweight", [])]:
+        for st in ("auto", "full_body", "upper_lower", "body_part"):
+            p = generate_plan(goal="general", days_per_week=4, experience="intermediate", equipment=eq, equipment_list=lst, split_style=st)
+            assert all(e["exercise"] != "Pull-up / negative" for d in p["days"] for e in d["exercises"]), (eq, lst, st)
+    # a plan saved earlier with it shows an easier one that works the same muscles
+    from sqlalchemy.orm import Session
+    from app.db import engine
+    from app.routers.plans import _easier_pulls
+    client.get("/api/profile")
+    fake = [{"type": "strength", "exercises": [{"exercise": "Pull-up / negative", "sets": 3, "reps": "5"}]}]
+    with Session(engine) as db:
+        swapped = _easier_pulls(fake, db)[0]["exercises"][0]
+    assert swapped["exercise"] != "Pull-up / negative" and swapped["swapped_from"] == "Pull-up / negative"
