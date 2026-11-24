@@ -506,3 +506,9 @@ def test_search_box_finds_dish_with_extra_words():
     from app.services import food_db
     for q in ("amadeus pistachio cake", "slice of pistachio cake", "cake pistachio"):
         assert food_db.search(q)[0]["name"].startswith("Pistachio cake"), q
+
+
+def test_start_weight_shows_kg_and_lb():
+    from pathlib import Path
+    js = (Path(__file__).parents[1] / "app/static/app.js").read_text(encoding="utf-8")
+    assert "kg (${fmt(x.load.lb, 1)} lb)" in js and "lb (${fmt(x.load.kg, 1)} kg)" in js
