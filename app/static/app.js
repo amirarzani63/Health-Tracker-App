@@ -1129,8 +1129,8 @@ function posterHTML(title, exercises, { sub = "", compact = false } = {}) {
     ${exercises.map((x, i) => `<article class="excard" data-poster="${esc(x.photo || x.exercise)}" data-cardio="${x.pattern === "cardio" ? 1 : ""}" data-compact="${compact ? 1 : ""}">
       <header><span class="exnum">${i + 1}</span><h4>${esc(x.exercise)}</h4></header>
       <div class="pimg"><span class="pimg-ph">${esc(x.exercise.slice(0, 1))}</span></div>
-      ${x.pattern === "cardio" ? `<dl class="exstats one"><div><dt>How long</dt><dd>${esc(x.reps)}</dd></div></dl>` : `<dl class="exstats"><div><dt>Rounds</dt><dd>${x.sets}</dd></div><div><dt>Times each round</dt><dd>${esc(x.reps)}</dd></div>
-        ${x.rest_s ? `<div><dt>Rest between rounds</dt><dd>${x.rest_s} sec</dd></div>` : ""}</dl>
+      ${x.pattern === "cardio" ? `<dl class="exstats one"><div><dt>How long</dt><dd>${esc(x.reps)}</dd></div></dl>` : `<dl class="exstats"><div><dt>Sets</dt><dd>${x.sets}${x.sets_note ? `<small class="muted"> (${esc(x.sets_note)})</small>` : ""}</dd></div><div><dt>Reps in each set</dt><dd>${esc(x.reps)}</dd></div>
+        ${x.rest_s ? `<div><dt>Rest between sets</dt><dd>${x.rest_s} sec</dd></div>` : ""}</dl>
         ${x.load ? `<p class="exload">🏋️ Start with <b>${U.imperial ? `${fmt(x.load.lb, 1)} lb (${fmt(x.load.kg, 1)} kg)` : `${fmt(x.load.kg, 1)} kg (${fmt(x.load.lb, 1)} lb)`}</b> ${esc(x.load.per)}
           <span class="muted small">· too easy (3+ reps left)? go up next time. Can't finish the reps? go down.</span></p>` : ""}`}
       <div class="exmus"></div>

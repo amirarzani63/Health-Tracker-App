@@ -21,8 +21,30 @@ def _with_loads(plan: WorkoutPlan | None, db: Session) -> dict | None:
         return None
     from app.services.loads import add_loads
     out = PlanOut.model_validate(plan).model_dump()
-    out["days"] = add_loads(plan.days or [], get_profile(db), plan.goal)
+    out["days"] = _your_sets(add_loads(plan.days or [], get_profile(db), plan.goal), db)
     return out
+
+
+def _your_sets(days: list, db: Session) -> list:
+    """If you've been doing more sets of an exercise than the plan says, the plan shows what you actually do."""
+    from datetime import datetime, timedelta
+    from app.models import Activity
+    done: dict[str, int] = {}
+    since = datetime.now() - timedelta(days=60)
+    for a in db.scalars(select(Activity).where(Activity.start_time >= since).order_by(Activity.start_time.desc())):
+        per: dict[str, int] = {}
+        for st in a.sets or []:
+            n = (st.get("exercise") or "").strip().lower()
+            if n:
+                per[n] = per.get(n, 0) + 1
+        for n, c in per.items():
+            done.setdefault(n, c)  # newest session wins
+    for d in days:
+        for e in d.get("exercises", []):
+            n = (e.get("exercise") or "").strip().lower()
+            if e.get("pattern") != "cardio" and done.get(n, 0) > (e.get("sets") or 0):
+                e["sets"], e["sets_note"] = min(done[n], 6), "what you did last time"
+    return days
 
 
 @router.get("", response_model=list[PlanOut])

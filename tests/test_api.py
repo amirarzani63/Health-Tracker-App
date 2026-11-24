@@ -512,3 +512,17 @@ def test_start_weight_shows_kg_and_lb():
     from pathlib import Path
     js = (Path(__file__).parents[1] / "app/static/app.js").read_text(encoding="utf-8")
     assert "kg (${fmt(x.load.lb, 1)} lb)" in js and "lb (${fmt(x.load.kg, 1)} kg)" in js
+
+
+def test_plan_follows_the_sets_you_do(client):
+    """Logged 3 sets of an exercise the plan says 2 of: the plan now shows 3."""
+    r = client.put("/api/profile", json=client.get("/api/profile").json() | {"experience": "beginner"})
+    client.post("/api/plans/generate", json={"goal": "fat_loss", "days_per_week": 3})
+    plan = client.get("/api/plans/active").json()
+    ex = next(e for d in plan["days"] for e in d["exercises"] if e.get("pattern") != "cardio")
+    planned = ex["sets"]
+    did = planned + 1
+    client.post("/api/activities", json={"start_time": f"{TODAY}T07:00:00", "activity_type": "strength_training", "name": "Gym",
+                                         "duration_s": 1800, "sets": [{"exercise": ex["exercise"], "reps": 10, "weight_kg": 20}] * did})
+    again = next(e for d in client.get("/api/plans/active").json()["days"] for e in d["exercises"] if e["exercise"] == ex["exercise"])
+    assert again["sets"] == did and again["sets_note"]
