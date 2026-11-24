@@ -81,11 +81,15 @@ def test_every_generated_plan_exercise_has_the_right_photo():
         assert m and m["images"] and m["name"] == PHOTO[n].lstrip("~"), n
 
 
-def test_every_plan_exercise_has_one_exact_video():
-    import re
-    from app.services.preset_plan import DAYS
+def test_no_unchecked_videos():
+    """Videos are only listed once someone has watched them and confirmed the exact exercise; the rest search YouTube."""
     from app.services.videos import VIDEOS
-    from app.services.workout_planner import PHOTO
-    names = set(PHOTO) | {e["exercise"] for d in DAYS for e in d["exercises"] if e.get("pattern") != "cardio"}
-    assert not sorted(n for n in names if n not in VIDEOS and not n.startswith("Cardio finisher"))
-    assert all(re.fullmatch(r"[A-Za-z0-9_-]{11}", v) for v in VIDEOS.values())
+    assert VIDEOS == {}
+
+
+def test_photos_never_show_a_different_exercise():
+    """A dumbbell exercise is never shown with a barbell / kettlebell photo; those count as 'no exact picture'."""
+    from app.services.exlib import match
+    for n in ("Dumbbell Romanian deadlift", "Single-leg RDL", "Hip thrust (shoulders on bench, dumbbell on hips)", "Dumbbell hip thrust"):
+        assert match(n).get("similar"), n
+    assert match("Chest-supported row")["name"] == "Dumbbell Incline Row" and not match("Chest-supported row").get("similar")

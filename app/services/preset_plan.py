@@ -45,7 +45,7 @@ DAYS = [
     ]},
     {"weekday": "Tue", "type": "strength", "title": "Lower body A", "minutes": 65, "est_kcal": 540, "exercises": [
         gx("Goblet squat (one dumbbell)", "Goblet Squat", 3, "10-12", 75, "squat"),
-        gx("Dumbbell Romanian deadlift", "Romanian Deadlift", 3, "10-12", 75, "hinge"),
+        ex("Dumbbell Romanian deadlift", 3, "10-12", 75, "hinge"),
         gx("Leg extension (cable station)", "Leg Extensions", 3, "12-15", 60, "squat"),
         gx("Leg curl (cable station)", "Seated Leg Curl", 3, "12-15", 60, "hinge"),
         gx("Back extension (back-extension bench)", "Hyperextensions (Back Extensions)", 2, "10-12", 60, "hinge"),
@@ -66,7 +66,7 @@ DAYS = [
     {"weekday": "Fri", "type": "strength", "title": "Lower body B", "minutes": 65, "est_kcal": 540, "exercises": [
         gx("Split squat (dumbbells, hold the rack for balance if needed)", "Split Squat with Dumbbells", 3, "8-10 each leg", 75, "lunge"),
         gx("Sumo dumbbell squat", "Plie Dumbbell Squat", 3, "10-12", 75, "squat"),
-        gx("Hip thrust (shoulders on bench, dumbbell on hips)", "Barbell Hip Thrust", 3, "12", 60, "hinge"),
+        ex("Hip thrust (shoulders on bench, dumbbell on hips)", 3, "12", 60, "hinge"),
         gx("Leg curl (cable station)", "Seated Leg Curl", 2, "12-15", 60, "hinge"),
         gx("Dead bug", "Dead Bug", 3, "8 each side (left + right = 1)", 45, "core"),
         ex("Treadmill: 1 minute fast, then 2 minutes slow", 1, "24 minutes", 0, "cardio"),

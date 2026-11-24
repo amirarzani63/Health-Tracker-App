@@ -21,12 +21,7 @@ def _with_loads(plan: WorkoutPlan | None, db: Session) -> dict | None:
         return None
     from app.services.loads import add_loads
     out = PlanOut.model_validate(plan).model_dump()
-    prof = get_profile(db)
-    out["days"] = _your_sets(add_loads(plan.days or [], prof, plan.goal), db)
-    from app.services.cardio import workout_kcal
-    for d in out["days"]:  # calories from the real session length and this person's weight
-        if d.get("type") in ("strength", "cardio"):
-            d["est_kcal"] = round(workout_kcal(d, prof.weight_kg or 75))
+    out["days"] = serve_days(plan.days or [], db, plan.goal)
     return out
 
 
@@ -69,12 +64,15 @@ def _easier_pulls(days: list, db: Session) -> list:
 
     pulls = [n for n, need in (("Lat pulldown", {"cable"}), ("Band lat pulldown", {"bands"}),
                                ("One-arm dumbbell row", {"dumbbells"}), ("Superman pull", set())) if need <= have]
+    from app.services.workout_planner import PHOTO
     out = []
     for d in days:
         names = {e.get("exercise") for e in d.get("exercises", [])}
         exs = []
         for e in d.get("exercises", []):
             n = e.get("exercise")
+            if n in PHOTO and "photo" in e:  # a photo name saved with an older plan: use the checked table instead
+                e = {k: v for k, v in e.items() if k != "photo"}
             bad = n in TOO_HARD or (n in info and not info[n][1] <= have)
             if bad:
                 cands = pulls if n in TOO_HARD else options(info[n][0])
@@ -89,6 +87,19 @@ def _easier_pulls(days: list, db: Session) -> list:
             exs.append(e)
         out.append({**d, "exercises": exs})
     return out
+
+
+def serve_days(days: list, db: Session, goal: str = "general") -> list:
+    """Plan days as the person should see them everywhere (plan tab and dashboard): only their equipment,
+    3+ sets, real session length, start weights and calories for their weight."""
+    from app.services.cardio import workout_kcal
+    from app.services.loads import add_loads
+    prof = get_profile(db)
+    days = _your_sets(add_loads(days, prof, goal), db)
+    for d in days:
+        if d.get("type") in ("strength", "cardio"):
+            d["est_kcal"] = round(workout_kcal(d, prof.weight_kg or 75))
+    return days
 
 
 def _your_sets(days: list, db: Session) -> list:

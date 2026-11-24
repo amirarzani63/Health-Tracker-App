@@ -27,6 +27,9 @@ def dashboard(day: date | None = None, db: Session = Depends(get_db)):
     week = trend[-7:]
     acts = insights.activities_between(db, day - timedelta(days=6), day)
     plan, session = insights.todays_session(db, day)
+    if session:  # the same version the plan tab shows (equipment swaps, sets, time, calories, photos)
+        from app.routers.plans import serve_days
+        session = serve_days([session], db, plan.goal if plan else "general")[0]
     goals = db.get(Goals, 1)
     profile = insights.get_profile(db)
 

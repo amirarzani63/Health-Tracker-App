@@ -886,20 +886,23 @@ async function openExercise(name, part) {
     if (lib.primary.length && !lib.similar) { info.primary = lib.primary; info.secondary = lib.secondary; }
     info.primaryNames = info.primary.map((m) => MUSCLE_NAMES[m]); info.secondaryNames = info.secondary.map((m) => MUSCLE_NAMES[m]);
     if (lib.instructions.length && !lib.similar) info.cues = lib.instructions;
-    if (lib.images.length) {
+    if (lib.similar) {  // never show a different exercise as if it were this one
+      $("#exPic").innerHTML = `<p class="muted small">No picture of this exact exercise was found, so none is shown. Follow the steps below, or tap "Find a video" to search for it.</p>`;
+      $("#exPic").classList.remove("hidden");
+    } else if (lib.images.length) {
       $("#exPic").innerHTML = `<div class="pimg big${lib.images.length > 1 ? " anim" : ""}">${lib.images.map((src, i) => `<img src="${src}" alt="${esc(lib.name)}${i ? " (end position)" : " (start position)"}" class="${i ? "peak" : "start"}">`).join("")}</div>
         ${lib.images.length > 1 ? `<div class="pic-steps"><span>Start</span><span>Finish</span></div>` : ""}
-        ${lib.similar ? `<p class="muted small">No photo of this exact exercise. Shown: ${esc(lib.name)}, a similar movement.</p>` : ""}`;
+`;
       $("#exPic").classList.remove("hidden");
     }
     $("#exTips").innerHTML = lib.tips.map((t) => `<li>💡 ${esc(t)}</li>`).join("");
-    $("#exCredit").textContent = lib.credit || `${lib.similar ? "Photo" : "Photos & instructions"}: ${lib.name} (free-exercise-db, public domain)`;
+    $("#exCredit").textContent = lib.similar ? "" : lib.credit || `Photos & instructions: ${lib.name} (free-exercise-db, public domain)`;
   }
   $("#exMuscles").innerHTML = (info.primaryNames.length
     ? `<span class="mtag prim">Main: ${info.primaryNames.map(esc).join(", ")}</span>` : `<span class="mtag">General movement</span>`)
     + (info.secondaryNames.length ? `<span class="mtag sec">Also: ${info.secondaryNames.map(esc).join(", ")}</span>` : "");
   $("#exCues").innerHTML = info.cues.map((c) => `<li>${esc(c)}</li>`).join("")
-    + `<li class="vid-li">${videoButton(name, "▶ Watch the video for this exercise")}</li>`;
+    + `<li class="vid-li">${videoButton(name, "🔎 Find a video of this exact exercise on YouTube")}</li>`;
   $("#exDialog").showModal();
 }
 $("#exClose").onclick = () => $("#exDialog").close();
@@ -1104,7 +1107,7 @@ const dayName = (wd) => DAY_LONG[wd] || wd;
 const VIDEOS = { map: null };
 api("/api/exercise-videos").then((m) => { VIDEOS.map = m; }).catch(() => {});
 const videoUrl = (name) => "https://www.youtube.com/results?search_query=" + encodeURIComponent(`how to do ${name.replace(/\s*\(.*?\)/g, "")} exercise proper form`);
-function videoButton(name, label = "▶ Watch video") {
+function videoButton(name, label = "🔎 Find a video on YouTube") {
   return `<button type="button" class="vid-link" data-video="${esc(name)}">${label}</button>`;
 }
 async function playVideo(name) {
@@ -1157,12 +1160,12 @@ async function hydratePosters(root = document) {
       : ["Walk fast outside or on a treadmill, or ride a bike (an exercise bike is fine).", "Keep going without stopping for the whole time.", "Go at a pace where you breathe harder but can still talk in full sentences."])
       : (own && m.instructions.length ? m.instructions : local.cues || []).slice(0, t.dataset.compact ? 2 : 3);
     if (!t.querySelector(".exsteps").dataset.own) t.querySelector(".exsteps").innerHTML = steps.map((s) => `<li>${esc(s)}</li>`).join("");
-    if (m?.images?.length) {
+    if (m?.images?.length && !m.similar) {
       t.querySelector(".pimg").innerHTML = m.images.map((src, i) => `<img src="${src}" alt="${esc(t.dataset.poster)} ${i ? "finish" : "start"} position" loading="lazy" class="${i ? "peak" : "start"}">`).join("");
       t.querySelector(".pimg").classList.toggle("anim", m.images.length > 1);
-      if (m.similar) t.querySelector(".pimg").insertAdjacentHTML("beforeend", `<span class="pimg-note">Similar movement</span>`);
-    } else {
-      t.querySelector(".pimg").innerHTML = `<div class="pimg-map">${BodyMap.render(local.primary, local.secondary)}</div>`;
+    } else {  // no picture of this exact exercise: show the muscles it works, never a different exercise
+      t.querySelector(".pimg").innerHTML = `<div class="pimg-map">${BodyMap.render(local.primary, local.secondary)}</div>`
+        + (m?.similar ? `<span class="pimg-note">No picture of this exact exercise</span>` : "");
     }
   }
 }
