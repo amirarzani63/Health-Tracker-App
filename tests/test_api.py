@@ -329,8 +329,12 @@ def test_finished_strength_workout_counts_as_exercise_burn(client):
     before = client.get(f"/api/dashboard?day={day}").json()
     client.post("/api/plans/checkins/all", json={"day": day.isoformat(), "done": True})
     after = client.get(f"/api/dashboard?day={day}").json()
-    mins = strength[names[day.weekday()]]["minutes"]
-    expected = round(4.0 * 3.5 * 70 / 200 * mins)
+    sd = strength[names[day.weekday()]]
+    mins = sd["minutes"]
+    cardio_min = sum(int(e["reps"].split()[0]) for e in sd["exercises"] if e.get("pattern") == "cardio")
+    # lifting at 3.5 METs, the cardio part at 4.3, only what's above resting (MET - 1); 70 kg
+    expected = round(2.5 * 3.5 * 70 / 200 * (mins - cardio_min) + 3.3 * 3.5 * 70 / 200 * cardio_min)
+    assert sd["est_kcal"] == expected  # the plan shows the same number the dashboard adds
     assert after["cardio_kcal"] - before["cardio_kcal"] == expected > 0
     assert after["burned"] - before["burned"] == expected
 

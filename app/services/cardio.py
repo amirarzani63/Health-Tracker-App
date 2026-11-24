@@ -112,7 +112,24 @@ def logged(db: Session, start: date, end: date) -> dict[date, float]:
     return out
 
 
-STRENGTH_MET = 5.0  # weight training, moderate-to-vigorous with short rests (Compendium of Physical Activities)
+STRENGTH_MET = 3.5  # resistance training, several exercises, 8-15 reps, rests included (Compendium 2024, code 02054)
+FINISHER_MET = 4.3  # the treadmill / bike part at the end of a gym session (brisk incline walk)
+CARDIO_DAY_MET = 5.0  # a planned cardio day ticked done without saying which machine
+
+
+def workout_kcal(day: dict, weight_kg: float, skip_cardio: bool = False) -> float:
+    """Calories a planned session adds on top of resting (resting is counted once, in the day's resting burn).
+    Strength days: lifting time at 3.5 METs + the cardio part at 4.3. Cardio days: 5 METs."""
+    from app.services.workout_planner import normalize_day
+    day = normalize_day(day)
+    per = 3.5 * weight_kg / 200  # kcal per minute per MET
+    if day.get("type") == "cardio":
+        return 0.0 if skip_cardio else (CARDIO_DAY_MET - 1) * per * (day.get("minutes") or 0)
+    if day.get("type") != "strength":
+        return 0.0
+    cardio_min = sum(_minutes(e.get("reps")) for e in day.get("exercises") or [] if e.get("pattern") == "cardio")
+    lift_min = max(0, (day.get("minutes") or 0) - cardio_min)
+    return (STRENGTH_MET - 1) * per * lift_min + (0 if skip_cardio else (FINISHER_MET - 1) * per * cardio_min)
 
 
 def _minutes(text: str) -> float:
@@ -137,20 +154,14 @@ def planned_workout_kcal(db: Session, start: date, end: date, done: dict, profil
     by_wd = {d.get("weekday"): d for d in plan.days or []}
     names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     logged_days = set(logged(db, start, end))
-    per_min = (STRENGTH_MET - 1) * 3.5 * profile.weight_kg / 200  # on top of resting, which is counted already
     out: dict[date, float] = {}
     d = start
     while d <= end:
         day = by_wd.get(names[d.weekday()])
         if done.get(d.isoformat()) is True and day:
-            if day.get("type") == "strength":
-                exs = day.get("exercises") or []
-                cardio_min = sum(_minutes(e.get("reps")) for e in exs if e.get("pattern") == "cardio")
-                total = day.get("minutes") or (len([e for e in exs if e.get("pattern") != "cardio"]) * 8 + cardio_min)
-                mins = total - cardio_min if d in logged_days else total
-                out[d] = round(per_min * max(0, mins))
-            elif day.get("type") == "cardio" and d not in logged_days:
-                out[d] = round(per_min * (day.get("minutes") or 0))
+            kcal = workout_kcal(day, profile.weight_kg, skip_cardio=d in logged_days)  # cardio logged: don't count it twice
+            if kcal:
+                out[d] = round(kcal)
         d += timedelta(days=1)
     return out
 

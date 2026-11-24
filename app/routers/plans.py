@@ -21,7 +21,12 @@ def _with_loads(plan: WorkoutPlan | None, db: Session) -> dict | None:
         return None
     from app.services.loads import add_loads
     out = PlanOut.model_validate(plan).model_dump()
-    out["days"] = _your_sets(add_loads(plan.days or [], get_profile(db), plan.goal), db)
+    prof = get_profile(db)
+    out["days"] = _your_sets(add_loads(plan.days or [], prof, plan.goal), db)
+    from app.services.cardio import workout_kcal
+    for d in out["days"]:  # calories from the real session length and this person's weight
+        if d.get("type") in ("strength", "cardio"):
+            d["est_kcal"] = round(workout_kcal(d, prof.weight_kg or 75))
     return out
 
 
@@ -39,14 +44,15 @@ def _your_sets(days: list, db: Session) -> list:
                 per[n] = per.get(n, 0) + 1
         for n, c in per.items():
             done.setdefault(n, c)  # newest session wins
+    from app.services.workout_planner import normalize_day
+    days = [normalize_day(d) for d in days]  # 3 sets each, and the real session length
     for d in days:
         for e in d.get("exercises", []):
             n = (e.get("exercise") or "").strip().lower()
-            if e.get("pattern") != "cardio" and 1 < (e.get("sets") or 0) < 3:
-                e["sets"] = 3  # plans made earlier with 2 sets: every exercise is 3 sets now
             if e.get("pattern") != "cardio" and done.get(n, 0) > (e.get("sets") or 0):
                 e["sets"], e["sets_note"] = min(done[n], 6), "what you did last time"
-    return days
+                d["_more"] = True
+    return [normalize_day({k: v for k, v in d.items() if k != "_more"}) if d.get("_more") else d for d in days]
 
 
 @router.get("", response_model=list[PlanOut])

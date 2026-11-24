@@ -5,6 +5,7 @@ per movement pattern for the available equipment, and sets sets/reps/rest
 from the goal. Each week adds a simple progression note, with a deload in
 the final week of plans that are 4+ weeks long.
 """
+import re
 
 EXERCISES = {
     "squat": {"gym": ["Barbell back squat", "Front squat", "Leg press"],
@@ -206,6 +207,45 @@ SCHEDULE = {
     6: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
 }
 WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+WARMUP_MIN, SETUP_MIN = 5, 1  # warm-up at the start; walking to the next machine / setting the weight
+
+
+def _set_seconds(reps) -> float:
+    """Time under work for one set: ~3 s per rep (both sides for 'each side'), or the hold time."""
+    t = str(reps or "").lower()
+    m = re.search(r"(\d+(?:\.\d+)?)(?:\s*[-–]\s*(\d+(?:\.\d+)?))?", t)  # "10-12" or "8"
+    avg = (float(m.group(1)) + float(m.group(2) or m.group(1))) / 2 if m else 10
+    if "s" in t.replace("sets", "") and ("sec" in t or re.search(r"\d\s*s\b", t)):
+        return avg
+    return avg * 3 * (2 if "each" in t else 1)
+
+
+def _minutes_in(reps) -> float:
+    m = re.search(r"(\d+(?:\.\d+)?)\s*min", str(reps or ""))
+    return float(m.group(1)) if m else 0.0
+
+
+def normalize_day(day: dict) -> dict:
+    """A plan day as it's done now: at least 3 sets per strength exercise, and the session's real length
+    from its sets, reps and rests (plus warm-up and any cardio), so time and calories match."""
+    day = dict(day)
+    if day.get("type") != "strength":
+        return day
+    exs, total = [], WARMUP_MIN
+    for e in day.get("exercises") or []:
+        e = dict(e)
+        if e.get("pattern") == "cardio" or _minutes_in(e.get("reps")):
+            total += _minutes_in(e.get("reps")) * max(1, e.get("sets") or 1)
+        else:
+            if 1 < (e.get("sets") or 0) < 3:
+                e["sets"] = 3
+            n = e.get("sets") or 3
+            total += SETUP_MIN + (n * _set_seconds(e.get("reps")) + (n - 1) * (e.get("rest_s") or 60)) / 60
+        exs.append(e)
+    day["exercises"], day["minutes"] = exs, int(round(total / 5) * 5)
+    return day
+
 
 # (sets, reps, rest seconds) for main lifts and accessories
 GOAL_SCHEME = {
@@ -455,7 +495,27 @@ def _styled_plan(goal, days_per_week, weeks, have, experience, include_cardio, f
            else "home" if have else "no equipment")
     label = {"body_part": "muscle-group split", "full_body": "full body", "upper_lower": "upper/lower", "ppl": "push/pull/legs"}[style]
     name = f"{goal.replace('_', ' ').title()} · {label} · {days_per_week} days/week · {kit}"
-    return {"name": name, "goal": goal, "weeks": weeks, "days": days, "progression": progression}
+    return {"name": name, "goal": goal, "weeks": weeks, "days": _fit(days, session_minutes), "progression": progression}
+
+
+def _fit(days: list, session_minutes: int) -> list:
+    """Every strength session at 3+ sets, trimmed (last extra exercise first, keeping 3) to fit the time you have."""
+    out = []
+    for d in days:
+        d = normalize_day(d)
+        while d.get("type") == "strength" and d["minutes"] > session_minutes * 1.1:
+            lifts = [i for i, e in enumerate(d["exercises"]) if e.get("pattern") != "cardio" and not _minutes_in(e.get("reps"))]
+            if len(lifts) <= 3:  # already the fewest exercises: take a set off the biggest (never below 3)
+                big = max(lifts, key=lambda i: d["exercises"][i].get("sets") or 0)
+                if (d["exercises"][big].get("sets") or 0) <= 3:
+                    break
+                exs = [dict(e) for e in d["exercises"]]
+                exs[big]["sets"] -= 1
+                d = normalize_day({**d, "exercises": exs})
+                continue
+            d = normalize_day({**d, "exercises": [e for i, e in enumerate(d["exercises"]) if i != lifts[-1]]})
+        out.append(d)
+    return out
 
 
 def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
@@ -466,8 +526,10 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
                   split_style: str = "auto") -> dict:
     have = equipment_set(equipment, equipment_list)
     if split_style in ("body_part", "full_body", "upper_lower", "ppl"):
-        return _styled_plan(goal, days_per_week, weeks, have, experience, include_cardio, focus_areas or [],
+        p = _styled_plan(goal, days_per_week, weeks, have, experience, include_cardio, focus_areas or [],
                             [i for i in (injuries or []) if i != "none"], session_minutes, age, bmi, split_style)
+        p["days"] = _fit(p["days"], session_minutes)
+        return p
     focus_areas, injuries = focus_areas or [], [i for i in (injuries or []) if i != "none"]
     # roughly 8-10 minutes per exercise including rest; the warm-up takes the rest
     max_ex = max(3, min(8, (session_minutes - 5) // 8))

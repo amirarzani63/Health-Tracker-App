@@ -1276,7 +1276,8 @@ function cardioList(iso, planMin) {
   for (let left = planMin, i = 0; left > 0; i++) { const m = Math.min(MACHINE_MAX, left); out.push({ activity: order[i % order.length], minutes: m }); left -= m; }
   return out;
 }
-const kcalFor = (key, min) => Math.round((CARDIO_OPTS[key].met * 3.5 * cardioState.kg / 200) * min);
+// calories on top of resting (resting is already in the day's burn), like the activity log and dashboard
+const kcalFor = (key, min) => Math.round(((CARDIO_OPTS[key].met - 1) * 3.5 * cardioState.kg / 200) * min);
 const plannedCardioMin = (d) => d.type === "cardio" ? d.minutes
   : (d.exercises || []).filter((x) => x.pattern === "cardio").reduce((t, x) => t + (parseInt(x.reps, 10) || 0), 0);
 async function loadCardio() {
@@ -1319,7 +1320,7 @@ function withCardio(day, iso) {
   const cardioKcal = list.reduce((t, x) => t + kcalFor(x.activity, x.minutes), 0);
   const total = list.reduce((t, x) => t + x.minutes, 0);
   if (day.type === "cardio") return { ...day, cardioKey: list[0].activity, cardioCards: cards, minutes: total, est_kcal: cardioKcal };
-  const walkKcal = Math.round((4.3 * 3.5 * cardioState.kg / 200) * planMin);
+  const walkKcal = Math.round(((4.3 - 1) * 3.5 * cardioState.kg / 200) * planMin);  // what the server counted for the planned walk
   return { ...day, exercises: [...day.exercises.filter((x) => x.pattern !== "cardio"), ...cards],
     minutes: day.minutes ? day.minutes - planMin + total : day.minutes,
     est_kcal: day.est_kcal ? day.est_kcal - walkKcal + cardioKcal : day.est_kcal };
