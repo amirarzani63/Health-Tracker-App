@@ -30,7 +30,7 @@ EXERCISES = {
               "home": ["Dumbbell reverse lunge", "Step-up"],
               "bodyweight": ["Reverse lunge", "Lateral lunge"]},
     "calf": {"gym": ["Standing calf raise"], "home": ["Single-leg calf raise"], "bodyweight": ["Single-leg calf raise"]},
-    "biceps": {"gym": ["EZ-bar curl", "Cable curl"], "home": ["Dumbbell curl", "Hammer curl"], "bodyweight": ["Chin-up hold", "Towel curl"]},
+    "biceps": {"gym": ["EZ-bar curl", "Cable curl"], "home": ["Dumbbell curl", "Hammer curl"], "bodyweight": ["Chin-up hold"]},
     "triceps": {"gym": ["Cable pushdown", "Skull crusher"], "home": ["Overhead dumbbell extension"], "bodyweight": ["Bench dip", "Diamond push-up"]},
     "core": {"gym": ["Cable crunch", "Hanging knee raise"], "home": ["Dead bug", "Plank"], "bodyweight": ["Plank", "Hollow hold"]},
     "carry": {"gym": ["Farmer's carry"], "home": ["Suitcase carry"], "bodyweight": ["Bear crawl"]},
@@ -61,7 +61,7 @@ CATALOG = {
               ("Reverse lunge", set(), "bw"), ("Lateral lunge", set(), "bw")],
     "calf": [("Standing calf raise", {"machines"}, "mach"), ("Single-leg calf raise", set(), "bw")],
     "biceps": [("EZ-bar curl", {"barbell"}, "bar"), ("Cable curl", {"cable"}, "mach"), ("Dumbbell curl", {"dumbbells"}, "db"),
-               ("Hammer curl", {"dumbbells"}, "db"), ("Chin-up hold", {"pullup"}, "hard"), ("Towel curl", set(), "bw")],
+               ("Hammer curl", {"dumbbells"}, "db"), ("Chin-up hold", {"pullup"}, "hard"), ("Concentration curl", {"dumbbells"}, "db")],
     "triceps": [("Cable pushdown", {"cable"}, "mach"), ("Skull crusher", {"barbell", "bench"}, "bar"),
                 ("Overhead dumbbell extension", {"dumbbells"}, "db"), ("Bench dip", {"bench"}, "bw"), ("Diamond push-up", set(), "hard")],
     "core": [("Cable crunch", {"cable"}, "mach"), ("Hanging knee raise", {"pullup"}, "bw"), ("Dead bug", set(), "bw"),
@@ -338,7 +338,7 @@ PHOTO = {
     "Dumbbell reverse lunge": "Dumbbell Rear Lunge", "Reverse lunge": "Dumbbell Rear Lunge", "Lateral lunge": "~Dumbbell Lunges",
     "Standing calf raise": "Standing Calf Raises", "Single-leg calf raise": "Standing Dumbbell Calf Raise",
     "EZ-bar curl": "EZ-Bar Curl", "Cable curl": "Standing Biceps Cable Curl", "Dumbbell curl": "Dumbbell Bicep Curl",
-    "Hammer curl": "Hammer Curls", "Chin-up hold": "Chin-Up", "Towel curl": "~Dumbbell Bicep Curl",
+    "Hammer curl": "Hammer Curls", "Chin-up hold": "Chin-Up", "Concentration curl": "Concentration Curls",
     "Cable pushdown": "Triceps Pushdown", "Skull crusher": "EZ-Bar Skullcrusher",
     "Overhead dumbbell extension": "Standing Dumbbell Triceps Extension", "Bench dip": "Bench Dips",
     "Diamond push-up": "Close-Grip Push-Up off of a Dumbbell", "Rope triceps pushdown (cable)": "Triceps Pushdown - Rope Attachment",
@@ -554,7 +554,9 @@ def generate_plan(goal: str = "general", days_per_week: int = 4, weeks: int = 4,
         title, patterns = DAY_TEMPLATES[key]
         exercises = []
         for i, pattern in enumerate(patterns):
-            options = ranked(pattern, have, experience, age, i < 2 and pattern in MAIN_PATTERNS) or EXERCISES[pattern]["bodyweight"]
+            options = ranked(pattern, have, experience, age, i < 2 and pattern in MAIN_PATTERNS)
+            if not options:  # nothing this person has equipment for (e.g. curls with no weights): skip, never guess
+                continue
             idx = usage.get(pattern, 0)
             usage[pattern] = idx + 1
             is_main = i < 2 and pattern in MAIN_PATTERNS

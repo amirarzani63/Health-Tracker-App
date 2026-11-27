@@ -30,7 +30,7 @@ def gx(name, photo, sets, reps, rest=75, pattern=""):
 
 
 # Only equipment in the user's building gym (Nov 2026 photos): dumbbell rack, adjustable benches,
-# cable station (lat pulldown, seated row, leg extension / leg curl, rope), pull-up/dip/knee-raise tower,
+# cable station (lat pulldown, seated row, leg extension / leg curl, rope). No hanging / pull-up bar (user, Nov 27).
 # back-extension bench, stability ball, treadmills, upright + recumbent bike, elliptical.
 # Gym rule: cardio machines max 30 minutes at a time.
 DAYS = [
@@ -60,7 +60,7 @@ DAYS = [
         gx("Dumbbell lateral raise", "Side Lateral Raise", 3, "12", 60, "v_push"),
         gx("Face pull (cable with rope)", "Face Pull", 2, "12-15", 60, "h_pull"),
         gx("Cable biceps curl", "Standing Biceps Cable Curl", 2, "12", 60, "biceps"),
-        gx("Knee raise (on the dip / knee-raise tower)", "Knee/Hip Raise On Parallel Bars", 2, "8-12", 60, "core"),
+        gx("Cable crunch (kneeling, rope on the cable station)", "Cable Crunch", 3, "12-15", 60, "core"),
         CARDIO_FINISH,
     ]},
     {"weekday": "Fri", "type": "strength", "title": "Lower body B", "minutes": 65, "est_kcal": 540, "exercises": [

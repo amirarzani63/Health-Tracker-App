@@ -27,15 +27,18 @@ def _with_loads(plan: WorkoutPlan | None, db: Session) -> dict | None:
 
 TOO_HARD = {"Pull-up / negative"}  # needs the strength to lower yourself slowly from the bar
 # The building gym (Nov 2026 photos): dumbbells, adjustable benches, one cable station (lat pulldown, seated row,
-# leg extension / curl, rope), a pull-up / dip / knee-raise tower and cardio machines. No barbell, EZ bar or other machines.
-BUILDING_GYM = ["dumbbells", "bench", "cable", "pullup", "cardio"]
+# leg extension / curl, rope) and cardio machines. No barbell, EZ bar, hanging / pull-up bar or other machines.
+BUILDING_GYM = ["dumbbells", "bench", "cable", "cardio"]
+_OLD_BUILDING_GYM = [["dumbbells", "bench", "cable", "pullup", "cardio"]]  # saved before the user said there's no bar
+# exercises from older saved plans that aren't in the catalog: (movement, equipment needed), so they can be swapped
+LEGACY = {"Knee raise (on the dip / knee-raise tower)": ("core", {"pullup"}), "Towel curl": ("biceps", {"towel"})}
 
 
 def _equipment(db: Session) -> set[str]:
     """What this person can train with. A building-gym plan with no list saved gets the building gym's list (saved once)."""
     from app.services.workout_planner import equipment_set
     prof = get_profile(db)
-    if not prof.equipment_list:
+    if not prof.equipment_list or prof.equipment_list in _OLD_BUILDING_GYM:
         plan = db.scalar(select(WorkoutPlan).where(WorkoutPlan.active))
         if plan and "building gym" in (plan.name or "").lower():
             prof.equipment_list = list(BUILDING_GYM)
@@ -49,6 +52,7 @@ def _easier_pulls(days: list, db: Session) -> list:
     from app.services.workout_planner import CATALOG, FOCUS_CATALOG, ranked
     have = _equipment(db)
     info = {n: (p, need) for p, opts in CATALOG.items() for n, need, _ in opts}
+    info.update(LEGACY)
     for area, opts in FOCUS_CATALOG.items():
         for n, need in opts:
             info.setdefault(n, ("f:" + area, need))
