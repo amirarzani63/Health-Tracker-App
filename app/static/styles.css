@@ -1533,3 +1533,4 @@ dialog, .guide-list, .ex-dialog { overflow-x: hidden; }
 .cluster.wf-row2 { margin-top: 12px; }
 .ibar-fill.burn { margin: 0; text-shadow: none; }  /* not the ".burn" text style */
 .vs-row > b { text-align: right; }
+.gym-hours { margin: 0 4px 10px; color: var(--muted); }

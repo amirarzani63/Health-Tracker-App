@@ -1414,7 +1414,9 @@ function renderWeek(plan) {
   const detail = !ss ? `<p class="muted">Outside your ${plan.weeks}-week plan.</p>`
     : ss.type === "rest" ? `<p class="muted">Rest day. An easy walk and some stretching are perfect.</p>`
     : `${checkinHTML(cal.sel, sd)}${hasCardio(ss) ? cardioPicker(cal.sel, ss) : ""}${renderPlanDay(withCardio(ss, cal.sel))}<label class="move">Move ${dayName(wd)}'s session to <select data-move-from="${wd}" data-plan="${plan.id}"><option value="">Pick a day…</option>${options}</select></label>`;
-  return `<div class="card cal-card">
+  const g = plan.gym, t12 = (t) => { const [h, mm] = t.split(":").map(Number); return `${(h + 11) % 12 + 1}:${String(mm).padStart(2, "0")} ${h < 12 ? "am" : "pm"}`; };
+  const gymNote = g ? `<p class="gym-hours small">🕕 Your gym is open <b>${t12(g.open)} – ${t12(g.close)}</b> every day. Start by <b>${t12(g.latest_start)}</b> to finish your longest session (${g.longest_min} min) before it closes. Cardio machines: ${g.cardio_max_min} min at a time.</p>` : "";
+  return gymNote + `<div class="card cal-card">
     <div class="cal-head"><button type="button" class="icon" data-cal-nav="-1" aria-label="Previous month">‹</button>
       <h3>${m.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h3>
       <button type="button" class="icon" data-cal-nav="1" aria-label="Next month">›</button></div>

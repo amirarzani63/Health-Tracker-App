@@ -82,9 +82,25 @@ def list_reminders(db: Session = Depends(get_db)):
     return insights.get_reminders(db)
 
 
+def _12h(t: str) -> str:
+    h, m = map(int, t.split(":"))
+    return f"{(h - 1) % 12 + 1}:{m:02d} {'am' if h < 12 else 'pm'}"
+
+
 @router.put("/reminders", response_model=list[ReminderOut])
 def update_reminders(data: list[ReminderIn], db: Session = Depends(get_db)):
     current = {r.key: r for r in insights.get_reminders(db)}
+    from app.routers.plans import GYM_OPEN, gym_hours, is_building_gym
+    from app.services.workout_planner import normalize_day
+    w = next((i for i in data if i.key == "workout" and i.enabled), None)
+    if w and is_building_gym(db):  # the building gym is only open 6:00 am - 11:00 pm
+        from sqlalchemy import select as _sel
+        from app.models import WorkoutPlan
+        plan = db.scalar(_sel(WorkoutPlan).where(WorkoutPlan.active))
+        g = gym_hours([normalize_day(d) for d in plan.days or []])
+        if not (GYM_OPEN <= w.time <= g["latest_start"]):
+            raise HTTPException(422, f"Your building gym is open 6:00 am to 11:00 pm. Your longest session is {g['longest_min']} minutes, "
+                                     f"so set the workout reminder between 6:00 am and {_12h(g['latest_start'])}.")
     for item in data:
         r = current[item.key]
         r.enabled, r.time = item.enabled, item.time

@@ -146,6 +146,7 @@ class PlanOut(ORM):
     progression: list
     active: bool
     created_at: datetime
+    gym: dict | None = None  # opening hours of the person's gym, when known
 
 
 class GarminLoginIn(BaseModel):

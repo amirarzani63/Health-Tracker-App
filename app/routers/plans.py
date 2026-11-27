@@ -22,6 +22,8 @@ def _with_loads(plan: WorkoutPlan | None, db: Session) -> dict | None:
     _refresh_preset(db)
     out = PlanOut.model_validate(plan).model_dump()
     out["days"] = serve_days(plan.days or [], db, plan.goal)
+    if plan.active and is_building_gym(db):
+        out["gym"] = gym_hours(out["days"])
     return out
 
 
@@ -29,6 +31,24 @@ TOO_HARD = {"Pull-up / negative"}  # needs the strength to lower yourself slowly
 # The building gym (Nov 2026 photos): dumbbells, adjustable benches, one cable station (lat pulldown, seated row,
 # leg extension / curl, rope), a pull-up / dip / knee-raise tower and cardio machines. No barbell or EZ bar.
 BUILDING_GYM = ["dumbbells", "bench", "cable", "pullup", "cardio"]
+# Fitness room rules sign (photo, Nov 2026): open daily 6:00 am - 11:00 pm; cardio machines 30 minutes at a time.
+GYM_OPEN, GYM_CLOSE, GYM_CARDIO_MAX = "06:00", "23:00", 30
+
+
+def is_building_gym(db: Session) -> bool:
+    """Only the person whose plan is the building-gym plan (Amir) gets the building's rules."""
+    plan = db.scalar(select(WorkoutPlan).where(WorkoutPlan.active))
+    return bool(plan and "building gym" in (plan.name or "").lower())
+
+
+def gym_hours(days: list) -> dict:
+    """Opening hours and the latest time to start the longest session so it ends before closing."""
+    longest = max([d.get("minutes") or 0 for d in days if d.get("type") in ("strength", "cardio")] or [60])
+    h, m = map(int, GYM_CLOSE.split(":"))
+    end = h * 60 + m - longest
+    end -= end % 5
+    return {"open": GYM_OPEN, "close": GYM_CLOSE, "cardio_max_min": GYM_CARDIO_MAX,
+            "longest_min": longest, "latest_start": f"{end // 60:02d}:{end % 60:02d}"}
 _OLD_BUILDING_GYM = [["dumbbells", "bench", "cable", "cardio"]]  # saved on Nov 27 before "halter" was understood as barbell
 # exercises from older saved plans that aren't in the catalog: (movement, equipment needed), so they can be swapped
 LEGACY = {"Knee raise (on the dip / knee-raise tower)": ("core", {"pullup"}), "Towel curl": ("biceps", {"towel"})}

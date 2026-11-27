@@ -602,3 +602,28 @@ def test_building_gym_has_no_barbell_and_no_towel_curl(client):
             p = generate_plan(goal=goal, days_per_week=4, equipment="gym", equipment_list=BUILDING_GYM, split_style=st)
             names = [e["exercise"].lower() for d in p["days"] for e in d["exercises"]]
             assert not [n for n in names if any(w in n for w in ("towel", "barbell", "ez-bar"))], (goal, st)
+
+
+def test_building_gym_hours_only_for_its_plan(client):
+    """The building gym (open 6 am - 11 pm, cardio 30 min) applies only to the building-gym plan's owner."""
+    from sqlalchemy.orm import Session
+    from app.db import engine
+    from app.services.preset_plan import install
+    client.get("/api/profile")
+    with Session(engine) as db:
+        install(db)
+    plan = client.get("/api/plans/active").json()
+    g = plan["gym"]
+    assert g["open"] == "06:00" and g["close"] == "23:00" and g["cardio_max_min"] == 30
+    assert g["latest_start"] <= "22:00"
+    rem = [r | {"enabled": r["key"] == "workout"} for r in client.get("/api/reminders").json()]
+    late = [r | ({"time": "22:45"} if r["key"] == "workout" else {}) for r in rem]
+    assert client.put("/api/reminders", json=late).status_code == 422
+    early = [r | ({"time": "05:30"} if r["key"] == "workout" else {}) for r in rem]
+    assert client.put("/api/reminders", json=early).status_code == 422
+    ok = [r | ({"time": "18:00"} if r["key"] == "workout" else {}) for r in rem]
+    assert client.put("/api/reminders", json=ok).status_code == 200
+    # someone else with their own plan: no building-gym hours, any reminder time
+    client.post("/api/plans/generate", json={"goal": "general", "days_per_week": 3})
+    assert client.get("/api/plans/active").json().get("gym") is None
+    assert client.put("/api/reminders", json=late).status_code == 200
