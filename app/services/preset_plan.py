@@ -29,9 +29,12 @@ def gx(name, photo, sets, reps, rest=75, pattern=""):
     return {**ex(name, sets, reps, rest, pattern), "photo": photo}
 
 
-# Only equipment in the user's building gym (Nov 2026 photos): dumbbell rack, adjustable benches,
-# cable station (lat pulldown, seated row, leg extension / leg curl, rope). No hanging / pull-up bar (user, Nov 27).
-# back-extension bench, stability ball, treadmills, upright + recumbent bike, elliptical.
+# Only equipment in the user's building gym (photos, Nov 2026): dumbbell rack, adjustable benches, an Inspire
+# multi-gym ("cable station": seated chest press arms, lat pulldown, seated low row, leg extension / leg curl,
+# high and low pulleys with a rope), a Hoist pull-up / dip / knee-raise tower, an ab-crunch bench,
+# back-extension bench, stability ball, 2 treadmills, upright + recumbent bike, elliptical.
+# No barbell or EZ bar ("halter" = barbell, user Nov 27). Every gym day uses the multi-gym.
+PRESET_VERSION = 2  # bump when DAYS change, so saved copies of this plan are refreshed
 # Gym rule: cardio machines max 30 minutes at a time.
 DAYS = [
     {"weekday": "Mon", "type": "strength", "title": "Upper body A", "minutes": 65, "est_kcal": 520, "exercises": [
@@ -39,8 +42,8 @@ DAYS = [
         gx("Seated cable row (cable station)", "Seated Cable Rows", 3, "10-12", 75, "h_pull"),
         gx("Seated dumbbell shoulder press (bench upright)", "Dumbbell Shoulder Press", 3, "10-12", 75, "v_push"),
         gx("Lat pulldown (cable station)", "Wide-Grip Lat Pulldown", 3, "10-12", 75, "v_pull"),
-        gx("Dumbbell hammer curl", "Hammer Curls", 2, "12", 60, "biceps"),
-        gx("Rope triceps pushdown (cable)", "Triceps Pushdown - Rope Attachment", 2, "12-15", 60, "triceps"),
+        gx("Dumbbell hammer curl", "Hammer Curls", 3, "12", 60, "biceps"),
+        gx("Rope triceps pushdown (cable)", "Triceps Pushdown - Rope Attachment", 3, "12-15", 60, "triceps"),
         CARDIO_FINISH,
     ]},
     {"weekday": "Tue", "type": "strength", "title": "Lower body A", "minutes": 65, "est_kcal": 540, "exercises": [
@@ -48,27 +51,27 @@ DAYS = [
         ex("Dumbbell Romanian deadlift", 3, "10-12", 75, "hinge"),
         gx("Leg extension (cable station)", "Leg Extensions", 3, "12-15", 60, "squat"),
         gx("Leg curl (cable station)", "Seated Leg Curl", 3, "12-15", 60, "hinge"),
-        gx("Back extension (back-extension bench)", "Hyperextensions (Back Extensions)", 2, "10-12", 60, "hinge"),
+        gx("Back extension (back-extension bench)", "Hyperextensions (Back Extensions)", 3, "10-12", 60, "hinge"),
         gx("Plank", "Plank", 3, "hold 20-30 seconds", 45, "core"),
         CARDIO_FINISH,
     ]},
     {"weekday": "Wed", "type": "cardio", "title": "Cardio machines", "zone": "Zone 2", "minutes": 60,
      "est_kcal": 500, "exercises": []},
     {"weekday": "Thu", "type": "strength", "title": "Upper body B", "minutes": 65, "est_kcal": 510, "exercises": [
-        gx("Incline dumbbell press (bench on incline)", "Incline Dumbbell Press", 3, "10-12", 75, "h_push"),
+        ex("Chest press (multi-gym, seated press arms)", 3, "10-12", 75, "h_push"),
         gx("One-arm dumbbell row (hand on bench)", "One-Arm Dumbbell Row", 3, "10-12", 75, "h_pull"),
         gx("Dumbbell lateral raise", "Side Lateral Raise", 3, "12", 60, "v_push"),
-        gx("Face pull (cable with rope)", "Face Pull", 2, "12-15", 60, "h_pull"),
-        gx("Cable biceps curl", "Standing Biceps Cable Curl", 2, "12", 60, "biceps"),
-        gx("Cable crunch (kneeling, rope on the cable station)", "Cable Crunch", 3, "12-15", 60, "core"),
+        gx("Face pull (cable with rope)", "Face Pull", 3, "12-15", 60, "h_pull"),
+        gx("Concentration curl (dumbbell, seated on the bench)", "Concentration Curls", 3, "12", 60, "biceps"),
+        gx("Knee raise (on the dip / knee-raise tower)", "Knee/Hip Raise On Parallel Bars", 3, "8-12", 60, "core"),
         CARDIO_FINISH,
     ]},
     {"weekday": "Fri", "type": "strength", "title": "Lower body B", "minutes": 65, "est_kcal": 540, "exercises": [
         gx("Split squat (dumbbells, hold the rack for balance if needed)", "Split Squat with Dumbbells", 3, "8-10 each leg", 75, "lunge"),
         gx("Sumo dumbbell squat", "Plie Dumbbell Squat", 3, "10-12", 75, "squat"),
         ex("Hip thrust (shoulders on bench, dumbbell on hips)", 3, "12", 60, "hinge"),
-        gx("Leg curl (cable station)", "Seated Leg Curl", 2, "12-15", 60, "hinge"),
-        gx("Dead bug", "Dead Bug", 3, "8 each side (left + right = 1)", 45, "core"),
+        gx("Leg curl (cable station)", "Seated Leg Curl", 3, "12-15", 60, "hinge"),
+        gx("Cable crunch (kneeling, rope on the cable station)", "Cable Crunch", 3, "12-15", 60, "core"),
         ex("Treadmill: 1 minute fast, then 2 minutes slow", 1, "24 minutes", 0, "cardio"),
     ]},
     {"weekday": "Sat", "type": "cardio", "title": "Cardio machines (longer)", "zone": "Zone 2", "minutes": 70,

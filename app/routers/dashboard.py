@@ -26,6 +26,8 @@ def dashboard(day: date | None = None, db: Session = Depends(get_db)):
     trend = insights.daily_series(db, day - timedelta(days=13), day)
     week = trend[-7:]
     acts = insights.activities_between(db, day - timedelta(days=6), day)
+    from app.routers.plans import _refresh_preset
+    _refresh_preset(db)  # the building-gym plan's latest days before reading today's session
     plan, session = insights.todays_session(db, day)
     if session:  # the same version the plan tab shows (equipment swaps, sets, time, calories, photos)
         from app.routers.plans import serve_days

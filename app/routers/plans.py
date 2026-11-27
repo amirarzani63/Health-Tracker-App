@@ -19,7 +19,7 @@ def _with_loads(plan: WorkoutPlan | None, db: Session) -> dict | None:
     """The plan with a suggested starting weight on each exercise, worked out for this person."""
     if plan is None:
         return None
-    from app.services.loads import add_loads
+    _refresh_preset(db)
     out = PlanOut.model_validate(plan).model_dump()
     out["days"] = serve_days(plan.days or [], db, plan.goal)
     return out
@@ -27,11 +27,25 @@ def _with_loads(plan: WorkoutPlan | None, db: Session) -> dict | None:
 
 TOO_HARD = {"Pull-up / negative"}  # needs the strength to lower yourself slowly from the bar
 # The building gym (Nov 2026 photos): dumbbells, adjustable benches, one cable station (lat pulldown, seated row,
-# leg extension / curl, rope) and cardio machines. No barbell, EZ bar, hanging / pull-up bar or other machines.
-BUILDING_GYM = ["dumbbells", "bench", "cable", "cardio"]
-_OLD_BUILDING_GYM = [["dumbbells", "bench", "cable", "pullup", "cardio"]]  # saved before the user said there's no bar
+# leg extension / curl, rope), a pull-up / dip / knee-raise tower and cardio machines. No barbell or EZ bar.
+BUILDING_GYM = ["dumbbells", "bench", "cable", "pullup", "cardio"]
+_OLD_BUILDING_GYM = [["dumbbells", "bench", "cable", "cardio"]]  # saved on Nov 27 before "halter" was understood as barbell
 # exercises from older saved plans that aren't in the catalog: (movement, equipment needed), so they can be swapped
 LEGACY = {"Knee raise (on the dip / knee-raise tower)": ("core", {"pullup"}), "Towel curl": ("biceps", {"towel"})}
+
+
+def _refresh_preset(db: Session) -> None:
+    """A saved copy of the building-gym plan gets the current version of its days (e.g. new multi-gym exercises)."""
+    from app.services import preset_plan
+    plan = db.scalar(select(WorkoutPlan).where(WorkoutPlan.active))
+    if not plan or "building gym" not in (plan.name or "").lower():
+        return
+    if (plan.days or [{}])[0].get("preset_version") != preset_plan.PRESET_VERSION:
+        days = [dict(d) for d in preset_plan.DAYS]
+        days[0]["preset_version"] = preset_plan.PRESET_VERSION
+        plan.days = days
+        flag_modified(plan, "days")
+        db.commit()
 
 
 def _equipment(db: Session) -> set[str]:
@@ -43,6 +57,7 @@ def _equipment(db: Session) -> set[str]:
         if plan and "building gym" in (plan.name or "").lower():
             prof.equipment_list = list(BUILDING_GYM)
             db.commit()
+    _refresh_preset(db)
     return equipment_set(prof.equipment or "gym", prof.equipment_list or [])
 
 

@@ -338,7 +338,7 @@ PHOTO = {
     "Dumbbell reverse lunge": "Dumbbell Rear Lunge", "Reverse lunge": "Dumbbell Rear Lunge", "Lateral lunge": "~Dumbbell Lunges",
     "Standing calf raise": "Standing Calf Raises", "Single-leg calf raise": "Standing Dumbbell Calf Raise",
     "EZ-bar curl": "EZ-Bar Curl", "Cable curl": "Standing Biceps Cable Curl", "Dumbbell curl": "Dumbbell Bicep Curl",
-    "Hammer curl": "Hammer Curls", "Chin-up hold": "Chin-Up", "Concentration curl": "Concentration Curls",
+    "Hammer curl": "Hammer Curls", "Chin-up hold": "Chin-Up", "Concentration curl": "Concentration Curls", "Chest press (multi-gym, seated press arms)": "~Leverage Chest Press",
     "Cable pushdown": "Triceps Pushdown", "Skull crusher": "EZ-Bar Skullcrusher",
     "Overhead dumbbell extension": "Standing Dumbbell Triceps Extension", "Bench dip": "Bench Dips",
     "Diamond push-up": "Close-Grip Push-Up off of a Dumbbell", "Rope triceps pushdown (cable)": "Triceps Pushdown - Rope Attachment",

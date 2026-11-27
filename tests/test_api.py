@@ -578,23 +578,27 @@ def test_new_plan_uses_only_your_equipment(client):
         assert not [n for n in names if "barbell" in n or "ez-bar" in n or "leg press" in n or "machine" in n], (goal, names)
 
 
-def test_building_gym_has_no_bar_and_no_towel_curl(client):
-    """Dumbbells, benches and the cable station only: no towel curl, no hanging bar; knee raises become a cable move."""
+def test_building_gym_has_no_barbell_and_no_towel_curl(client):
+    """Dumbbells, benches, the multi-gym and the tower: no towel curl, barbell or EZ bar; every gym day uses the multi-gym."""
     from sqlalchemy.orm import Session
     from app.db import engine
     from app.routers.plans import _easier_pulls, BUILDING_GYM
+    from app.services.preset_plan import DAYS
     from app.services.workout_planner import generate_plan
-    assert "pullup" not in BUILDING_GYM
+    assert "barbell" not in BUILDING_GYM and "pullup" in BUILDING_GYM
     prof = client.get("/api/profile").json()
     client.put("/api/profile", json={**prof, "equipment": "gym", "equipment_list": BUILDING_GYM})
-    day = [{"type": "strength", "exercises": [{"exercise": n, "sets": 3, "reps": "10"} for n in
-                                              ("Towel curl", "Knee raise (on the dip / knee-raise tower)", "Hanging knee raise", "Chin-up hold")]}]
+    day = [{"type": "strength", "exercises": [{"exercise": n, "sets": 3, "reps": "10"} for n in ("Towel curl", "EZ-bar curl", "Barbell row")]}]
     with Session(engine) as db:
         got = [e["exercise"] for e in _easier_pulls(day, db)[0]["exercises"]]
-    assert got[0] in ("Dumbbell curl", "Hammer curl", "Concentration curl") and got[1] == "Cable crunch"
-    assert not {"Towel curl", "Hanging knee raise", "Chin-up hold"} & set(got) and len(set(got)) == 4
+    assert got[0] in ("Dumbbell curl", "Hammer curl", "Concentration curl") and got[1] in ("Dumbbell curl", "Hammer curl", "Concentration curl")
+    assert got[2] in ("Chest-supported row", "One-arm dumbbell row") and len(set(got)) == 3
+    for d in DAYS:
+        if d["type"] == "strength":
+            assert any(w in e["exercise"].lower() for e in d["exercises"] for w in ("cable", "multi-gym", "pulldown")), d["weekday"]
+            assert all(e["sets"] >= 3 for e in d["exercises"] if e.get("pattern") != "cardio"), d["weekday"]
     for goal in ("fat_loss", "general", "hypertrophy"):
         for st in ("auto", "full_body", "upper_lower", "ppl", "body_part"):
             p = generate_plan(goal=goal, days_per_week=4, equipment="gym", equipment_list=BUILDING_GYM, split_style=st)
             names = [e["exercise"].lower() for d in p["days"] for e in d["exercises"]]
-            assert not [n for n in names if any(w in n for w in ("towel", "hanging", "pull-up", "chin-up", "barbell", "ez-bar"))], (goal, st)
+            assert not [n for n in names if any(w in n for w in ("towel", "barbell", "ez-bar"))], (goal, st)
